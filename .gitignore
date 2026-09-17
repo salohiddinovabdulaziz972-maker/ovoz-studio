@@ -20,3 +20,7 @@ Thumbs.db
 *.jks
 *.keystore
 keystore.properties
+
+# Tekshiruv skriptlarining vaqtinchalik chiqishi
+__pycache__/
+*.pyc

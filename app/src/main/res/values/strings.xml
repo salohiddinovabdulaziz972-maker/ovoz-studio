@@ -168,6 +168,26 @@
     <string name="speed_error_edit_failed">Tezlik yoki ohangni qo\'llab bo\'lmadi</string>
     <string name="speed_error_nothing_to_apply">Tezlik ham, ohang ham o\'zgarmagan</string>
 
+    <string name="noise_title">Shovqin tozalash</string>
+    <string name="noise_hint">Fayl tanlanmagan. Shovqinni tozalash uchun avval audio faylni oching.</string>
+    <string name="noise_sample_title">Shovqin namunasi</string>
+    <string name="noise_sample_note">Faqat shovqin eshitiladigan qismni belgilang — odatda yozuvning boshi, hali gapirilmagan payt. Dastur shu qismdan shovqin darajasini o\'lchab, keyin uni butun fayldan ayiradi.</string>
+    <string name="noise_sample_from">Namuna boshi</string>
+    <string name="noise_sample_to">Namuna oxiri</string>
+    <string name="noise_sample_range">Namuna olinadigan oraliq: %1$s — %2$s</string>
+    <string name="noise_strength_label">Tozalash kuchi</string>
+    <string name="noise_strength_note">Qiymat 1.0 dan %1$s gacha. Kattaroq qiymat shovqinni chuqurroq bosadi, lekin juda katta qiymatda nutqning nozik tovushlari ham bo\'g\'ilishi mumkin.</string>
+    <string name="noise_floor_label">Qoldiq, dB</string>
+    <string name="noise_floor_note">Ayirishdan keyin shovqin polosasida shuncha quvvat qoldiriladi: -30 da deyarli hech narsa qolmaydi, -3 da sezilarli qoladi. Juda past qiymatda qoldiq tasodifiy ohanglar bo\'lib eshitiladi.</string>
+    <string name="noise_action">Qo\'llash va saqlash</string>
+    <string name="noise_busy">Tozalanmoqda, biroz kuting…</string>
+    <string name="noise_done">Saqlandi: %1$s — shovqin %2$s dB pasaydi</string>
+    <string name="noise_open_saved">Kesish ekranida ochish</string>
+    <string name="noise_error_file_not_found">Fayl topilmadi</string>
+    <string name="noise_error_edit_failed">Shovqinni tozalab bo\'lmadi</string>
+    <string name="noise_error_sample_range">Namuna oraliq noto\'g\'ri: oxiri boshidan keyin bo\'lishi kerak</string>
+    <string name="noise_error_sample_quiet">Namuna olingan oraliq jim — faqat shovqin eshitiladigan qismni tanlang</string>
+
     <string name="common_delete">O\'chirish</string>
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">Yaxshi</string>

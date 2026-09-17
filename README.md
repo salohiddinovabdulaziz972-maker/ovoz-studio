@@ -27,6 +27,19 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 - **Bo'lish va ko'p nuqtali o'chirish**: faylni ixtiyoriy nuqtadan ikki
   qismga bo'lish; bir nechta oraliqni ro'yxatga yig'ib, hammasini bir marta
   o'chirish.
+- **Format konvertori**: MP3, WAV, M4A, FLAC, AAC, OPUS. Fayl import qilinsa,
+  tahrirdan keyin **o'z formatida** qaytadi (talab shu edi). WMA va OGG
+  yozilmaydi — Android'da ular uchun kodlovchi yo'q, buni import paytida ochiq
+  aytiladi.
+- **Ekvalayzer**: 10 va 31 polosa, 6 tayyor profil, past chastota kesish,
+  kesish himoyasi (cho'qqi ko'tarilsa butun fayl bir xil tushiriladi). Har bir
+  polosa raqamli maydonda kiritiladi.
+- **Tezlik va ohang**: 0.5x–2x, ohang ±12 yarim ton; ohang o'zgarganda uzunlik
+  o'zgarmaydi, ya'ni ikkalasini birga qo'llash mumkin.
+- **Shovqin tozalash**: shovqin namunasini belgilaysiz (odatda yozuv boshi),
+  ilova o'sha profilni butun fayldan ayiradi. Kuch va qoldiq qo'lda kiritiladi.
+  Halol aytilgan cheklov: bu **statistik spektral ayirish**, neyron tarmoq
+  emas — batafsil `docs/PROGRESS.md` da.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
@@ -35,10 +48,10 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-Format konvertori, ekvalayzer, tezlik/ohang, shovqin tozalash, TTS/STT,
-hujjatlarni audiolashtirish va audio-kitob, ID3 teglar, ko'p yo'lli
-aralashtirish, vokal/cholg'u ajratish. Hammasi reja bo'yicha ketma-ket
-qo'shiladi — to'liq ro'yxat va tartib `docs/PROGRESS.md` da.
+TTS/STT (o'zbek tilida nutq va matn), hujjatlarni audiolashtirish va
+audio-kitob, ID3 teglar va ulashish, ko'p yo'lli aralashtirish, sozlamalar
+ekrani, vokal/cholg'u ajratish va neyron shovqin tozalash. Hammasi reja
+bo'yicha ketma-ket qo'shiladi — to'liq ro'yxat va tartib `docs/PROGRESS.md` da.
 
 ## Qurish
 
@@ -60,18 +73,18 @@ shart emas, telefondan yuklab olish kifoya.
 
 ## Tekshirish (testlar)
 
-Ikki qatlam bor — ikkalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
+Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 
-**1. Mantiq testlari** — WAV, kesish va vaqt:
+**1. Mantiq testlari** — WAV, kesish, vaqt, DSP jadvallari:
 
 ```
 bash bin/run-tests.sh
 ```
 
-41 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+226 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
-holatini oldindan aniqlash. Gradle orqali ham ishlaydi
-(`gradle testDebugUnitTest`) — CI shuni bajaradi.
+holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari.
+Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
 accessibility qatlami:
@@ -86,10 +99,27 @@ fayllarni haqiqiy kompilyatordan o'tkazadi. APK yig'ilmaydi — u uchun
 `aapt2` kerak, u esa faqat x86_64 uchun chiqariladi — lekin Kotlin xatolari
 CI'ni kutmasdan, bir necha soniyada topiladi.
 
-Bu ikki qatlam shunchaki nazorat emas. Ular ustida ishlash davomida bir necha
+**3. Mustaqil tekshiruvlar** — qayta ishlangan ovozni **boshqa** dastur
+o'lchaydi. Bu uchinchi qatlam eng muhimi: ilovaning o'zi o'z natijasini
+tekshirsa, bu o'z-o'zini tekshirish bo'lardi — «to'g'ri ko'rinadi» deganidan
+nariga o'tmaydi.
+
+```
+bash bin/verify-mp3.sh      # MP3 kodlovchisi ffmpeg bilan
+bash bin/verify-eq.sh       # ekvalayzer ffmpeg'ning equalizer filtri bilan
+bash bin/verify-speed.sh    # tezlik/ohang ffmpeg'ning atempo zanjiri bilan
+bash bin/verify-noise.sh    # shovqin tozalash ffmpeg'ning afftdn filtri bilan
+```
+
+Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
+mustaqil o'lchaydi (`ffmpeg`, `python3`). Batafsil natijalar va topilgan
+xatolar `docs/PROGRESS.md` da.
+
+Bu qatlamlar shunchaki nazorat emas. Ular ustida ishlash davomida bir necha
 jiddiy xato topildi: biri ilovani umuman yig'ib bo'lmas holga keltirgan,
 biri har bir o'chirishda bir kadrni jimgina yo'qotardi, biri ekran
-o'quvchisi uchun vaqtni noto'g'ri tilda o'qirdi. Batafsil: `docs/PROGRESS.md`.
+o'quvchisi uchun vaqtni noto'g'ri tilda o'qirdi, biri 24-bit faylni butunlay
+buzardi. Batafsil: `docs/PROGRESS.md`.
 
 ## Litsenziya — GPL-3.0
 
@@ -121,11 +151,20 @@ yoki kirill yozuvi avtomatik tanlanadi.
 ```
 app/src/main/java/uz/ovozstudio/app/
   media/      WAV yozish/o'qish, kesish, pleyer, fayl saqlash, fon xizmati
-  ui/common/  Accessibility komponentlari, vaqt kiritish maydonlari
+  media/dsp/  ekvalayzer, tezlik/ohang (WSOLA), shovqin tozalash, FFT
+  media/format/ format aniqlash, kodlovchilar, formatni saqlash
+  ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
   ui/trim/    kesish ekrani
-  util/       vaqt formatlash
+  ui/convert/ format konvertori ekrani
+  ui/eq/      ekvalayzer ekrani
+  ui/speed/   tezlik va ohang ekrani
+  ui/noise/   shovqin tozalash ekrani
+  ui/nav/     ekranlar orasidagi yo'l
+  util/       vaqt va raqam formatlash
+bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari
+tools/        tekshiruv dasturlari (ilovani buyruq qatoridan ishga soladi)
 ```
 
 Muhim texnik qarorlar `docs/PROGRESS.md` da qisqa izohlangan.

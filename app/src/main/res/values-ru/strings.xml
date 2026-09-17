@@ -168,6 +168,26 @@
     <string name="speed_error_edit_failed">Не удалось применить скорость или тон</string>
     <string name="speed_error_nothing_to_apply">Ни скорость, ни тон не изменились</string>
 
+    <string name="noise_title">Удаление шума</string>
+    <string name="noise_hint">Файл не выбран. Чтобы убрать шум, сначала откройте аудиофайл.</string>
+    <string name="noise_sample_title">Образец шума</string>
+    <string name="noise_sample_note">Отметьте участок, где слышен только шум — обычно это начало записи, пока никто не говорит. Приложение измеряет уровень шума на этом участке и вычитает его из всего файла.</string>
+    <string name="noise_sample_from">Начало образца</string>
+    <string name="noise_sample_to">Конец образца</string>
+    <string name="noise_sample_range">Участок образца: %1$s — %2$s</string>
+    <string name="noise_strength_label">Сила очистки</string>
+    <string name="noise_strength_note">От 1.0 до %1$s. Большее значение подавляет шум глубже, но при очень большом значении могут заглохнуть и тихие звуки речи.</string>
+    <string name="noise_floor_label">Остаток, дБ</string>
+    <string name="noise_floor_note">Сколько мощности остаётся в шумовых полосах после вычитания: при -30 почти ничего не остаётся, при -3 остаётся заметно. При очень низком значении остаток слышен как случайные тона.</string>
+    <string name="noise_action">Применить и сохранить</string>
+    <string name="noise_busy">Идёт очистка, подождите…</string>
+    <string name="noise_done">Сохранено: %1$s — шум снижен на %2$s дБ</string>
+    <string name="noise_open_saved">Открыть на экране обрезки</string>
+    <string name="noise_error_file_not_found">Файл не найден</string>
+    <string name="noise_error_edit_failed">Не удалось убрать шум</string>
+    <string name="noise_error_sample_range">Участок образца задан неверно: конец должен быть позже начала</string>
+    <string name="noise_error_sample_quiet">Выбранный участок тихий — выберите место, где слышен только шум</string>
+
     <string name="common_delete">Удалить</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">Хорошо</string>

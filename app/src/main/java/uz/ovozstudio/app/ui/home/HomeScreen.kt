@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -51,6 +52,8 @@ fun HomeScreen(
     onEq: () -> Unit,
     onSpeedFile: (String) -> Unit,
     onSpeed: () -> Unit,
+    onNoiseFile: (String) -> Unit,
+    onNoise: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -103,6 +106,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        A11yOutlinedButton(
+            label = stringResource(R.string.noise_title),
+            onClick = onNoise,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         Text(
             text = stringResource(R.string.home_recent_title),
             style = MaterialTheme.typography.titleLarge,
@@ -123,6 +132,7 @@ fun HomeScreen(
                         onConvert = { onConvertFile(recording.file.absolutePath) },
                         onEq = { onEqFile(recording.file.absolutePath) },
                         onSpeed = { onSpeedFile(recording.file.absolutePath) },
+                        onNoise = { onNoiseFile(recording.file.absolutePath) },
                         onDeleteRequest = { pendingDelete = recording },
                     )
                     HorizontalDivider()
@@ -162,6 +172,7 @@ private fun RecordingRow(
     onConvert: () -> Unit,
     onEq: () -> Unit,
     onSpeed: () -> Unit,
+    onNoise: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     val duration = TimeFormat.format(recording.durationMs)
@@ -210,6 +221,16 @@ private fun RecordingRow(
             Icon(
                 imageVector = Icons.Filled.Create,
                 contentDescription = stringResource(R.string.speed_title) + ": " + title,
+            )
+        }
+
+        // Shovqin tozalash uchun ham alohida ikonka kerak: asosiy to'plamda
+        // «tozalash» ikonkasi yo'q, pastga strelka esa shovqin darajasini
+        // pasaytirishni bildiradi.
+        IconButton(onClick = onNoise) {
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = stringResource(R.string.noise_title) + ": " + title,
             )
         }
 

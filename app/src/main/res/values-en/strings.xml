@@ -168,6 +168,26 @@
     <string name="speed_error_edit_failed">Could not apply the speed or pitch</string>
     <string name="speed_error_nothing_to_apply">Neither speed nor pitch has changed</string>
 
+    <string name="noise_title">Noise reduction</string>
+    <string name="noise_hint">No file selected. To remove noise, open an audio file first.</string>
+    <string name="noise_sample_title">Noise sample</string>
+    <string name="noise_sample_note">Mark a part where only noise is heard — usually the start of the recording, before anyone speaks. The app measures the noise level in that part and subtracts it from the whole file.</string>
+    <string name="noise_sample_from">Sample start</string>
+    <string name="noise_sample_to">Sample end</string>
+    <string name="noise_sample_range">Sample range: %1$s — %2$s</string>
+    <string name="noise_strength_label">Reduction strength</string>
+    <string name="noise_strength_note">From 1.0 to %1$s. A higher value suppresses noise more deeply, but a very high value can also muffle the quiet parts of speech.</string>
+    <string name="noise_floor_label">Residual, dB</string>
+    <string name="noise_floor_note">How much power is left in the noise bands after subtraction: at -30 almost nothing remains, at -3 a noticeable amount does. At a very low value the remainder is heard as random tones.</string>
+    <string name="noise_action">Apply and save</string>
+    <string name="noise_busy">Reducing noise, please wait…</string>
+    <string name="noise_done">Saved: %1$s — noise reduced by %2$s dB</string>
+    <string name="noise_open_saved">Open in the trim screen</string>
+    <string name="noise_error_file_not_found">File not found</string>
+    <string name="noise_error_edit_failed">Could not reduce the noise</string>
+    <string name="noise_error_sample_range">The sample range is invalid: the end must come after the start</string>
+    <string name="noise_error_sample_quiet">The selected sample is silent — choose a part where only noise is heard</string>
+
     <string name="common_delete">Delete</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>

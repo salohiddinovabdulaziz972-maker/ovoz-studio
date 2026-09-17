@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 171 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 190 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 210 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 226 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   58 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   62 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -75,6 +75,14 @@ Oxirgi yangilanish: 2026-09-17
     qatori), `util/DecimalText.kt` (kiritish qoidalari). Ekvalayzer, tezlik va
     konvertor ekranlari shularni ishlatadi: bir xil sozlama uch xil ko'rinishda
     bo'lmasligi uchun mantiq bir joyda turadi.
+15. **Shovqin tozalash** — `media/dsp/NoiseReducer.kt` (FFT ustida spektral
+    ayirish) va `ui/noise/` ekrani. Foydalanuvchi **shovqin namunasini**
+    belgilaydi — odatda yozuvning boshi, hali hech kim gapirmagan qismi;
+    ilova o'sha oraliqning chastota profili bo'yicha butun fayldan shovqinni
+    ayiradi. Ekranda namuna chegaralari vaqt maydonlarida, kuch va qoldiq
+    esa **qo'lda kiritiladi** (ilova bo'ylab yagona qoida).
+    Mustaqil tekshiruv: `bin/verify-noise.sh` (yettinchi tekshiruv, pastda).
+    **Muhim:** bu statistik usul — neyron tarmoq emas (pastda ochiq yozilgan).
 
 ## Muhim texnik qarorlar
 
@@ -422,6 +430,74 @@ skript ichida yozib qo'yildi; chastota chegarasi 1 % ligicha qoldi
 shitirlash bor-yo'qligi — bu quloq bilan baholanadigan narsa, raqam emas.
 Uni faqat egasi qurilmada eshitib aytadi.
 
+### Yettinchi tekshiruv — shovqin tozalash (2026-09-17)
+
+Bu yerda ham namuna-ba-namuna qiyoslash mumkin emas: spektral ayirish har bir
+chastota polosasining kuchini alohida o'zgartiradi, ya'ni chiqish to'lqin shakli
+bilan emas, **o'lchanadigan xossalari** bilan baholanadi. Uchta bir-biridan
+mustaqil o'lchov olinadi.
+
+**A. Nazariy modelga qiyoslash.** Algoritm shunday ta'riflanganki, kutilgan
+natijani qog'ozda hisoblash mumkin: shovqin polosasida `u = P/N` eksponensial
+taqsimlangan, daromad esa Berouti qoidasi bo'yicha
+`g = min(1, √(max(u − α, β) / u))`. Bundan kutilgan quvvat pasayishi
+`E[g²] = ∫₀^∞ min(1, max(u−α, β)/u) · e^(−u) du` — integral `awk` da Riman
+yig'indisi bilan hisoblanadi (qadam 0.0005) va Monte-Karlo hisobi bilan
+solishtirilib tekshirilgan: ikkisi ham **0.14211** berdi.
+
+| holat | kutilgan | o'lchangan |
+|---|---|---|
+| standart (α=2.5, β=−15 dB) | 8.47 dB | 10.65 dB |
+| kuchli (α=4.0, β=−30 dB) | 19.78 dB | 22.50 dB |
+| yumshoq (α=1.5, β=−10 dB) | 4.67 dB | 5.67 dB |
+
+Farq 1–3 dB va u **modelning ideallashtirilganidan** kelib chiqadi, ilova
+xatosidan emas: model har bir kadr daromadini mustaqil deb hisoblaydi, aslida
+esa to'rtta qo'shni kadr Hanning² og'irliklari bilan qo'shiladi
+(a = [0, 1/6, 2/3, 1/6], Σa² = 0.5). Shuning uchun chegara 4 dB qilib qo'yildi
+va sabab skript ichida yozib qo'yildi. Model **global** darajani beradi, aniq
+nuqtaviy bashorat emas — bu tekshirib ko'rildi: bashorat qilingan o'rtacha
+daromad 0.3086, chiqqan fayldan o'lchangan periodogramma esa 0.4888.
+
+**B. Boshqa kod bazasi bilan qiyoslash** — ffmpeg'ning `afftdn` filtri
+(mustaqil amalga oshirish), sozlama `afftdn=nr=12:nf=-32:rf=-80:nt=w`.
+`nf` (shovqin poli) ataylab haqiqiy polga moslandi: standart −50 dBFS berilsa
+filtr shovqinni signal deb hisoblab **hech narsa qilmaydi** (0.05 dB), ya'ni
+qiyoslash bo'sh bo'lardi.
+
+| | shovqin pasayishi | 1 kHz ohang o'zgarishi |
+|---|---|---|
+| ilova | 10.65 dB | 0.0019 dB |
+| ffmpeg `afftdn` | 8.71 dB | 0.0000 dB |
+
+Farq 1.95 dB: ikkala tomon ham shovqinni bostiradi va ohangni saqlab qoladi.
+Chegara 8 dB — usullar bir xil emas, faqat natija bir darajadaligi
+tekshiriladi.
+
+**C. Silliqlash.** Kadrlararo silliqlash (0 → 0.5) natija miqdorini
+o'zgartirmasligi kerak: 10.79 dB va 10.65 dB, farq **0.14 dB**. Silliqlash
+faqat «musiqiy shovqin»ni kamaytiradi va modelda hisobga olinmaydi — shuning
+uchun A qismida silliqlash 0 qilib olinadi.
+
+**O'lchovni kim bajaradi.** Ilovaning o'zi `noiseDropDb` ni qaytaradi, lekin
+unga ishonilmaydi: `bin/verify-noise-measure.py` — ilova kodidan mustaqil,
+RIFF sarlavhasini o'zi o'qib RMS va ohang amplitudasini o'lchaydi. Uch holatda
+ham ilova aytgan raqam mustaqil o'lchovdan **0.1 dB** ichida chiqdi: ya'ni
+«tozaladim» deb yolg'on aytish darhol ko'rinadi.
+
+**Halol izoh: bu neyron tarmoq emas.** Tavsifda «AI shovqin tozalash»
+deyilgan. Amalda bu — **statistik spektral ayirish**: foydalanuvchi ko'rsatgan
+shovqin namunasidan polosa profili olinadi va Berouti qoidasi bilan ayiriladi.
+Usul klassik, tushunarli va telefonda tez ishlaydi, lekin u «o'rgangan» model
+emas: nutqni shovqindan ajratib olmaydi, faqat shovqin poli ma'lum bo'lgan
+holatda yaxshi ishlaydi (masalan, bir xil fon shovqini ostidagi yozuv).
+Neyron denoiser (RNNoise/Demucs sinfidagi model, ONNX/TFLite orqali qurilmada)
+alohida band sifatida yo'l xaritasiga qo'shildi — u o'z tekshiruvi bilan
+keladi.
+
+**Nima tekshirilmaydi.** Tozalashdan keyin nutq qanchalik tabiiy eshitilishi —
+bu quloq bilan baholanadigan narsa, raqam emas.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -443,6 +519,8 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   kesish himoyasi.
 - Tezlik va ohang: 0.5x–2x, ohang ±12 yarim ton, ikkalasi birga; natijadagi
   uzunlik darhol ko'rsatiladi.
+- Shovqin tozalash: shovqin namunasi bo'yicha spektral ayirish, kuch va qoldiq
+  qo'lda kiritiladi, natija darhol kutubxonaga tushadi.
 
 **Keyingi navbat (shu tartibda)**
 
@@ -467,7 +545,14 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    ±12 yarim ton, ikkalasi birga ham. Mustaqil tekshiruv ffmpeg bilan o'tdi
    (oltinchi tekshiruv, yuqorida). **Qolgani (faqat qurilmada tekshiriladi):**
    ekranning o'zi va tovush silliqligi — pastda.
-4. **Shovqin tozalash** — spektral ayirish; avval shovqin namunasi olinadi.
+4. ~~**Shovqin tozalash**~~ — **tayyor**. Spektral ayirish (FFT + Berouti
+   qoidasi), shovqin namunasi foydalanuvchi tomonidan belgilanadi, kuch va
+   qoldiq chegarasi qo'lda kiritiladi. Mustaqil tekshiruv ffmpeg'ning
+   `afftdn` filtri bilan o'tdi (yettinchi tekshiruv, yuqorida).
+   **Qolgani (faqat qurilmada tekshiriladi):** ekranning o'zi — TalkBack bilan
+   namuna oraliqlarini kiritib, natijani eshitish.
+   **Aytilmagan, lekin muhim:** bu **statistik usul, neyron tarmoq emas**.
+   Tavsifdagi «AI shovqin tozalash» shu bilan chegaralanadi — quyida 11-band.
 5. **Ovoz dvigateli abstraksiyasi** (`VoiceEngine` + `DeviceTtsEngine`) —
    qurilma TTS'i, keyin bulut AI ovozini shu interfeys ortiga ulash.
 6. **Hujjat → audio-kitob** — PDF/DOCX/TXT/EPUB, boblarga bo'lish, har bob
@@ -479,6 +564,14 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 9. **Sozlamalar ekrani** — til tanlash, soddalashtirilgan rejim, ilova haqida.
 10. **Vokal/cholg'u ajratish** — qurilmada ishlaydigan model (ONNX/TFLite);
     eng og'ir band, shuning uchun oxirida.
+11. **Neyron shovqin tozalash** — 4-band statistik usul bilan bajarildi, ya'ni
+    shovqin namunasi kerak va nutq shovqindan *ajratilmaydi*, faqat pol
+    ayiriladi. Neyron model (RNNoise yoki shunga o'xshash, ONNX/TFLite orqali
+    qurilmada ishlaydigan) namunani talab qilmaydi va nutqni shovqindan
+    ajratadi. 10-band bilan bir xil infratuzilmani (model yuklash, NPU/CPU
+    tanlash) ishlatadi — shuning uchun ikkalasi birga qilinadi.
+    **Halol cheklov:** model fayli ilovaga qo'shiladi va u bir necha MB bo'ladi;
+    litsenziyasi GPL-3.0 bilan mos bo'lishi shart.
 
 **Faqat egasi bajaradi**
 
@@ -493,6 +586,11 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   birikkan joyda shitirlash yo'qmi), ohang surilganda tabiiy eshitiladimi,
   0.5x da uzunlik to'g'ri chiqadimi. Bu — quloq bilan baholanadigan narsa,
   skript uni o'lchay olmaydi.
+- Shovqin tozalash ekranini sinash: namuna oraliqlari vaqt maydonlarida
+  kiritiladimi, kuch/qoldiq maydonlari o'qiladimi, tozalangandan keyin nutq
+  tabiiy eshitiladimi va shovqin haqiqatan kamayganmi. Skript faqat
+  shovqinning **kamayganini** o'lchaydi; nutqning **yaxshi eshitilishini**
+  faqat quloq aytadi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 

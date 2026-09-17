@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import uz.ovozstudio.app.ui.convert.ConvertScreen
 import uz.ovozstudio.app.ui.eq.EqScreen
 import uz.ovozstudio.app.ui.home.HomeScreen
+import uz.ovozstudio.app.ui.noise.NoiseScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
 import uz.ovozstudio.app.ui.speed.SpeedScreen
 import uz.ovozstudio.app.ui.trim.TrimScreen
@@ -37,6 +38,12 @@ object Routes {
      */
     const val SPEED = "speed?path={path}"
 
+    /**
+     * Shovqin tozalash ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun u
+     * beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
+     */
+    const val NOISE = "noise?path={path}"
+
     fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
 
     fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
@@ -44,6 +51,8 @@ object Routes {
     fun eq(path: String): String = "eq?path=${Uri.encode(path)}"
 
     fun speed(path: String): String = "speed?path=${Uri.encode(path)}"
+
+    fun noise(path: String): String = "noise?path=${Uri.encode(path)}"
 }
 
 @Composable
@@ -62,6 +71,8 @@ fun AppNav() {
                 onEq = { navController.navigate(Routes.eq("")) },
                 onSpeedFile = { path -> navController.navigate(Routes.speed(path)) },
                 onSpeed = { navController.navigate(Routes.speed("")) },
+                onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
+                onNoise = { navController.navigate(Routes.noise("")) },
             )
         }
 
@@ -120,6 +131,18 @@ fun AppNav() {
         ) { entry ->
             val path = entry.arguments?.getString("path").orEmpty()
             SpeedScreen(
+                initialPath = Uri.decode(path),
+                onBack = { navController.popBackStack() },
+                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
+            )
+        }
+
+        composable(
+            route = Routes.NOISE,
+            arguments = listOf(navArgument("path") { type = NavType.StringType }),
+        ) { entry ->
+            val path = entry.arguments?.getString("path").orEmpty()
+            NoiseScreen(
                 initialPath = Uri.decode(path),
                 onBack = { navController.popBackStack() },
                 onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
