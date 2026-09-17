@@ -106,6 +106,20 @@ class RecordingStore(context: Context) {
             }
     }
 
+    /**
+     * Ilova papkasidagi MP3 fayllar — eng yangisi birinchi.
+     *
+     * Nega alohida ro'yxat: [list] faqat WAV qaytaradi (davomiylik WAV
+     * sarlavhasidan o'qiladi, MP3 da u boshqa tuzilma). Konvertor va
+     * audio-kitob esa MP3 yozadi — teg ekrani ularni ko'rsatmasa,
+     * foydalanuvchi o'zi yasagan faylni topa olmasdi: tizim tanlagichi
+     * ilovaning ichki papkasini ko'rmaydi.
+     */
+    fun listMp3(): List<File> =
+        directory.listFiles { file -> file.isFile && file.extension.equals("mp3", true) }
+            ?.sortedByDescending { it.lastModified() }
+            .orEmpty()
+
     fun delete(file: File): Boolean = runCatching { file.delete() }.getOrDefault(false)
 
     /** Tahrirlashdan keyin eski oraliq fayllarni tozalaydi (fayl saqlangandan keyin chaqiriladi). */

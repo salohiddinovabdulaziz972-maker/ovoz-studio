@@ -66,6 +66,17 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   15/30/60 daqiqaga qo'yiladi, «bob oxirigacha» rejimida esa gap
   o'rtasida uzilmaydi: vaqt tugasa ham joriy bob oxirigacha o'qiladi.
   Vaqt faqat o'qish paytida sanaydi — tanaffusda taymer ham to'xtaydi.
+- **ID3 teglar**: MP3 faylning nomi, ijrochisi, albomi, yili, janri, tartib
+  raqami va muqova rasmi tahrirlanadi. Maydonlar **fayldagi mavjud teg bilan**
+  to'ldiriladi — aks holda faqat muqova qo'shmoqchi bo'lgan foydalanuvchi
+  nomini jimgina yo'qotardi. Manba fayl o'zgarmaydi, teg yangi faylga
+  yoziladi. Halol cheklov: ID3 faqat MP3 da bor — WAV/M4A/FLAC uchun bu
+  ekran formatni aytadi va konvertorga havola beradi (M4A va FLAC teglari
+  boshqa standartda, ular alohida qo'shiladi). ID3v2.2 teglari o'qilmaydi:
+  eski fayl ochilsa maydonlar bo'sh chiqadi.
+- **Ulashish**: tayyor faylni tizim oynasi orqali boshqa ilovaga yuborish
+  (Telegram, pochta, bulut). Fayl `content://` havola bilan, faqat o'qish
+  uchun va bir marta beriladi.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
@@ -74,9 +85,10 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-Nutqni matnga aylantirish (STT), ID3 teglar va ulashish, ko'p yo'lli
+Nutqni matnga aylantirish (STT), ko'p yo'lli
 aralashtirish, sozlamalar ekrani, vokal/cholg'u ajratish va neyron shovqin
-tozalash. Kitob pleyeri faqat shu seansda yasalgan kitobni tinglaydi:
+tozalash. ID3 teg faqat MP3 faylga yoziladi (M4A/FLAC teglari keyingi
+qadamda). Kitob pleyeri faqat shu seansda yasalgan kitobni tinglaydi:
 ilova qayta ochilgach, kitobni yana yasash kerak (fayllar joyida qoladi).
 Ovoz sintezi (TTS) bor, lekin hozircha faqat
 qurilma ovozi bilan — o'zbekcha neyron AI ovozi shu interfeys ortiga keyin
@@ -111,14 +123,16 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-423 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+476 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
 holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
 matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
 o'qish (PDF/DOCX/EPUB/TXT), boblarga bo'lish va kitob yig'ish (soxta
 sintezator bilan: tartib, pauza, to'xtatish, xato bob raqami), kitob
 pleyerining mantig'i (boblar bo'ylab o'tish chegaralari, belgi bo'ylab
-sakrash, qoldirilgan joyni saqlash, uxlash taymeri).
+sakrash, qoldirilgan joyni saqlash, uxlash taymeri), ID3 tegining to'g'ri
+yozilishi va **o'qilishi** (kirill, UTF-8, UTF-16, v2.4 ramka o'lchami,
+buzilgan teg ilovani yiqitmasligi).
 Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -144,6 +158,8 @@ bash bin/verify-mp3.sh      # MP3 kodlovchisi ffmpeg bilan
 bash bin/verify-eq.sh       # ekvalayzer ffmpeg'ning equalizer filtri bilan
 bash bin/verify-speed.sh    # tezlik/ohang ffmpeg'ning atempo zanjiri bilan
 bash bin/verify-noise.sh    # shovqin tozalash ffmpeg'ning afftdn filtri bilan
+bash bin/verify-tag.sh      # ID3 teglarini ffprobe o'qiydi, tegni ilova
+                            # o'z o'quvchisi bilan qayta o'qib solishtiradi
 ```
 
 Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
@@ -192,6 +208,7 @@ app/src/main/java/uz/ovozstudio/app/
   media/doc/  hujjat o'qish: TXT, DOCX, EPUB, PDF (o'zimizning o'quvchi)
   media/book/ boblarga bo'lish, kitob yig'ish, belgilar, pleyer tartibi,
               qoldirilgan joy, uxlash taymeri
+  media/tag/  ID3 tegini yozish va o'qish, foydalanuvchi kiritgan qiymatlar
   ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
@@ -202,6 +219,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/noise/   shovqin tozalash ekrani
   ui/voice/   ovoz sinovi ekrani (qurilmada qanday ovozlar bor)
   ui/book/    hujjatdan audio-kitob ekrani va pleyer
+  ui/tag/     ID3 teg muharriri va ulashish ekrani
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash
 bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari

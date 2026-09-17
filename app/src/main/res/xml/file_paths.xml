@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ilova qaysi papkalarni boshqa ilovalarga bera oladi.
+
+  Bu ro'yxat ataylab tor: `FileProvider` faqat shu yerdagi yo'llarni
+  havola qila oladi, ya'ni ilovaning butun xotirasi emas, faqat o'z
+  ish papkasi ulashiladi.
+
+    * `OvozStudio/` — yozuvlar, saqlangan tahrirlar va yuklangan manba
+      fayllar (ular `getExternalFilesDir(null)` ichida turadi);
+    * `.` (ichki papka) — tashqi xotira mavjud bo'lmagan qurilmalarda
+      fayllar shu yerga tushadi.
+
+  Yo'l noto'g'ri bo'lsa ulashish `IllegalArgumentException` bilan
+  yiqiladi — shuning uchun `RecordingStore` dagi papka nomlari bilan
+  bir xil bo'lishi shart.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path name="ovozstudio" path="OvozStudio/" />
+    <files-path name="ichki" path="." />
+</paths>

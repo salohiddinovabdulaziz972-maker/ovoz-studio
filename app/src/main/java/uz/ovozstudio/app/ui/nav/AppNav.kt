@@ -14,6 +14,7 @@ import uz.ovozstudio.app.ui.home.HomeScreen
 import uz.ovozstudio.app.ui.noise.NoiseScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
 import uz.ovozstudio.app.ui.speed.SpeedScreen
+import uz.ovozstudio.app.ui.tag.TagScreen
 import uz.ovozstudio.app.ui.trim.TrimScreen
 import uz.ovozstudio.app.ui.voice.VoiceScreen
 
@@ -53,6 +54,12 @@ object Routes {
     const val VOICE = "voice"
 
     /**
+     * Teglar va ulashish ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun
+     * u beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
+     */
+    const val TAG = "tag?path={path}"
+
+    /**
      * Hujjatdan audio-kitob ekrani. Fayl talab qilmaydi: hujjat ekranning
      * o'zida tanlanadi, chunki fayl tizimidan audio emas, hujjat olinadi.
      */
@@ -67,6 +74,8 @@ object Routes {
     fun speed(path: String): String = "speed?path=${Uri.encode(path)}"
 
     fun noise(path: String): String = "noise?path=${Uri.encode(path)}"
+
+    fun tag(path: String): String = "tag?path=${Uri.encode(path)}"
 }
 
 @Composable
@@ -87,6 +96,7 @@ fun AppNav() {
                 onSpeed = { navController.navigate(Routes.speed("")) },
                 onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
                 onNoise = { navController.navigate(Routes.noise("")) },
+                onTag = { navController.navigate(Routes.tag("")) },
                 onVoice = { navController.navigate(Routes.VOICE) },
                 onBook = { navController.navigate(Routes.BOOK) },
             )
@@ -162,6 +172,20 @@ fun AppNav() {
                 initialPath = Uri.decode(path),
                 onBack = { navController.popBackStack() },
                 onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
+            )
+        }
+
+        composable(
+            route = Routes.TAG,
+            arguments = listOf(navArgument("path") { type = NavType.StringType }),
+        ) { entry ->
+            val path = entry.arguments?.getString("path").orEmpty()
+            TagScreen(
+                initialPath = Uri.decode(path),
+                onBack = { navController.popBackStack() },
+                // Teg yozib bo'lmaydigan format — konvertor shu ilovaning
+                // o'zida: foydalanuvchi boshqa dastur qidirmasin.
+                onConvert = { navController.navigate(Routes.convert("")) },
             )
         }
 

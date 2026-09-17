@@ -56,6 +56,7 @@ fun HomeScreen(
     onNoise: () -> Unit,
     onVoice: () -> Unit,
     onBook: () -> Unit,
+    onTag: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -127,6 +128,14 @@ fun HomeScreen(
         A11yOutlinedButton(
             label = stringResource(R.string.book_title),
             onClick = onBook,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Teglar ekrani: ilova ichidagi MP3 fayllar o'sha yerda ro'yxat
+        // bo'lib chiqadi — tizim tanlagichi bu papkani ko'rmaydi.
+        A11yOutlinedButton(
+            label = stringResource(R.string.tag_title),
+            onClick = onTag,
             modifier = Modifier.fillMaxWidth(),
         )
 

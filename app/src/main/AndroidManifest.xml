@@ -57,6 +57,22 @@
             android:name=".media.RecordingService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
+
+        <!-- Fayl ulashish uchun. Android 7+ da `file://` yo'l boshqa ilovaga
+             berilmaydi (FileUriExposedException), faqat `content://` havola
+             mumkin — uni shu provayder yasaydi. `exported=false`: boshqa
+             ilovalar provayderni o'zi chaqira olmaydi, havola esa faqat
+             ulashish paytida, bir marta beriladi. Qaysi papkalar
+             ko'rinishini `res/xml/file_paths.xml` belgilaydi. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 423 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 476 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   68 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   97 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -148,6 +148,39 @@ Oxirgi yangilanish: 2026-09-17
     Ilova qayta ochilsa, fayllar joyida turadi, lekin ro'yxatni tiklash
     uchun kitobni qayta yasash kerak. Bu — keyingi ish (papkadan o'qish).
 
+19. **ID3 teglar va ulashish** — `media/tag/` (`Id3v2Reader`, `Mp3Tagger`,
+    `TagDraft`) + `ui/tag/` + `util/Sharing.kt`. MP3 faylning nomi, ijrochisi,
+    albomi, yili, janri, tartib raqami («3/12» ko'rinishida ham) va muqova
+    rasmi tahrirlanadi. Manba fayl **o'zgarmaydi**: teg yangi faylga yoziladi
+    (kesish va konvertatsiyadagi bilan bir xil naqsh — telefonda «bekor qilish»
+    yo'q, asl nusxa joyida qolishi kerak). Fayl boshqa ilovaga
+    `FileProvider` orqali `content://` havola bilan, faqat o'qish uchun va bir
+    marta beriladi.
+    **Nega o'quvchi ham yozildi:** yozuvchi tegni **butunlay almashtiradi**
+    (bo'sh maydon — yo'q maydon). Ekran fayldagi mavjud tegni o'qimasa,
+    foydalanuvchi faqat muqova qo'shmoqchi bo'lib, nom va ijrochini jimgina
+    o'chirib qo'yardi. Shuning uchun `Id3v2Reader` yozildi va u alohida
+    tekshiriladi.
+    **Mustaqil tekshiruv** (`bin/verify-tag.sh`): ilova yozgan tegni **ffprobe**
+    o'qiydi (tashqi o'quvchi), so'ng o'sha fayl ilovaning o'z o'quvchisi bilan
+    qayta o'qiladi va maydonlar solishtiriladi. To'rt holat: ffmpeg yozgan
+    eski teg (o'qish uni ko'radi, boshqa maydonlar bo'sh qoladi), to'liq teg
+    (oltita maydon + muqova bayt-bayt), kirill teg, va audio qismi
+    o'zgarmaganini ffprobe tasdiqlashi.
+    27 ta JVM testi: teg matni ramkalari, UTF-16 (BOM ikki tartibda), UTF-8,
+    ISO-8859-1, v2.4 ning sinxsaflangan ramka o'lchami va ma'lumot uzunligi
+    belgisi, to'ldirish (padding), buzilgan teg (ilova yiqilmasligi shart),
+    siqilgan ramka, muqovaning o'z baytlari, `read(File)` da muqovadan keyingi
+    audio teg ichiga sizmasligi.
+    **Halol cheklovlar:** ID3 faqat MP3 da (WAV/M4A/FLAC boshqa standart —
+    ekran buni aytadi va konvertorga havola beradi); ID3v2.2 teglari
+    o'qilmaydi (uch belgili ramka nomlari, boshqa tuzilma) — bunday fayl
+    ochilsa maydonlar bo'sh chiqadi.
+    **Ilova papkasidagi fayllar ro'yxati** ham shu ekranga qo'shildi
+    (`RecordingStore.listMp3()`): tizim tanlagichi `Android/data/…` ni
+    ko'rmaydi, ya'ni konvertor va audio-kitob yasagan MP3 ni foydalanuvchi
+    boshqa yo'l bilan topa olmasdi.
+
 ## Muhim texnik qarorlar
 
 - **Ovoz har doim float ko'rinishida o'qiladi** (`ENCODING_PCM_FLOAT`), faylga
@@ -246,6 +279,26 @@ Oxirgi yangilanish: 2026-09-17
 - **Import qilingan hujjat ilova papkasiga nusxalanadi.** Tizim tanlagichi
   bergan `content://` havolasi faqat shu seansda yashaydi; kitob yasash esa
   undan keyin ham davom etadi. Nusxa `manba/` papkasiga tushadi.
+- **Teg yozishdan oldin mavjud teg o'qiladi.** ID3 yozuvchisi tegni
+  butunlay almashtiradi: yozilmagan maydon — tegda umuman yo'q maydon.
+  Ya'ni o'quvchisiz ekran ma'lumot yo'qotardi (faqat muqova qo'shmoqchi
+  bo'lgan foydalanuvchi nom va ijrochini yo'qotardi). Shuning uchun
+  `Id3v2Reader` yozildi; u ham ffprobe bilan mustaqil tekshiriladi.
+- **Teg faylning tarkibi bo'yicha tekshiriladi, kengaytmasi bo'yicha
+  emas.** `supportsId3Tags()` `AudioFormatDetector` aniqlagan konteynerni
+  oladi: `.mp3` deb nomlangan WAV faylga teg yozish jimgina buzuq fayl
+  yasardi.
+- **Raqamli maydon uchun raqamli klaviatura emas.** Tartib raqami maydonida
+  «3/12» yozilishi mumkin — raqamli klaviaturaning «/» tugmasi yo'q, ya'ni
+  jami sonni kiritib bo'lmasdi. Yil maydonidagina `KeyboardType.Number`.
+- **Ulashish `FileProvider` orqali.** Android 7 dan boshlab `file://` yo'l
+  boshqa ilovaga berilmaydi (`FileUriExposedException`), faqat `content://`.
+  Ruxsat `FLAG_GRANT_READ_URI_PERMISSION` bilan, bir marta va faqat o'qish
+  uchun beriladi; provayder `exported=false`, ko'rinadigan papkalar esa
+  `res/xml/file_paths.xml` da sanab o'tilgan.
+- **Muqova oqimdan chegara bilan o'qiladi** (`readCapped`): `readBytes()`
+  butun rasmni xotiraga ko'tarardi va 40 megapikselli surat ilovani
+  yiqitardi. Chegaradan oshsa — o'qish to'xtaydi va tushunarli xabar chiqadi.
 
 ## Formatni saqlash — egasining talabi
 
@@ -673,8 +726,13 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    **Hozircha yo'q:** ilova qayta ochilgach, pleyer ro'yxati qaytadan
    tiklanmaydi — kitobni yana yasash kerak (fayllar joyida qoladi).
    **Qolgani (faqat qurilmada tekshiriladi):** pastda.
-7. **ID3 teglar va ulashish** — nom, ijrochi, albom, muqova; faylni boshqa
-   ilovaga yuborish.
+7. ~~**ID3 teglar va ulashish**~~ — **tayyor** (19-band). Nom, ijrochi,
+   albom, yil, janr, tartib raqami va muqova; faylni tizim oynasi orqali
+   boshqa ilovaga yuborish. Teg yangi faylga yoziladi, mavjud teg avval
+   o'qiladi (aks holda tahrirlanmagan maydonlar jimgina o'chib ketardi).
+   **Hozircha yo'q:** ID3 faqat MP3 da — M4A/FLAC teglari keyingi ish;
+   ID3v2.2 o'qilmaydi.
+   **Qolgani (faqat qurilmada tekshiriladi):** pastda.
 8. **Ko'p yo'lli aralashtirish** — har bir yo'lga ovoz balandligi, panorama,
    ducking.
 9. **Sozlamalar ekrani** — til tanlash, soddalashtirilgan rejim, ilova haqida.
@@ -724,15 +782,27 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   o'rtasida uzilmaydimi. Bu — quloq va qurilma ishi; skript faqat **fayl
   mazmunini** (MP3 kadrlari, CUE yozuvlari, bob nomlari) va pleyer
   mantig'ini tekshira oladi, ovozning o'zini emas.
+- Teg va ulashish ekranini sinash: fayl tanlab, maydonlar fayldagi teg bilan
+  to'ldirilganini ko'rish (masalan, telefonda o'zbekcha tegli MP3 bo'lsa),
+  maydonlar klaviatura bilan kiritiladimi, muqova rasmi tanlanib faylga
+  yozilyaptimi va pleyer uni ko'rsatyaptimi, saqlangandan keyin **manba fayl
+  joyida qolganini** fayl menejerida tekshirish, «Ulashish» tugmasi tizim
+  oynasini ochib, faylni Telegram'ga yuboryaptimi. Skript teglarni
+  ffprobe bilan tekshiradi, lekin ulashish oynasini faqat qurilma ko'rsatadi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 
 - Import qilingan manba nusxalari `manba/` papkasida saqlanadi va o'chirish
   tugmasi ularga tegmaydi (u faqat asosiy ro'yxatdagi fayllarni o'chiradi).
-  Fayllar ko'payib ketsa, ular uchun tozalash kerak bo'ladi.
-- Ilova ichidagi faylni boshqa ilovaga yuborish (ulashish) hali yo'q —
-  konvertor natijani faqat ilovaning o'z papkasiga yozadi. Bu 7-band
-  (ID3 va ulashish) bilan birga keladi.
+  Fayllar ko'payib ketsa, ular uchun tozalash kerak bo'ladi. Teg ekranida
+  tanlangan fayl ham shu yerga nusxalanadi (teg butun fayl baytlari bo'yicha
+  yoziladi, oqim bilan bu mumkin emas) — ya'ni u ham tozalanmaguncha qoladi.
+- Teg ekrani faylni **nusxalab** oladi: katta MP3 (yuzlab MB) uchun bu ikki
+  barobar joy egallaydi. Xotira kartasi kam qolgan qurilmada buni yodda
+  tutish kerak.
+- ID3v2.2 tegli fayl ochilsa maydonlar bo'sh ko'rinadi, saqlash esa tegni
+  almashtiradi — ya'ni o'sha fayldagi eski teg yo'qoladi. O'quvchi v2.2 ni
+  qo'llashi keyingi ish.
 
 ## Ochiq savollar
 
