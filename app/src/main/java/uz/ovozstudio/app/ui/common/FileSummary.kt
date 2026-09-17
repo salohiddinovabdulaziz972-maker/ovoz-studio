@@ -19,11 +19,22 @@ import uz.ovozstudio.app.util.TimeFormat
  * sozlamadan kelib chiqadi.
  */
 @Composable
-fun fileSummary(info: WavInfo, durationMs: Long): String {
+fun fileSummary(info: WavInfo, durationMs: Long): String =
+    fileSummary(info.channels, info.sampleRate, durationMs)
+
+/**
+ * O'sha qator, lekin [WavInfo] bo'lmasa — xom qiymatlar bo'yicha.
+ *
+ * Kerak bo'ladi, chunki ba'zi ekranlarda (masalan, aralashtirish) yo'lning
+ * ma'lumoti fayldan emas, loyihadan keladi: manba fayl o'chirilgan bo'lsa
+ * ham yo'l sozlamalari saqlanadi.
+ */
+@Composable
+fun fileSummary(channels: Int, sampleRate: Int, durationMs: Long): String {
     val locale = LocalConfiguration.current.locales[0]
-    val channels = stringResource(
-        if (info.channels == 1) R.string.convert_channels_mono else R.string.convert_channels_stereo
+    val channelsText = stringResource(
+        if (channels == 1) R.string.convert_channels_mono else R.string.convert_channels_stereo
     )
-    val rate = LocalizedNumber.format(info.sampleRate / 1000.0, locale, fractionDigits = 1)
-    return "$channels, $rate kHz, ${TimeFormat.format(durationMs)}"
+    val rate = LocalizedNumber.format(sampleRate / 1000.0, locale, fractionDigits = 1)
+    return "$channelsText, $rate kHz, ${TimeFormat.format(durationMs)}"
 }

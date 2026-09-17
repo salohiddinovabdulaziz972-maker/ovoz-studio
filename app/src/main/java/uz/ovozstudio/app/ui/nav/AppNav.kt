@@ -11,6 +11,7 @@ import uz.ovozstudio.app.ui.book.BookScreen
 import uz.ovozstudio.app.ui.convert.ConvertScreen
 import uz.ovozstudio.app.ui.eq.EqScreen
 import uz.ovozstudio.app.ui.home.HomeScreen
+import uz.ovozstudio.app.ui.mix.MixScreen
 import uz.ovozstudio.app.ui.noise.NoiseScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
 import uz.ovozstudio.app.ui.speed.SpeedScreen
@@ -65,6 +66,13 @@ object Routes {
      */
     const val BOOK = "book"
 
+    /**
+     * Ko'p yo'lli aralashtirish ekrani. Yo'l talab qilmaydi: yo'llar
+     * ekranning o'zida, ilova papkasidagi yozuvlardan yig'iladi — bir
+     * necha fayl kerak bo'ladi, bittasi emas.
+     */
+    const val MIX = "mix"
+
     fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
 
     fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
@@ -97,6 +105,7 @@ fun AppNav() {
                 onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
                 onNoise = { navController.navigate(Routes.noise("")) },
                 onTag = { navController.navigate(Routes.tag("")) },
+                onMix = { navController.navigate(Routes.MIX) },
                 onVoice = { navController.navigate(Routes.VOICE) },
                 onBook = { navController.navigate(Routes.BOOK) },
             )
@@ -186,6 +195,16 @@ fun AppNav() {
                 // Teg yozib bo'lmaydigan format — konvertor shu ilovaning
                 // o'zida: foydalanuvchi boshqa dastur qidirmasin.
                 onConvert = { navController.navigate(Routes.convert("")) },
+            )
+        }
+
+        composable(Routes.MIX) {
+            MixScreen(
+                onBack = { navController.popBackStack() },
+                // Manbalar WAV bo'lishi kerak — boshqa format shu ilovaning
+                // o'zida o'tkaziladi.
+                onConvert = { navController.navigate(Routes.convert("")) },
+                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
             )
         }
 

@@ -74,6 +74,17 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   ekran formatni aytadi va konvertorga havola beradi (M4A va FLAC teglari
   boshqa standartda, ular alohida qo'shiladi). ID3v2.2 teglari o'qilmaydi:
   eski fayl ochilsa maydonlar bo'sh chiqadi.
+- **Ko'p yo'lli aralashtirish**: bir necha yozuv bitta faylga qo'shiladi.
+  Har bir yo'lga balandlik (desibelda), chap/o'ng joylashuv va siljish
+  beriladi; yo'lni o'chirish (mute), faqat bittasini eshitish (solo) va
+  butun aralashmaning umumiy balandligi bor. Natija **har doim stereo** —
+  panorama faqat ikki kanalda ma'noga ega. Yo'llar yig'indisi chegaradan
+  oshsa, har bir namuna alohida qisilmaydi: butun fayl bitta koeffitsientga
+  tushiriladi va ekran buni aytadi. Har bir o'zgarish darhol saqlanadi,
+  «orqaga qaytarish» esa oxirgi 30 qadamni tiklaydi. Halol cheklovlar:
+  manbalar **WAV** bo'lishi kerak (boshqa format konvertorda o'tkaziladi),
+  yo'llarning chastotasi teng bo'lishi shart — har xil chastota jimgina
+  qayta namunalanmaydi, ochiq xato beriladi. Sakkiz yo'lgacha.
 - **Ulashish**: tayyor faylni tizim oynasi orqali boshqa ilovaga yuborish
   (Telegram, pochta, bulut). Fayl `content://` havola bilan, faqat o'qish
   uchun va bir marta beriladi.
@@ -85,9 +96,11 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-Nutqni matnga aylantirish (STT), ko'p yo'lli
-aralashtirish, sozlamalar ekrani, vokal/cholg'u ajratish va neyron shovqin
-tozalash. ID3 teg faqat MP3 faylga yoziladi (M4A/FLAC teglari keyingi
+Nutqni matnga aylantirish (STT),
+sozlamalar ekrani, vokal/cholg'u ajratish va neyron shovqin
+tozalash. Aralashtirishda manbalar hozircha faqat WAV (boshqa format
+konvertorda o'tkaziladi) va ularning chastotasi teng bo'lishi shart.
+ID3 teg faqat MP3 faylga yoziladi (M4A/FLAC teglari keyingi
 qadamda). Kitob pleyeri faqat shu seansda yasalgan kitobni tinglaydi:
 ilova qayta ochilgach, kitobni yana yasash kerak (fayllar joyida qoladi).
 Ovoz sintezi (TTS) bor, lekin hozircha faqat
@@ -123,7 +136,7 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-476 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+545 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
 holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
 matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
@@ -132,7 +145,9 @@ sintezator bilan: tartib, pauza, to'xtatish, xato bob raqami), kitob
 pleyerining mantig'i (boblar bo'ylab o'tish chegaralari, belgi bo'ylab
 sakrash, qoldirilgan joyni saqlash, uxlash taymeri), ID3 tegining to'g'ri
 yozilishi va **o'qilishi** (kirill, UTF-8, UTF-16, v2.4 ramka o'lchami,
-buzilgan teg ilovani yiqitmasligi).
+buzilgan teg ilovani yiqitmasligi), aralashtirish ekranining hisoblari (aralashma
+uzunligi, tugma yoqilganmi) va yo'l sozlamalari matnining chegaralari
+(-60 dB maydonga sig'adimi, matn va son orasidagi aylanish aynanmi).
 Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -160,6 +175,9 @@ bash bin/verify-speed.sh    # tezlik/ohang ffmpeg'ning atempo zanjiri bilan
 bash bin/verify-noise.sh    # shovqin tozalash ffmpeg'ning afftdn filtri bilan
 bash bin/verify-tag.sh      # ID3 teglarini ffprobe o'qiydi, tegni ilova
                             # o'z o'quvchisi bilan qayta o'qib solishtiradi
+bash bin/verify-mix.sh      # aralashmani ffmpeg o'qiydi: balandlik va
+                            # panorama analitik javobga mosmi, kesish
+                            # himoyasi ishlayaptimi
 ```
 
 Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
@@ -209,6 +227,8 @@ app/src/main/java/uz/ovozstudio/app/
   media/book/ boblarga bo'lish, kitob yig'ish, belgilar, pleyer tartibi,
               qoldirilgan joy, uxlash taymeri
   media/tag/  ID3 tegini yozish va o'qish, foydalanuvchi kiritgan qiymatlar
+  media/mix/  ko'p yo'lli aralashtirish: mikser, yo'l sozlamalari,
+              loyihani saqlash
   ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
@@ -220,6 +240,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/voice/   ovoz sinovi ekrani (qurilmada qanday ovozlar bor)
   ui/book/    hujjatdan audio-kitob ekrani va pleyer
   ui/tag/     ID3 teg muharriri va ulashish ekrani
+  ui/mix/     ko'p yo'lli aralashtirish ekrani
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash
 bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari

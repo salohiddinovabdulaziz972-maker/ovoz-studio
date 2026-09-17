@@ -57,6 +57,7 @@ fun HomeScreen(
     onVoice: () -> Unit,
     onBook: () -> Unit,
     onTag: () -> Unit,
+    onMix: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -136,6 +137,15 @@ fun HomeScreen(
         A11yOutlinedButton(
             label = stringResource(R.string.tag_title),
             onClick = onTag,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Aralashtirish ham faylga bog'lanmagan: u bir necha yozuvni talab
+        // qiladi, shuning uchun yo'l oldindan berilmaydi — yo'llar ekranning
+        // o'zida ro'yxatdan yig'iladi.
+        A11yOutlinedButton(
+            label = stringResource(R.string.mix_title),
+            onClick = onMix,
             modifier = Modifier.fillMaxWidth(),
         )
 

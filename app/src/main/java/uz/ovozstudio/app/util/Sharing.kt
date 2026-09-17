@@ -51,4 +51,7 @@ object Sharing {
     // MP3 fayl uchun tur. Umumiy «audio» turidan aniqroq: qabul qiluvchi
     // ilovalar shunga qarab filtrlaydi va to'g'ri pleyerni tanlaydi.
     const val MP3_MIME = "audio/mpeg"
+
+    /** WAV fayl uchun tur — aralashtirish natijasi shu formatda chiqadi. */
+    const val WAV_MIME = "audio/wav"
 }

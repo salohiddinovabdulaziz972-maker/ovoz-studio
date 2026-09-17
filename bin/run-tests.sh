@@ -83,11 +83,18 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/book/BookBuilder.kt
     app/src/main/java/uz/ovozstudio/app/media/book/BookPlaylist.kt
     app/src/main/java/uz/ovozstudio/app/media/book/BookPlaybackStore.kt
+    app/src/main/java/uz/ovozstudio/app/media/mix/AudioMixer.kt
+    app/src/main/java/uz/ovozstudio/app/media/mix/MixProject.kt
+    app/src/main/java/uz/ovozstudio/app/media/mix/MixProjectStore.kt
+    app/src/main/java/uz/ovozstudio/app/media/mix/MixSource.kt
+    app/src/main/java/uz/ovozstudio/app/media/mix/MixTrack.kt
+    app/src/main/java/uz/ovozstudio/app/media/mix/MixTrackText.kt
     app/src/main/java/uz/ovozstudio/app/media/tag/AudioTags.kt
     app/src/main/java/uz/ovozstudio/app/media/tag/Id3v2Reader.kt
     app/src/main/java/uz/ovozstudio/app/media/tag/Id3v2Tag.kt
     app/src/main/java/uz/ovozstudio/app/media/tag/Mp3Tagger.kt
     app/src/main/java/uz/ovozstudio/app/media/tag/TagDraft.kt
+    app/src/main/java/uz/ovozstudio/app/ui/mix/MixUiState.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -132,7 +139,12 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookPlaylistTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookPlaybackStoreTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/mix/AudioMixerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/mix/MixEditorTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/mix/MixProjectStoreTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/mix/MixTrackTextTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/Id3v2ReaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/ui/mix/MixUiStateTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/Id3v2TagTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/Mp3TaggerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/TagDraftTest.kt

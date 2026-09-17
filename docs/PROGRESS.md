@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 210 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 335 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 476 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 545 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   97 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   106 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -180,6 +180,46 @@ Oxirgi yangilanish: 2026-09-17
     (`RecordingStore.listMp3()`): tizim tanlagichi `Android/data/…` ni
     ko'rmaydi, ya'ni konvertor va audio-kitob yasagan MP3 ni foydalanuvchi
     boshqa yo'l bilan topa olmasdi.
+
+20. **Ko'p yo'lli aralashtirish** — `media/mix/` (`AudioMixer`, `MixTrack`,
+    `MixSource`, `MixEditor`, `MixProject`, `MixProjectStore`) + `ui/mix/`
+    ekrani. Bir necha yozuv bitta faylga qo'shiladi; har bir yo'lga
+    balandlik (−60…+12 dB), chap/o'ng joylashuv (−1…+1) va siljish
+    (0…600 s) beriladi, yo'lni o'chirish (mute) va faqat bittasini eshitish
+    (solo) bor, umumiy balandlik esa alohida.
+    **Barcha sozlamalar qo'lda kiritiladi** (ilova bo'ylab yagona qoida):
+    sirg'anma bilan aniq desibelni qo'yib bo'lmaydi — ekran o'quvchi uchun ham,
+    barmoq uchun ham. Matn va son orasidagi qoidalar alohida faylda
+    (`MixTrackText`), shuning uchun ular JVM'da tekshiriladi: «−60» maydonga
+    sig'adimi, chegaradan oshib ketmaydimi, matn va son orasidagi aylanish
+    **aynan**mi (sozlama saqlanib, qayta ochilganda o'sha ovoz eshitilishi
+    kerak).
+    **Natija har doim stereo**: panorama faqat ikki kanalda ma'noga ega.
+    Mono yo'l o'rtada turganda har bir kanalga **−3 dB** bilan qo'yiladi
+    (quvvat saqlanadi), chetga surilganda 0 dB — ya'ni «o'rtaga qo'ydim,
+    ovoz balandroq bo'lib ketdi» holati yo'q.
+    **Kesish himoyasi**: yo'llar yig'indisi chegaradan oshsa, har bir namuna
+    alohida qisilmaydi (bu buzilish ovozi berardi) — butun fayl oldindan
+    o'lchangan cho'qqi bo'yicha bitta koeffitsientga tushiriladi. Buning
+    uchun mikser fayllarni **ikki marta** o'qiydi: birinchisi cho'qqini
+    o'lchaydi, ikkinchisi yozadi. Ekran tushirish miqdorini aytadi, lekin
+    faqat sezilarli bo'lsa: to'liq shkaladagi bitta yo'l ham 0.999 ga
+    tushadi (0.01 dB) — buni «0 dB tushirildi» deb aytish ma'nosiz bo'lardi.
+    **Loyiha avtomatik saqlanadi** (`filesDir`, har o'zgarishdan keyin,
+    `Mutex` bilan — sekin yozuv keyingisini bosib ketmasligi uchun), ya'ni
+    ekrandan chiqib qaytilganda yo'llar joyida turadi. Saqlanadigan narsa —
+    manba faylning **nomi**, to'liq yo'li emas: ilovaning papkasi
+    yangilanishdan keyin o'zgarishi mumkin, nom esa qoladi. Fayl topilmasa,
+    yo'l jimgina tushib qolmaydi — ochiq xato beriladi va aralashtirish
+    to'xtatiladi. «Orqaga qaytarish» oxirgi 30 qadamni tiklaydi.
+    **Nega WAV:** mikser har bir faylni ikki marta o'qiydi, siqilgan
+    formatda bu mumkin emas (ochish bir marta oqim bo'lib keladi). Shuning
+    uchun ekranda konvertorga o'tish tugmasi bor — boshqa dastur qidirish
+    shart emas. Chastotalar har xil bo'lsa, jimgina qayta namunalash
+    **qilinmaydi**: ochiq xato beriladi (aks holda foydalanuvchi eshitgan
+    natija bilan kutgani mos kelmasdi).
+    **Mustaqil tekshiruv:** `bin/verify-mix.sh` (sakkizinchi tekshiruv,
+    pastda).
 
 ## Muhim texnik qarorlar
 
@@ -653,6 +693,50 @@ keladi.
 **Nima tekshirilmaydi.** Tozalashdan keyin nutq qanchalik tabiiy eshitilishi —
 bu quloq bilan baholanadigan narsa, raqam emas.
 
+### Sakkizinchi tekshiruv — aralashtirish (2026-09-17)
+
+Bu yerda namuna-ba-namuna qiyoslash **mumkin**, shuning uchun o'lchov eng qat'iy
+bo'ldi: manbalarni `ffmpeg` yasaydi, aralashmani ilova yozadi, natijani esa
+ilovaning kodidan mustaqil python skript (`bin/verify-mix-compare.py` — RIFF
+sarlavhasini o'zi o'qiydi, kerakli chastotadagi amplitudani Goertzel usuli bilan
+o'lchaydi) tekshiradi.
+
+**A. Boshqa kod bazasi bilan namuna-ba-namuna.** ffmpeg'ning `amix` filtri
+(`normalize=0`) bilan solishtiriladi: ikkala yo'l ham stereo, panorama o'rtada,
+ya'ni solishtirishda hech qanday «panorama qoidasi» qatnashmaydi — faqat yig'ish
+va desibel qoladi. Eng katta farq **0.00000** (chegara ±0.0001) — ya'ni
+namunalar farqi o'lchov aniqligidan ham kichik. Solishtirish namuna-ba-namuna,
+kanal bo'yicha; uzunlik yoki kanal soni mos kelmasa — bu alohida xato.
+
+**B. Panorama, siljish va balandlik — analitik javob bilan.** Bu yerda
+qoida qog'ozda hisoblanadi va o'shanga qiyoslanadi.
+
+| o'lchov | kutilgan | chiqqan |
+|---|---|---|
+| mono yo'l o'rtada, chap kanal (440 Hz) | 0.35355 (−3 dB) | 0.35355 |
+| mono yo'l o'rtada, o'ng kanal | 0.35355 | 0.35355 |
+| chetga surilgan yo'l (440 Hz chapda) | 0.50000 (0 dB) | 0.50000 |
+| o'sha yo'l qarama-qarshi kanalda | 0.00000 | 0.00000 |
+| master −6 dB dan keyin | 0.17720 | 0.17720 |
+| 200 ms siljish (o'ng kanal boshlanishi) | 9600 kadr | 9601 kadr |
+
+Siljish kadr aniqligida (9600 kadr = 200 ms × 48 kHz), ya'ni ±3 kadr ichida.
+Qarama-qarshi kanaldagi **nol** ham tekshiriladi: yo'l «hamma joyda bir oz»
+eshitilib qolmasligi kerak.
+
+**C. Kesish himoyasi.** Ikki yo'l yig'indisi 1.6 bo'lganda chiqish cho'qqisi
+aynan **0.999** bo'lishi, o'lchangan cho'qqi esa 1.6 chiqishi shart — ya'ni
+fayl qisilmagan, balki butunlay bitta koeffitsientga tushirilgan. Koeffitsient
+ham tekshiriladi: 0.62437 (kutilgan 0.999/1.6 = 0.62438, farq 1e-05).
+
+**Nima tekshirilmaydi.** ffmpeg'ning o'z `pan` filtri bilan qiyoslash **ataylab**
+qilinmaydi: u boshqa panorama qonunini ishlatadi (mononi kanalga 0 dB bilan
+qo'yadi), ya'ni farq kodning xatosidan emas, ikki boshqa qoidadan chiqardi va
+o'lchov ma'nosiz bo'lardi. Shuning uchun B qismi analitik javob bilan
+solishtiriladi. Qolgan ikkisi — aralashma qanday **eshitilishi** (yo'llar
+muvozanati, panorama ta'siri) va ekranning TalkBack bilan ishlashi — faqat
+qurilmada, quloq bilan baholanadi.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -676,6 +760,9 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   uzunlik darhol ko'rsatiladi.
 - Shovqin tozalash: shovqin namunasi bo'yicha spektral ayirish, kuch va qoldiq
   qo'lda kiritiladi, natija darhol kutubxonaga tushadi.
+- Ko'p yo'lli aralashtirish: balandlik, chap/o'ng joylashuv, siljish,
+  mute/solo, umumiy balandlik, orqaga qaytarish, avtomatik saqlanadigan
+  loyiha; natija stereo va kesishdan himoyalangan.
 
 **Keyingi navbat (shu tartibda)**
 
@@ -733,8 +820,17 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    **Hozircha yo'q:** ID3 faqat MP3 da — M4A/FLAC teglari keyingi ish;
    ID3v2.2 o'qilmaydi.
    **Qolgani (faqat qurilmada tekshiriladi):** pastda.
-8. **Ko'p yo'lli aralashtirish** — har bir yo'lga ovoz balandligi, panorama,
-   ducking.
+8. ~~**Ko'p yo'lli aralashtirish**~~ — **tayyor** (20-band). Har bir yo'lga
+   ovoz balandligi, chap/o'ng joylashuv, siljish, mute/solo va umumiy
+   balandlik; natija har doim stereo, kesish himoyasi bilan. Mustaqil
+   tekshiruv ffmpeg bilan o'tdi (sakkizinchi tekshiruv, pastda).
+   **Hozircha yo'q:** tavsifda tilga olingan **ducking** (bitta yo'l
+   ko'tarilganda boshqasini avtomatik tushirish) — u hozir qo'lda
+   bajariladi: balandlik maydonini o'zgartirib. Avtomatik ducking
+   (ohang bo'yicha aniqlash va yumshatish) alohida ish. Shuningdek
+   manbalar faqat WAV va ularning chastotasi teng bo'lishi shart;
+   har xil chastotali yo'llarni avtomatik qayta namunalash keyingi ish.
+   **Qolgani (faqat qurilmada tekshiriladi):** pastda.
 9. **Sozlamalar ekrani** — til tanlash, soddalashtirilgan rejim, ilova haqida.
 10. **Vokal/cholg'u ajratish** — qurilmada ishlaydigan model (ONNX/TFLite);
     eng og'ir band, shuning uchun oxirida.
@@ -789,6 +885,13 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   joyida qolganini** fayl menejerida tekshirish, «Ulashish» tugmasi tizim
   oynasini ochib, faylni Telegram'ga yuboryaptimi. Skript teglarni
   ffprobe bilan tekshiradi, lekin ulashish oynasini faqat qurilma ko'rsatadi.
+- Aralashtirish ekranini sinash: ikki-uch yozuvni qo'shib, balandlik va
+  chap/o'ng joylashuv maydonlarini TalkBack bilan kiritib, natijani
+  tinglash; yo'lni o'chirib (mute) va «faqat shuni eshitish» bilan
+  solishtirish; ekrandan chiqib qaytganda yo'llar joyida turishini
+  tekshirish; «orqaga qaytarish» ishlayaptimi. Skript matematikani
+  o'lchaydi, lekin **qaysi sozlama qanday eshitilishini** va ekranning
+  o'qilishini faqat qurilma ko'rsatadi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 
@@ -803,6 +906,17 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 - ID3v2.2 tegli fayl ochilsa maydonlar bo'sh ko'rinadi, saqlash esa tegni
   almashtiradi — ya'ni o'sha fayldagi eski teg yo'qoladi. O'quvchi v2.2 ni
   qo'llashi keyingi ish.
+- Aralashtirishda manbalar **faqat WAV** va ularning chastotasi **teng**
+  bo'lishi shart. Har xil chastotali yo'l avtomatik qayta namunalanmaydi:
+  ochiq xato beriladi va faylni konvertorda mos chastotaga o'tkazish kerak
+  bo'ladi. Avtomatik qayta namunalash keyingi ish.
+- Aralashma loyihasi `filesDir` da saqlanadi va faqat **nomi** bo'yicha
+  manbaga bog'lanadi. Manba fayl o'chirilsa yoki nomi o'zgartirilsa, yo'l
+  «manba topilmadi» bo'lib qoladi — yo'qolmaydi, lekin uni qaytadan
+  qo'shish kerak.
+- Ducking (bir yo'l ko'tarilganda boshqasini avtomatik tushirish) hozir
+  qo'lda bajariladi — balandlik maydonini o'zgartirib. Avtomatik ducking
+  alohida ish.
 
 ## Ochiq savollar
 
