@@ -93,6 +93,36 @@
     <string name="trim_error_cuts_empty">Ro\'yxat bo\'sh — avval bo\'lak qo\'shing</string>
     <string name="trim_error_cuts_all">Ro\'yxatdagi bo\'laklar butun faylni qamrab olgan</string>
 
+    <string name="convert_title">Format konvertori</string>
+    <string name="convert_source_title">Manba fayl</string>
+    <string name="convert_source_unknown">Noma\'lum format</string>
+    <string name="convert_source_summary">%1$s, %2$s, %3$s, uzunligi %4$s</string>
+    <string name="convert_channels_mono">mono</string>
+    <string name="convert_channels_stereo">stereo</string>
+    <string name="convert_channels_multi">%1$d kanal</string>
+    <string name="convert_hint">Hozircha fayl tanlanmagan. Konvertatsiya qilish uchun audio faylni tanlang.</string>
+    <string name="convert_pick">Audio fayl tanlash</string>
+    <string name="convert_busy">Ishlanmoqda, biroz kuting…</string>
+    <string name="convert_target_title">Yoziladigan format</string>
+    <string name="convert_kind_lossless">yo\'qotishsiz</string>
+    <string name="convert_kind_lossy">siqilgan</string>
+    <string name="convert_kind_same">manba formati</string>
+    <string name="convert_preserved_note">Fayl o\'z formatida qaytariladi — boshqa formatni tanlamasangiz, u o\'zgarmaydi.</string>
+    <string name="convert_fallback_note">Bu formatni saqlab bo\'lmaydi (%1$s). Quyidan mos format tanlang.</string>
+    <string name="convert_reason_no_encoder">bu formatga yozib bo\'lmaydi</string>
+    <string name="convert_reason_no_decoder">fayl ochilmaydi</string>
+    <string name="convert_reason_api_too_old">qurilma versiyasi yetarli emas</string>
+    <string name="convert_limited_note">Ro\'yxatda faqat shu fayl uchun mos formatlar ko\'rsatilgan.</string>
+    <string name="convert_action">Konvertatsiya qilish</string>
+    <string name="convert_done">Saqlandi: %1$s</string>
+    <string name="convert_error_unknown_format">Bu fayl audio emas yoki formati noma\'lum</string>
+    <string name="convert_error_no_decoder">Bu formatni bu qurilmada ochib bo\'lmaydi</string>
+    <string name="convert_error_read_failed">Faylni o\'qib bo\'lmadi</string>
+    <string name="convert_error_empty">Faylda birorta ham ovoz namunasi yo\'q</string>
+    <string name="convert_error_encode_failed">Bu formatga yozib bo\'lmadi</string>
+    <string name="convert_error_write_failed">Natija faylini saqlab bo\'lmadi</string>
+    <string name="convert_error_file_not_found">Fayl topilmadi</string>
+
     <string name="common_delete">O\'chirish</string>
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">Yaxshi</string>

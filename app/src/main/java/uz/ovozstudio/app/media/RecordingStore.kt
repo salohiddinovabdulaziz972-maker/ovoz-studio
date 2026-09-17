@@ -35,9 +35,29 @@ class RecordingStore(context: Context) {
     /** Tahrirlash paytidagi oraliq fayllar — foydalanuvchiga ko'rsatilmaydi. */
     val editsDirectory: File = File(directory, "tahrir").apply { mkdirs() }
 
+    /**
+     * Import qilingan manba fayllar.
+     *
+     * Alohida papka, chunki [clearEdits] tahrir papkasini butunlay tozalaydi:
+     * manba o'sha yerda yotsa, saqlashdan keyin foydalanuvchining yuklagan
+     * fayli yo'q bo'lardi — asl formatni tiklash uchun esa u kerak.
+     */
+    val sourcesDirectory: File = File(directory, "manba").apply { mkdirs() }
+
     fun newRecordingFile(prefix: String = "yozuv"): File = uniqueFile(directory, prefix)
 
     fun newEditFile(tag: String): File = uniqueFile(editsDirectory, tag)
+
+    /**
+     * Yuklangan fayl nusxasi uchun joy. [extension] — manbaning kengaytmasi
+     * (`mp3`, `m4a`…): nusxa asl nomga yaqin bo'lib qolsa, fayl keyin
+     * fayl menejerida ham tushunarli ko'rinadi.
+     */
+    fun newSourceFile(extension: String): File = uniqueFile(sourcesDirectory, "manba", extension)
+
+    /** Konvertatsiya natijasi uchun joy — kengaytma maqsad formatdan olinadi. */
+    fun newOutputFile(prefix: String, extension: String): File =
+        uniqueFile(directory, prefix, extension)
 
     /**
      * Bo'sh nom qaytaradi.
@@ -47,19 +67,27 @@ class RecordingStore(context: Context) {
      * Ya'ni yangi yozuv eski yozuvni yo'q qilishi mumkin edi. Endi nom band
      * bo'lsa, oxiriga raqam qo'shiladi.
      */
-    private fun uniqueFile(directory: File, rawPrefix: String): File {
-        // Prefiks endi tashqaridan (masalan, bo'lingan faylning nomidan) kelishi
-        // mumkin, shuning uchun faqat xavfsiz belgilar qoldiriladi: `/` yoki
-        // `..` fayl nomida bo'lsa, yozuv butunlay boshqa papkaga tushib qolardi.
+    private fun uniqueFile(directory: File, rawPrefix: String, extension: String = "wav"): File {
+        // Prefiks endi tashqaridan (masalan, bo'lingan faylning nomidan yoki
+        // import qilingan fayldan) kelishi mumkin, shuning uchun faqat xavfsiz
+        // belgilar qoldiriladi: `/` yoki `..` fayl nomida bo'lsa, yozuv
+        // butunlay boshqa papkaga tushib qolardi.
         val prefix = rawPrefix
             .replace(Regex("[^A-Za-z0-9._-]"), "_")
             .take(40)
             .ifEmpty { "yozuv" }
+        // Kengaytma ham tashqaridan keladi — uni ham tozalash shart, aks
+        // holda `../` kabi qiymat papkadan chiqarib yuborardi.
+        val suffix = extension
+            .replace(Regex("[^A-Za-z0-9]"), "")
+            .lowercase()
+            .take(5)
+            .ifEmpty { "wav" }
         val stamp = timestamp()
-        var candidate = File(directory, "$prefix-$stamp.wav")
+        var candidate = File(directory, "$prefix-$stamp.$suffix")
         var counter = 2
         while (candidate.exists()) {
-            candidate = File(directory, "$prefix-$stamp-$counter.wav")
+            candidate = File(directory, "$prefix-$stamp-$counter.$suffix")
             counter++
         }
         return candidate

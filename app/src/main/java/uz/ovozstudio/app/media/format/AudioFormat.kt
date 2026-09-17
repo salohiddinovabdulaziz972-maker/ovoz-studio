@@ -55,8 +55,14 @@ enum class AudioCodec(val displayName: String, val lossless: Boolean) {
  * talabi: "qanday format yuklasa, shunday format qaytarilsin". Boshqa
  * formatga o'tish faqat ochiq konvertatsiya amali bo'lganda bo'ladi.
  *
- * [bitDepth] faqat yo'qotishsiz formatlarda bo'ladi (WAV, FLAC).
- * [bitrate] faqat yo'qotishli formatlarda bo'ladi (MP3, AAC, Opus).
+ * [bitDepth] yo'qotishsiz konteynerlarda (WAV, FLAC) sarlavhaga yoziladigan
+ * haqiqiy chuqurlik. Yo'qotishli konteynerlarda (MP3, AAC, Opus) esa u
+ * **kodlovchiga kelayotgan PCM'ning shkalasi** degan ma'noni bildiradi —
+ * bunday konteynerda bit chuqurligi saqlanmaydi, lekin kodlovchi namunalarni
+ * to'g'ri talqin qilishi uchun uni bilishi shart: 24-bit manbani 16-bit deb
+ * hisoblash ovozni butunlay buzadi.
+ *
+ * [bitrate] faqat yo'qotishli formatlarda bo'ladi.
  * Ikkalasi ham `null` bo'lishi mumkin — u holda eksport standart qiymatni
  * ishlatadi.
  */

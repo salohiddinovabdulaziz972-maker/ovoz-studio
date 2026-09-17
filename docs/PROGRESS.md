@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 88 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 128 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,12 +17,12 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 85 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 119 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   31 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   41 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -39,8 +39,17 @@ Oxirgi yangilanish: 2026-09-17
     baytlariga qarab aniqlaydi; `FormatSupport` Android'ning kodek
     imkoniyatlari jadvalini saqlaydi; `FormatPreservingExporter` tahrirlangan
     faylni manba formatida qaytaradi. FLAC kodlovchisi noldan yozildi
-    (Android'da FLAC uchun kodlovchi yo'q, faqat dekoder). Batafsil:
-    «Formatni saqlash» bo'limi pastda.
+    (Android'da FLAC uchun kodlovchi yo'q, faqat dekoder). MP3 kodlovchisi
+    LAME'ning sof Java porti (`de.sciss:jump3r`) ustiga qurildi — Android'da
+    MP3 uchun ham faqat dekoder bor. Batafsil: «Formatni saqlash» bo'limi
+    pastda.
+11. **Import va konvertor ekrani** — `AndroidAudioDecoder` (MediaExtractor +
+    MediaCodec) har qanday siqilgan faylni WAV ga ochadi; WAV manba esa
+    umuman qayta kodlanmaydi (24-bit 24-bit bo'lib qoladi).
+    `AndroidAudioEncoders` tizim kodlovchilarini (AAC, Opus) ulaydi.
+    Konvertor ekrani: fayl tanlanadi, maqsad format ro'yxati esa **shu fayl
+    uchun** mos variantlardan tuziladi — ya'ni "tanladingiz, lekin yozib
+    bo'lmadi" holati bo'lmaydi. Tanlov dastlab manba formatida turadi.
 
 ## Muhim texnik qarorlar
 
@@ -112,6 +121,13 @@ dekoder umuman yo'q. Yozish: WAV va FLAC — o'z kodlovchilarimiz; MP3 —
 dekoder. Bunday manba import qilinsa, ilova buni import paytida aytadi va
 o'rniga yo'qotishsiz FLAC taklif qiladi — sabab `FallbackReason` kodida
 qaytariladi, matn UI qatlamida tarjima qilinadi.
+
+**MP3 kodlovchisi `jump3r` ustida.** Android'da MP3 uchun ham faqat dekoder
+bor, kodlovchi yo'q. `jump3r` — LAME'ning sof Java porti; uning `mp3` va
+`mpg` paketlari Android'ga bog'liq emas. Kutubxonaning qulay o'rami
+(`de.sciss.jump3r.lowlevel.LameEncoder`) esa `javax.sound.sampled` ga
+tayanadi — u ishlatilmaydi va ProGuard qoidasi bilan chiqarib tashlanadi.
+Litsenziya: LGPL-2.1+ (LAME'dan meros), loyihaning GPL-3.0'i bilan mos.
 
 **FLAC kodlovchisi o'zimizniki.** Android'da FLAC uchun dekoder bor, kodlovchi
 yo'q; mavjud sof Java kutubxonalari (`jflac`) 2012-yildan beri
@@ -204,6 +220,48 @@ kodlovchi yozilganda u **mustaqil dekoderda** tekshiriladi, o'z-o'zidan
 emas — o'z-o'zini tekshirish «to'g'ri ko'rinadi» degan natijadan nariga
 o'tmaydi.
 
+### To'rtinchi tekshiruv — MP3 kodlovchisi (2026-09-17)
+
+21. **LAME modullari ulanish tartibi buzilgan edi.** `jump3r` ning past
+    darajali API'si `setModules` orqali qo'lda ulanadi; men modullarni
+    yuqoridan pastga uzatdim va ikkita `NullPointerException` oldim
+    (`this.bs is null`, keyin `this.lame is null`). Modullar bir-biriga
+    **ikki tomonlama** bog'langan: `BitStream` `VBRTag` ni biladi, `VBRTag`
+    esa `BitStream` ni. To'g'ri tartib — pastdan yuqoriga: avval barcha
+    nusxalar yaratiladi, keyin ichki bog'lanishlar, eng oxirida
+    `lame.setModules`. Psixoakustik model esa `Lame` ichida yaratiladi va
+    `QuantizePVT` **o'sha** nusxani olishi shart (`lame.enc.psy`), aks holda
+    u bo'sh qolib kodlash paytida yiqilardi.
+22. **Yo'qotishli konteynerda bit chuqurligi `null` bo'lib qolardi.**
+    `FormatPreservingExporter` MP3/AAC uchun `bitDepth` ni ataylab `null`
+    qilardi — «konteyner sarlavhasida bunday maydon yo'q» degan mantiq
+    bilan. Lekin kodlovchi bu maydonni boshqa ma'noda ishlatadi: u
+    namunalar **shkalasi**. Natijada 24-bit manba 16-bit deb hisoblanib,
+    namunalar 8 bit ortiq surilib, ovoz butunlay buzilardi (RMS xato 16398,
+    to'liq shkalaning yarmi). Endi `bitDepth` har doim tahrirlangan fayldan
+    olinadi, ma'nosi esa `AudioFormat` hujjatida yozib qo'yildi.
+
+**Tekshiruv natijasi** (`bash bin/verify-mp3.sh`, ffmpeg bilan):
+
+| holat | siljish | RMS xato | native LAME |
+|---|---|---|---|
+| stereo 192 kbps | 2257 | 172.7 | 172.6 |
+| mono 96 kbps | 2257 | 407.0 | 386.5 |
+| stereo VBR | 2257 | 17.7 | 40.1 |
+| mono 24-bit 192 kbps | 2257 | 231.5 | 231.4 |
+| mono 24-bit VBR | 2257 | 99.1 | 47.8 |
+
+Siljish besh holatda ham **aynan 2257 kadr** — bu 576 (kodlovchi
+kechikishi) + 529 (dekoder kechikishi) + 1152 (kadr) yig'indisi, ya'ni
+MP3 uchun darslikdagi qiymat. RMS xato native LAME bilan bir darajada
+(ba'zi holatda yaxshiroq). Ya'ni port nafaqat «ochiladigan» fayl beradi,
+balki haqiqiy LAME sifati bilan kodlaydi.
+
+JVM sinovlari ataylab faqat **tuzilishni** tekshiradi (kadr sinxronizatsiyasi,
+bit tezligi, kadr o'lchami) — ovozni ular ichida tekshirish o'z-o'zini
+tekshirish bo'lardi. Shuning uchun ffmpeg tekshiruvi alohida skriptda:
+`bin/verify-mp3.sh` + `bin/verify-mp3-compare.py`.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -223,14 +281,16 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 
 **Keyingi navbat (shu tartibda)**
 
-1. **Format konvertori** — qaror qilindi: `MediaCodec`, ffmpeg'siz.
-   Fon qatlami tayyor (`media/format/`): aniqlash, imkoniyatlar jadvali,
-   formatni saqlash, WAV va FLAC kodlovchilari, konvertor oqimi.
-   Qolgani: MP3 kodlovchisini `jump3r` orqali ulash, `MediaCodec`
-   kodlovchilari (M4A/AAC/Opus) va konvertor ekrani. WMA hech qachon
-   ishlamaydi — Android'da dekoderi yo'q, buni foydalanuvchiga import
-   paytida aytamiz. OGG/Vorbis ham yozilmaydi (kodlovchi yo'q) — bunday
-   fayl import qilinsa, o'rniga FLAC taklif qilinadi.
+1. ~~**Format konvertori**~~ — **tayyor**. Fon qatlami (`media/format/`)
+   to'liq: aniqlash, imkoniyatlar jadvali, formatni saqlash, WAV/FLAC/MP3
+   kodlovchilari (MP3 ffmpeg bilan tekshirilgan: `bin/verify-mp3.sh`),
+   import dekoderi va tizim kodlovchilari. Ekran ham tayyor
+   (`ui/convert/`). WMA hech qachon ishlamaydi — Android'da dekoderi yo'q,
+   buni import paytida ochiq aytamiz. OGG/Vorbis ham yozilmaydi (kodlovchi
+   yo'q) — bunday fayl import qilinsa, o'rniga FLAC taklif qilinadi.
+   **Qolgani (faqat qurilmada tekshiriladi):** M4A/AAC/Opus kodlovchilari
+   `MediaCodec` orqali ishlaydi-yu, JVM'da sinalmaydi — ularni telefonda
+   ochib ko'rish kerak.
 2. **Parametrik ekvalayzer** — 10 va 31 polosa, biquad filtrlar, float
    domenida. Ekran o'quvchi uchun har bir polosa raqamli maydonda.
 3. **Tezlik va ohang** — ohangni saqlab tezlashtirish (WSOLA), 0.5x–2x.
@@ -251,6 +311,18 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 
 - APK'ni qurilmada, TalkBack yoqilgan holda qo'lda sinash: yozish, kesish,
   bo'lish, ekran o'chganda yozuv davom etishi.
+- Konvertorni qurilmada sinash: telefondagi MP3 ni import qilib M4A/Opus ga
+  o'girish, WAV ni MP3 ga o'girish. Bu yo'l `MediaCodec` ga tayanadi, ya'ni
+  uni faqat qurilma ko'rsata oladi.
+
+**Ma'lum cheklovlar (keyingi ishlar)**
+
+- Import qilingan manba nusxalari `manba/` papkasida saqlanadi va o'chirish
+  tugmasi ularga tegmaydi (u faqat asosiy ro'yxatdagi fayllarni o'chiradi).
+  Fayllar ko'payib ketsa, ular uchun tozalash kerak bo'ladi.
+- Ilova ichidagi faylni boshqa ilovaga yuborish (ulashish) hali yo'q —
+  konvertor natijani faqat ilovaning o'z papkasiga yozadi. Bu 7-band
+  (ID3 va ulashish) bilan birga keladi.
 
 ## Ochiq savollar
 

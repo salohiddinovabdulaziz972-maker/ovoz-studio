@@ -93,6 +93,36 @@
     <string name="trim_error_cuts_empty">The list is empty — add a range first</string>
     <string name="trim_error_cuts_all">The listed ranges cover the whole file</string>
 
+    <string name="convert_title">Format converter</string>
+    <string name="convert_source_title">Source file</string>
+    <string name="convert_source_unknown">Unknown format</string>
+    <string name="convert_source_summary">%1$s, %2$s, %3$s, duration %4$s</string>
+    <string name="convert_channels_mono">mono</string>
+    <string name="convert_channels_stereo">stereo</string>
+    <string name="convert_channels_multi">%1$d channels</string>
+    <string name="convert_hint">No file selected yet. Choose an audio file to convert.</string>
+    <string name="convert_pick">Choose audio file</string>
+    <string name="convert_busy">Working, please wait…</string>
+    <string name="convert_target_title">Output format</string>
+    <string name="convert_kind_lossless">lossless</string>
+    <string name="convert_kind_lossy">compressed</string>
+    <string name="convert_kind_same">source format</string>
+    <string name="convert_preserved_note">The file comes back in its own format — it stays unchanged unless you pick another.</string>
+    <string name="convert_fallback_note">This format cannot be kept (%1$s). Choose a suitable format below.</string>
+    <string name="convert_reason_no_encoder">this format cannot be written</string>
+    <string name="convert_reason_no_decoder">the file cannot be opened</string>
+    <string name="convert_reason_api_too_old">the device version is too old</string>
+    <string name="convert_limited_note">Only formats that suit this file are listed.</string>
+    <string name="convert_action">Convert</string>
+    <string name="convert_done">Saved: %1$s</string>
+    <string name="convert_error_unknown_format">This is not an audio file, or its format is unknown</string>
+    <string name="convert_error_no_decoder">This format cannot be opened on this device</string>
+    <string name="convert_error_read_failed">Could not read the file</string>
+    <string name="convert_error_empty">The file contains no audio samples</string>
+    <string name="convert_error_encode_failed">Could not write to this format</string>
+    <string name="convert_error_write_failed">Could not save the result file</string>
+    <string name="convert_error_file_not_found">File not found</string>
+
     <string name="common_delete">Delete</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>

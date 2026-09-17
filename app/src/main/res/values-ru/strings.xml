@@ -93,6 +93,36 @@
     <string name="trim_error_cuts_empty">Список пуст — сначала добавьте участок</string>
     <string name="trim_error_cuts_all">Участки в списке охватывают весь файл</string>
 
+    <string name="convert_title">Конвертер форматов</string>
+    <string name="convert_source_title">Исходный файл</string>
+    <string name="convert_source_unknown">Неизвестный формат</string>
+    <string name="convert_source_summary">%1$s, %2$s, %3$s, длительность %4$s</string>
+    <string name="convert_channels_mono">моно</string>
+    <string name="convert_channels_stereo">стерео</string>
+    <string name="convert_channels_multi">%1$d канала</string>
+    <string name="convert_hint">Файл пока не выбран. Выберите аудиофайл для конвертации.</string>
+    <string name="convert_pick">Выбрать аудиофайл</string>
+    <string name="convert_busy">Обработка, подождите…</string>
+    <string name="convert_target_title">Формат для записи</string>
+    <string name="convert_kind_lossless">без потерь</string>
+    <string name="convert_kind_lossy">сжатый</string>
+    <string name="convert_kind_same">формат источника</string>
+    <string name="convert_preserved_note">Файл вернётся в своём формате — если не выбрать другой, он не изменится.</string>
+    <string name="convert_fallback_note">Этот формат сохранить нельзя (%1$s). Выберите подходящий формат ниже.</string>
+    <string name="convert_reason_no_encoder">в этот формат запись невозможна</string>
+    <string name="convert_reason_no_decoder">файл не открывается</string>
+    <string name="convert_reason_api_too_old">версия устройства недостаточна</string>
+    <string name="convert_limited_note">В списке только форматы, подходящие для этого файла.</string>
+    <string name="convert_action">Конвертировать</string>
+    <string name="convert_done">Сохранено: %1$s</string>
+    <string name="convert_error_unknown_format">Это не аудиофайл или его формат неизвестен</string>
+    <string name="convert_error_no_decoder">Этот формат невозможно открыть на этом устройстве</string>
+    <string name="convert_error_read_failed">Не удалось прочитать файл</string>
+    <string name="convert_error_empty">В файле нет ни одного звукового сэмпла</string>
+    <string name="convert_error_encode_failed">Не удалось записать в этот формат</string>
+    <string name="convert_error_write_failed">Не удалось сохранить итоговый файл</string>
+    <string name="convert_error_file_not_found">Файл не найден</string>
+
     <string name="common_delete">Удалить</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">Хорошо</string>

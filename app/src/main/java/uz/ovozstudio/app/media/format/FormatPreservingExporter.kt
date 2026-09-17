@@ -74,12 +74,16 @@ class FormatPreservingExporter(
         }
 
         WavPcmReader(edited).use { reader ->
-            // Manba parametrlari tahrirlangan fayldan olinadi — fayl ichidagi
-            // sarlavha bilan bir xil bo'lishi uchun.
+            // Namuna parametrlari tahrirlangan fayldan olinadi — fayl ichidagi
+            // sarlavha bilan bir xil bo'lishi uchun. Bu yo'qotishli
+            // kodeklarga ham tegishli: `bitDepth` u yerda konteyner
+            // sarlavhasi emas, kodlovchiga kelayotgan PCM'ning shkalasi
+            // (24-bit manba 24-bit bo'lib kelishi kerak, aks holda kodlovchi
+            // uni 16-bit deb hisoblab, ovozni butunlay buzardi).
             val actual = target.copy(
                 sampleRate = reader.format.sampleRate,
                 channels = reader.format.channels,
-                bitDepth = if (target.codec.lossless) reader.format.bitDepth else null,
+                bitDepth = reader.format.bitDepth,
             )
 
             val encoder = openEncoder(actual, destination)
@@ -104,6 +108,9 @@ class FormatPreservingExporter(
                 channels = target.channels,
                 bitsPerSample = target.bitDepth ?: DEFAULT_BIT_DEPTH,
             )
+
+        target.container == AudioContainer.MP3 && target.codec == AudioCodec.MP3 ->
+            Mp3Encoder(destination, target)
 
         else -> extraEncoder?.invoke(target, destination)
     }

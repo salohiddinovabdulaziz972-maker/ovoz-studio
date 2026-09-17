@@ -73,6 +73,13 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.navigation.compose)
 
+    // MP3 kodlovchisi. Android'da MP3 uchun faqat DEKODER bor
+    // (MediaCodec), kodlovchi yo'q — shuning uchun LAME'ning sof Java
+    // porti ishlatiladi. Uning `mp3` paketi Android'ga bog'liq emas;
+    // `lowlevel` o'rami esa `javax.sound.sampled` ga tayanadi va biz uni
+    // ishlatmaymiz (proguard qoidasi bilan chiqarib tashlangan).
+    implementation(libs.jump3r)
+
     debugImplementation(libs.androidx.ui.tooling)
 
     // Sof JVM testlari: WAV va vaqt mantiqi Android'siz tekshiriladi.

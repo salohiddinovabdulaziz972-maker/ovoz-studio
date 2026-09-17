@@ -55,18 +55,35 @@ object FormatSupport {
         AudioCodec.WMA -> false
     }
 
-    fun canEncode(container: AudioContainer, codec: AudioCodec, apiLevel: Int): Boolean = when (codec) {
-        // O'z kodlovchilarimiz — har qanday versiyada ishlaydi.
-        AudioCodec.PCM -> true
-        AudioCodec.FLAC -> true
-        // jump3r kutubxonasi orqali, sof Kotlin/Java.
-        AudioCodec.MP3 -> true
-        // MediaCodec + MediaMuxer: MP4 konteyneri barcha versiyalarda bor.
-        AudioCodec.AAC -> container != AudioContainer.OGG
-        // Android'da Vorbis kodlovchisi umuman yo'q (faqat dekoder).
-        AudioCodec.VORBIS -> false
-        AudioCodec.OPUS -> apiLevel >= OGG_API_LEVEL && container == AudioContainer.OGG
-        AudioCodec.WMA -> false
+    /**
+     * [sampleRate] ixtiyoriy, lekin muhim: kodek hamma chastotada ham
+     * ishlamaydi. Masalan Opus 44.1 kHz ni umuman bilmaydi, AAC esa faqat
+     * o'z jadvalidagi 13 ta qiymatni. Chastota berilmasa, faqat konteyner
+     * va kodek tekshiriladi.
+     */
+    fun canEncode(
+        container: AudioContainer,
+        codec: AudioCodec,
+        apiLevel: Int,
+        sampleRate: Int? = null,
+    ): Boolean {
+        val byContainer = when (codec) {
+            // O'z kodlovchilarimiz — har qanday versiyada ishlaydi.
+            AudioCodec.PCM -> true
+            AudioCodec.FLAC -> true
+            // jump3r kutubxonasi orqali, sof Kotlin/Java.
+            AudioCodec.MP3 -> true
+            // MediaCodec + MediaMuxer: MP4 konteyneri barcha versiyalarda bor.
+            AudioCodec.AAC -> container != AudioContainer.OGG
+            // Android'da Vorbis kodlovchisi umuman yo'q (faqat dekoder).
+            AudioCodec.VORBIS -> false
+            AudioCodec.OPUS -> apiLevel >= OGG_API_LEVEL && container == AudioContainer.OGG
+            AudioCodec.WMA -> false
+        }
+        if (!byContainer || sampleRate == null) return byContainer
+        // Jadvallar `CodecRates` da — u Android'siz, shuning uchun bu
+        // obyekt JVM testida ham ishlayveradi.
+        return CodecRates.supports(codec, sampleRate)
     }
 
     /** Faylni umuman import qilib bo'ladimi. */
@@ -85,13 +102,16 @@ object FormatSupport {
     fun resolve(source: AudioFormat, apiLevel: Int, override: AudioFormat? = null): ExportDecision {
         if (override != null) return ExportDecision.Preserved(override)
 
-        if (canEncode(source.container, source.codec, apiLevel)) {
+        if (canEncode(source.container, source.codec, apiLevel, source.sampleRate)) {
             return ExportDecision.Preserved(source)
         }
 
         val reason = when {
             !canDecode(source.container, source.codec) -> FallbackReason.NO_DECODER
-            source.codec == AudioCodec.OPUS -> FallbackReason.API_TOO_OLD
+            // Opus uchun eski versiya — alohida holat: kodlovchi bor, lekin
+            // qurilma yetmaydi. Chastota mos kelmasa bu yerga tushmaydi:
+            // u kodlovchining o'zi yo'qligi bilan bir xil.
+            source.codec == AudioCodec.OPUS && apiLevel < OGG_API_LEVEL -> FallbackReason.API_TOO_OLD
             else -> FallbackReason.NO_ENCODER
         }
 
@@ -129,6 +149,75 @@ object FormatSupport {
 
         return ExportDecision.Fallback(source, reason, recommended, alternatives)
     }
+
+    /**
+     * Konvertor ekranida taklif qilinadigan maqsad formatlar.
+     *
+     * Ro'yxat manbaning namuna parametrlaridan kelib chiqib tuziladi, shuning
+     * uchun unda "tanladingiz, lekin yozib bo'lmadi" holati bo'lmaydi: Opus
+     * 44.1 kHz ni umuman bilmaydi, AAC esa o'z jadvalidan tashqari
+     * chastotalarni — bunday formatlar ro'yxatga kirmaydi.
+     *
+     * Chastota va kanal soni barcha variantlarda bir xil: konvertatsiya
+     * formatni almashtiradi, sifatni emas. Uni o'zgartirish kerak bo'lsa,
+     * bu alohida amal bo'ladi.
+     */
+    fun convertOptions(source: AudioFormat, apiLevel: Int): List<AudioFormat> = buildList {
+        val rate = source.sampleRate
+        val channels = source.channels
+        val depth = source.bitDepth ?: DEFAULT_BIT_DEPTH
+
+        add(AudioFormat(AudioContainer.WAV, AudioCodec.PCM, rate, channels, depth))
+        // Yo'qotishsiz varianti ikkinchi turadi: u har doim mavjud va
+        // sifatni saqlaydi, ya'ni xavfsiz tanlov.
+        add(AudioFormat(AudioContainer.FLAC, AudioCodec.FLAC, rate, channels, depth))
+        add(lossy(AudioContainer.MP3, AudioCodec.MP3, rate, channels, depth))
+
+        for (container in listOf(AudioContainer.M4A, AudioContainer.AAC)) {
+            if (canEncode(container, AudioCodec.AAC, apiLevel, rate)) {
+                add(lossy(container, AudioCodec.AAC, rate, channels, depth))
+            }
+        }
+
+        if (canEncode(AudioContainer.OGG, AudioCodec.OPUS, apiLevel, rate)) {
+            add(lossy(AudioContainer.OGG, AudioCodec.OPUS, rate, channels, depth))
+        }
+    }
+
+    /**
+     * Ekran dastlab tanlab turadigan format.
+     *
+     * [resolve] taklif qilgan format **ro'yxatdagi nusxasi** bilan
+     * almashtiriladi. Sabab: manba faylda bit tezligi ko'rsatilmagan bo'lishi
+     * mumkin (MP3 uchun u sarlavhada har doim ham aniq emas), ro'yxatdagi
+     * variantda esa aniq qiymat turadi. Ikkalasi bir xil bo'lmasa, tanlov
+     * qatorida hech biri belgilanmay qolardi — foydalanuvchi esa "tanlov
+     * yo'qolgan" holatini ko'rardi.
+     */
+    fun defaultTarget(source: AudioFormat, apiLevel: Int): AudioFormat {
+        val preferred = when (val decision = resolve(source, apiLevel)) {
+            is ExportDecision.Preserved -> decision.format
+            is ExportDecision.Fallback -> decision.recommended
+        }
+        return convertOptions(source, apiLevel)
+            .firstOrNull { it.container == preferred.container && it.codec == preferred.codec }
+            ?: preferred
+    }
+
+    private fun lossy(
+        container: AudioContainer,
+        codec: AudioCodec,
+        sampleRate: Int,
+        channels: Int,
+        bitDepth: Int,
+    ): AudioFormat = AudioFormat(
+        container = container,
+        codec = codec,
+        sampleRate = sampleRate,
+        channels = channels,
+        bitDepth = bitDepth,
+        bitrate = defaultBitrate(codec, channels),
+    )
 
     /** Yo'qotishli kodlash uchun standart bit tezligi (bit/s). */
     fun defaultBitrate(codec: AudioCodec, channels: Int): Int {

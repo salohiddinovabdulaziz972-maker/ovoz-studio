@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,6 +43,8 @@ import uz.ovozstudio.app.util.TimeFormat
 fun HomeScreen(
     onRecord: () -> Unit,
     onOpenFile: (String) -> Unit,
+    onConvertFile: (String) -> Unit,
+    onConvert: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -76,6 +79,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        A11yOutlinedButton(
+            label = stringResource(R.string.home_action_convert),
+            onClick = onConvert,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         Text(
             text = stringResource(R.string.home_recent_title),
             style = MaterialTheme.typography.titleLarge,
@@ -93,6 +102,7 @@ fun HomeScreen(
                     RecordingRow(
                         recording = recording,
                         onOpen = { onOpenFile(recording.file.absolutePath) },
+                        onConvert = { onConvertFile(recording.file.absolutePath) },
                         onDeleteRequest = { pendingDelete = recording },
                     )
                     HorizontalDivider()
@@ -129,6 +139,7 @@ fun HomeScreen(
 private fun RecordingRow(
     recording: Recording,
     onOpen: () -> Unit,
+    onConvert: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     val duration = TimeFormat.format(recording.durationMs)
@@ -151,6 +162,16 @@ private fun RecordingRow(
                 text = duration,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        // Konvertatsiya shu qatordan boshlanadi, chunki ilovaning o'z
+        // papkasidagi fayllar tizim tanlagichida ko'rinmaydi: foydalanuvchi
+        // ularni faqat shu ro'yxat orqali topa oladi.
+        IconButton(onClick = onConvert) {
+            Icon(
+                imageVector = Icons.Filled.Refresh,
+                contentDescription = stringResource(R.string.home_action_convert) + ": " + title,
             )
         }
 
