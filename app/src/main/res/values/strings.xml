@@ -21,21 +21,14 @@
     <string name="record_marker_count">Belgilar: %1$d</string>
     <string name="record_started">Yozish boshlandi</string>
     <string name="record_announce_time">Vaqtni aytib ber</string>
-    <string name="record_elapsed_a11y">O\'tgan vaqt %1$s</string>
     <string name="record_level_a11y">Kirish darajasi %1$d foiz</string>
-    <string name="record_level_label">Kirish darajasi</string>
     <string name="record_quality_title">Sifat</string>
     <string name="record_sample_rate">Diskretizatsiya chastotasi</string>
     <string name="record_bit_depth">Bit chuqurligi</string>
-    <string name="record_format">Format</string>
-    <string name="record_channel">Kanallar</string>
-    <string name="record_channel_mono">Mono</string>
     <string name="record_channel_stereo">Stereo</string>
     <string name="record_noise_suppression">Shovqinni bostirish</string>
     <string name="record_echo_cancellation">Exoni yo\'qotish</string>
     <string name="record_saved">Saqlandi: %1$s</string>
-    <string name="record_stopped">Yozish to\'xtatildi</string>
-    <string name="record_error_start">Yozishni boshlab bo\'lmadi.</string>
     <string name="record_error_generic">Xatolik yuz berdi: %1$s</string>
     <string name="record_notification_channel">Yozib olish</string>
     <string name="record_notification_channel_desc">Yozuv davom etayotganda ko\'rinadigan bildirishnoma. Ovoz chiqarmaydi.</string>
@@ -59,7 +52,6 @@
     <string name="trim_stop">Eshitishni to\'xtatish</string>
     <string name="trim_fade_in">Silliq boshlanish (Fade In)</string>
     <string name="trim_fade_out">Silliq tugash (Fade Out)</string>
-    <string name="trim_fade_length">Silliqlash uzunligi %1$s ms</string>
     <string name="trim_fade_length_label">Silliqlash uzunligi, ms</string>
     <string name="trim_file_duration">Uzunligi: %1$s</string>
     <string name="trim_selection_range">%1$s — %2$s</string>
@@ -218,7 +210,7 @@
     <string name="settings_language">Ilova tili</string>
     <string name="settings_language_system">Tizim tili bilan bir xil</string>
     <string name="settings_simplified_mode">Ekran o\'quvchi uchun soddalashtirilgan rejim</string>
-    <string name="settings_simplified_mode_desc">To\'lqin shakllari va slayderlar o\'rniga matnli ro\'yxat va tugmalar ishlatiladi.</string>
+    <string name="settings_simplified_mode_desc">Ikkinchi darajali tugmalar yashiriladi — ekran o\'quvchi bilan har bir amalga yetish osonlashadi. Amallar yo\'qolmaydi: bosh ekranda «Boshqa imkoniyatlar» tugmasi orqali ochiladi.</string>
     <string name="settings_about">Ilova haqida</string>
 
     <string name="book_title">Hujjatdan audio-kitob</string>
@@ -292,7 +284,6 @@
     <string name="tag_share">Ulashish</string>
     <string name="tag_share_chooser">Faylni ulashish</string>
     <string name="tag_share_note">«Ulashish» faylni boshqa ilovalarga yuboradi: Telegram, pochta va boshqalar.</string>
-    <string name="tag_share_missing">Ulanadigan fayl topilmadi.</string>
     <string name="tag_error_no_file">Avval fayl tanlang.</string>
     <string name="tag_error_unsupported">Bu formatda teg yo\'q — hozircha faqat MP3 qo\'llab-quvvatlanadi.</string>
     <string name="tag_error_empty">Hech bo\'lmaganda bitta maydonni to\'ldiring.</string>
@@ -347,4 +338,20 @@
     <string name="mix_error_channels">Faqat mono va stereo yo\'llar qo\'llanadi.</string>
     <string name="mix_error_silent">Eshitiladigan yo\'l yo\'q — hamma yo\'l o\'chirilgan yoki yakka rejim hech kimni tanlamagan.</string>
     <string name="mix_error_write">Aralashmani yozib bo\'lmadi: joy yetmadi yoki manba o\'qilmadi.</string>
+    <string name="settings_language_note">Til darhol o\'zgaradi: ekran qayta ochiladi va tanlov eslab qolinadi.</string>
+    <string name="settings_language_uz_latn">O\'zbekcha (lotin)</string>
+    <string name="settings_language_uz_cyrl">O\'zbekcha (kirill)</string>
+    <string name="settings_language_ru">Ruscha</string>
+    <string name="settings_language_en">Inglizcha</string>
+    <string name="settings_language_active">Hozir ishlatilayotgan til: %1$s</string>
+    <string name="settings_version">Versiya: %1$s</string>
+    <string name="settings_license_value">Litsenziya: %1$s</string>
+    <string name="settings_license_note">Ochiq kod. Litsenziya ataylab shunday tanlangan: hech kim bu ilovaga reklama joylashtirib, yopiq mahsulot sifatida sota olmaydi.</string>
+    <string name="settings_open_source">Manba kodi</string>
+    <string name="settings_open_license">Litsenziya matni</string>
+    <string name="settings_error_save">Sozlama saqlanmadi — o\'zgarish qo\'llanmadi. Joy yetarli ekanini tekshiring.</string>
+    <string name="settings_error_link">Havolani ochib bo\'lmadi: qurilmada brauzer topilmadi.</string>
+    <string name="home_tools_show">Boshqa imkoniyatlar</string>
+    <string name="home_tools_hide">Ortiqcha tugmalarni yashirish</string>
+    <string name="home_tools_hidden">Soddalashtirilgan rejim yoniq: ikkinchi darajali amallar yashirilgan.</string>
 </resources>

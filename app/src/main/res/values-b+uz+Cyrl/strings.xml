@@ -21,21 +21,14 @@
     <string name="record_marker_count">Белгилар: %1$d</string>
     <string name="record_started">Ёзиш бошланди</string>
     <string name="record_announce_time">Вақтни айтиб бер</string>
-    <string name="record_elapsed_a11y">Ўтган вақт %1$s</string>
     <string name="record_level_a11y">Кириш даражаси %1$d фоиз</string>
-    <string name="record_level_label">Кириш даражаси</string>
     <string name="record_quality_title">Сифат</string>
     <string name="record_sample_rate">Дискретизация частотаси</string>
     <string name="record_bit_depth">Бит чуқурлиги</string>
-    <string name="record_format">Формат</string>
-    <string name="record_channel">Каналлар</string>
-    <string name="record_channel_mono">Моно</string>
     <string name="record_channel_stereo">Стерео</string>
     <string name="record_noise_suppression">Шовқинни бостириш</string>
     <string name="record_echo_cancellation">Эхони йўқотиш</string>
     <string name="record_saved">Сақланди: %1$s</string>
-    <string name="record_stopped">Ёзиш тўхтатилди</string>
-    <string name="record_error_start">Ёзишни бошлаб бўлмади.</string>
     <string name="record_error_generic">Хатолик юз берди: %1$s</string>
     <string name="record_notification_channel">Ёзиб олиш</string>
     <string name="record_notification_channel_desc">Ёзув давом этаётганда кўринадиган билдиришнома. Овоз чиқармайди.</string>
@@ -59,7 +52,6 @@
     <string name="trim_stop">Эшитишни тўхтатиш</string>
     <string name="trim_fade_in">Силлиқ бошланиш (Fade In)</string>
     <string name="trim_fade_out">Силлиқ тугаш (Fade Out)</string>
-    <string name="trim_fade_length">Силлиқлаш узунлиги %1$s мс</string>
     <string name="trim_fade_length_label">Силлиқлаш узунлиги, мс</string>
     <string name="trim_file_duration">Узунлиги: %1$s</string>
     <string name="trim_selection_range">%1$s — %2$s</string>
@@ -218,7 +210,7 @@
     <string name="settings_language">Илова тили</string>
     <string name="settings_language_system">Тизим тили билан бир хил</string>
     <string name="settings_simplified_mode">Экран ўқувчи учун соддалаштирилган режим</string>
-    <string name="settings_simplified_mode_desc">Тўлқин шакллари ва слайдерлар ўрнига матнли рўйхат ва тугмалар ишлатилади.</string>
+    <string name="settings_simplified_mode_desc">Иккинчи даражали тугмалар яширилади — экран ўқувчи билан ҳар бир амалга етиш осонлашади. Амаллар йўқолмайди: бош экранда «Бошқа имкониятлар» тугмаси орқали очилади.</string>
     <string name="settings_about">Илова ҳақида</string>
 
     <string name="book_title">Ҳужжатдан аудио-китоб</string>
@@ -292,7 +284,6 @@
     <string name="tag_share">Улашиш</string>
     <string name="tag_share_chooser">Файлни улашиш</string>
     <string name="tag_share_note">«Улашиш» файлни бошқа иловаларга юборади: Telegram, почта ва бошқалар.</string>
-    <string name="tag_share_missing">Уланадиган файл топилмади.</string>
     <string name="tag_error_no_file">Аввал файл танланг.</string>
     <string name="tag_error_unsupported">Бу форматда тег йўқ — ҳозирча фақат MP3 қўллаб-қувватланади.</string>
     <string name="tag_error_empty">Ҳеч бўлмаганда битта майдонни тўлдиринг.</string>
@@ -347,4 +338,20 @@
     <string name="mix_error_channels">Фақат моно ва стерео йўллар қўлланади.</string>
     <string name="mix_error_silent">Эшитиладиган йўл йўқ — ҳамма йўл ўчирилган ёки якка режим ҳеч кимни танламаган.</string>
     <string name="mix_error_write">Аралашмани ёзиб бўлмади: жой етмади ёки манба ўқилмади.</string>
+    <string name="settings_language_note">Тил дарҳол ўзгаради: экран қайта очилади ва танлов эслаб қолинади.</string>
+    <string name="settings_language_uz_latn">Ўзбекча (лотин)</string>
+    <string name="settings_language_uz_cyrl">Ўзбекча (кирилл)</string>
+    <string name="settings_language_ru">Русча</string>
+    <string name="settings_language_en">Инглизча</string>
+    <string name="settings_language_active">Ҳозир ишлатилаётган тил: %1$s</string>
+    <string name="settings_version">Версия: %1$s</string>
+    <string name="settings_license_value">Лицензия: %1$s</string>
+    <string name="settings_license_note">Очиқ код. Лицензия атайлаб шундай танланган: ҳеч ким бу иловага реклама жойлаштириб, ёпиқ маҳсулот сифатида сота олмайди.</string>
+    <string name="settings_open_source">Манба коди</string>
+    <string name="settings_open_license">Лицензия матни</string>
+    <string name="settings_error_save">Созлама сақланмади — ўзгариш қўлланамади. Жой етарли эканини текширинг.</string>
+    <string name="settings_error_link">Ҳаволани очиб бўлмади: қурилмада браузер топилмади.</string>
+    <string name="home_tools_show">Бошқа имкониятлар</string>
+    <string name="home_tools_hide">Ортиқча тугмаларни яшириш</string>
+    <string name="home_tools_hidden">Соддалаштирилган режим ёниқ: иккинчи даражали амаллар яширилган.</string>
 </resources>

@@ -21,21 +21,14 @@
     <string name="record_marker_count">Меток: %1$d</string>
     <string name="record_started">Запись началась</string>
     <string name="record_announce_time">Озвучить время</string>
-    <string name="record_elapsed_a11y">Прошло времени %1$s</string>
     <string name="record_level_a11y">Уровень входного сигнала %1$d процентов</string>
-    <string name="record_level_label">Уровень входного сигнала</string>
     <string name="record_quality_title">Качество</string>
     <string name="record_sample_rate">Частота дискретизации</string>
     <string name="record_bit_depth">Разрядность</string>
-    <string name="record_format">Формат</string>
-    <string name="record_channel">Каналы</string>
-    <string name="record_channel_mono">Моно</string>
     <string name="record_channel_stereo">Стерео</string>
     <string name="record_noise_suppression">Подавление шума</string>
     <string name="record_echo_cancellation">Подавление эха</string>
     <string name="record_saved">Сохранено: %1$s</string>
-    <string name="record_stopped">Запись остановлена</string>
-    <string name="record_error_start">Не удалось начать запись.</string>
     <string name="record_error_generic">Произошла ошибка: %1$s</string>
     <string name="record_notification_channel">Запись</string>
     <string name="record_notification_channel_desc">Показывается, пока идёт запись. Не издаёт звука.</string>
@@ -59,7 +52,6 @@
     <string name="trim_stop">Остановить воспроизведение</string>
     <string name="trim_fade_in">Плавное начало (Fade In)</string>
     <string name="trim_fade_out">Плавное окончание (Fade Out)</string>
-    <string name="trim_fade_length">Длина сглаживания %1$s мс</string>
     <string name="trim_fade_length_label">Длина сглаживания, мс</string>
     <string name="trim_file_duration">Длительность: %1$s</string>
     <string name="trim_selection_range">%1$s — %2$s</string>
@@ -218,7 +210,7 @@
     <string name="settings_language">Язык приложения</string>
     <string name="settings_language_system">Как в системе</string>
     <string name="settings_simplified_mode">Упрощённый режим для экранных дикторов</string>
-    <string name="settings_simplified_mode_desc">Вместо волновых форм и ползунков — текстовые списки и кнопки.</string>
+    <string name="settings_simplified_mode_desc">Второстепенные кнопки скрываются — со скринридером до каждого действия добраться проще. Действия не исчезают: на главном экране они открываются кнопкой «Другие возможности».</string>
     <string name="settings_about">О приложении</string>
 
     <string name="book_title">Документ в аудиокнигу</string>
@@ -292,7 +284,6 @@
     <string name="tag_share">Отправить</string>
     <string name="tag_share_chooser">Отправить файл</string>
     <string name="tag_share_note">«Отправить» передаёт файл другим приложениям: Telegram, почте и другим.</string>
-    <string name="tag_share_missing">Файл для отправки не найден.</string>
     <string name="tag_error_no_file">Сначала выберите файл.</string>
     <string name="tag_error_unsupported">В этом формате тегов нет — пока поддерживается только MP3.</string>
     <string name="tag_error_empty">Заполните хотя бы одно поле.</string>
@@ -347,4 +338,20 @@
     <string name="mix_error_channels">Поддерживаются только моно- и стереодорожки.</string>
     <string name="mix_error_silent">Нет слышимой дорожки — все дорожки заглушены или режим соло никого не выбрал.</string>
     <string name="mix_error_write">Не удалось записать сведение: не хватило места или источник не читается.</string>
+    <string name="settings_language_note">Язык меняется сразу: экран открывается заново, а выбор сохраняется.</string>
+    <string name="settings_language_uz_latn">Узбекский (латиница)</string>
+    <string name="settings_language_uz_cyrl">Узбекский (кириллица)</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">Английский</string>
+    <string name="settings_language_active">Сейчас используется: %1$s</string>
+    <string name="settings_version">Версия: %1$s</string>
+    <string name="settings_license_value">Лицензия: %1$s</string>
+    <string name="settings_license_note">Открытый код. Лицензия выбрана намеренно: никто не может добавить в приложение рекламу и продавать его как закрытый продукт.</string>
+    <string name="settings_open_source">Исходный код</string>
+    <string name="settings_open_license">Текст лицензии</string>
+    <string name="settings_error_save">Настройка не сохранилась — изменение не применено. Проверьте, достаточно ли места.</string>
+    <string name="settings_error_link">Не удалось открыть ссылку: на устройстве нет браузера.</string>
+    <string name="home_tools_show">Другие возможности</string>
+    <string name="home_tools_hide">Скрыть лишние кнопки</string>
+    <string name="home_tools_hidden">Упрощённый режим включён: второстепенные действия скрыты.</string>
 </resources>

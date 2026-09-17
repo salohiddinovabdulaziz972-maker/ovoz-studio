@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,10 +59,17 @@ fun HomeScreen(
     onBook: () -> Unit,
     onTag: () -> Unit,
     onMix: () -> Unit,
+    onSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
+    val simplified by viewModel.simplified.collectAsState()
     var pendingDelete by remember { mutableStateOf<Recording?>(null) }
+
+    // Soddalashtirilgan rejimda yopilgan bo'lim shu seans ichida ochilishi
+    // mumkin. `rememberSaveable`: ekran burilganda ham ochiq qolsin.
+    var toolsExpanded by rememberSaveable { mutableStateOf(false) }
+    val toolsVisible = !simplified || toolsExpanded
 
     // Ro'yxat har safar ekranga qaytilganda qayta o'qiladi. ViewModel ekrandan
     // uzoq yashaydi, shuning uchun faqat `init` dagi o'qish yetarli emas edi:
@@ -93,61 +101,88 @@ fun HomeScreen(
         )
 
         A11yOutlinedButton(
-            label = stringResource(R.string.home_action_convert),
-            onClick = onConvert,
+            label = stringResource(R.string.home_action_settings),
+            onClick = onSettings,
             modifier = Modifier.fillMaxWidth(),
         )
 
-        A11yOutlinedButton(
-            label = stringResource(R.string.eq_title),
-            onClick = onEq,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (toolsVisible) {
+            A11yOutlinedButton(
+                label = stringResource(R.string.home_action_convert),
+                onClick = onConvert,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        A11yOutlinedButton(
-            label = stringResource(R.string.speed_title),
-            onClick = onSpeed,
-            modifier = Modifier.fillMaxWidth(),
-        )
+            A11yOutlinedButton(
+                label = stringResource(R.string.eq_title),
+                onClick = onEq,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        A11yOutlinedButton(
-            label = stringResource(R.string.noise_title),
-            onClick = onNoise,
-            modifier = Modifier.fillMaxWidth(),
-        )
+            A11yOutlinedButton(
+                label = stringResource(R.string.speed_title),
+                onClick = onSpeed,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        // Ovoz sinovi faylga bog'lanmagan: u matnni o'qiydi, shuning uchun
-        // faqat shu yerda — qatorlar ichida takrorlanmaydi.
-        A11yOutlinedButton(
-            label = stringResource(R.string.voice_title),
-            onClick = onVoice,
-            modifier = Modifier.fillMaxWidth(),
-        )
+            A11yOutlinedButton(
+                label = stringResource(R.string.noise_title),
+                onClick = onNoise,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        // Audio-kitob ham faylga bog'lanmagan: hujjat ekranning o'zida
-        // tanlanadi, chunki kirish audio emas — PDF, DOCX, EPUB yoki TXT.
-        A11yOutlinedButton(
-            label = stringResource(R.string.book_title),
-            onClick = onBook,
-            modifier = Modifier.fillMaxWidth(),
-        )
+            // Ovoz sinovi faylga bog'lanmagan: u matnni o'qiydi, shuning uchun
+            // faqat shu yerda — qatorlar ichida takrorlanmaydi.
+            A11yOutlinedButton(
+                label = stringResource(R.string.voice_title),
+                onClick = onVoice,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        // Teglar ekrani: ilova ichidagi MP3 fayllar o'sha yerda ro'yxat
-        // bo'lib chiqadi — tizim tanlagichi bu papkani ko'rmaydi.
-        A11yOutlinedButton(
-            label = stringResource(R.string.tag_title),
-            onClick = onTag,
-            modifier = Modifier.fillMaxWidth(),
-        )
+            // Audio-kitob ham faylga bog'lanmagan: hujjat ekranning o'zida
+            // tanlanadi, chunki kirish audio emas — PDF, DOCX, EPUB yoki TXT.
+            A11yOutlinedButton(
+                label = stringResource(R.string.book_title),
+                onClick = onBook,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-        // Aralashtirish ham faylga bog'lanmagan: u bir necha yozuvni talab
-        // qiladi, shuning uchun yo'l oldindan berilmaydi — yo'llar ekranning
-        // o'zida ro'yxatdan yig'iladi.
-        A11yOutlinedButton(
-            label = stringResource(R.string.mix_title),
-            onClick = onMix,
-            modifier = Modifier.fillMaxWidth(),
-        )
+            // Teglar ekrani: ilova ichidagi MP3 fayllar o'sha yerda ro'yxat
+            // bo'lib chiqadi — tizim tanlagichi bu papkani ko'rmaydi.
+            A11yOutlinedButton(
+                label = stringResource(R.string.tag_title),
+                onClick = onTag,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            // Aralashtirish ham faylga bog'lanmagan: u bir necha yozuvni talab
+            // qiladi, shuning uchun yo'l oldindan berilmaydi — yo'llar ekranning
+            // o'zida ro'yxatdan yig'iladi.
+            A11yOutlinedButton(
+                label = stringResource(R.string.mix_title),
+                onClick = onMix,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else {
+            // Yopilgan bo'lim jimgina yo'qolmasligi kerak: foydalanuvchi
+            // nima uchun kam tugma borligini va qanday ochishni biladi.
+            Text(
+                text = stringResource(R.string.home_tools_hidden),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
+        // Ochish/yopish tugmasi faqat soddalashtirilgan rejimda ko'rinadi:
+        // oddiy rejimda yashiradigan narsa yo'q.
+        if (simplified) {
+            A11yOutlinedButton(
+                label = stringResource(
+                    if (toolsExpanded) R.string.home_tools_hide else R.string.home_tools_show,
+                ),
+                onClick = { toolsExpanded = !toolsExpanded },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         Text(
             text = stringResource(R.string.home_recent_title),
@@ -165,6 +200,7 @@ fun HomeScreen(
                 items(recordings, key = { it.file.absolutePath }) { recording ->
                     RecordingRow(
                         recording = recording,
+                        showTools = !simplified,
                         onOpen = { onOpenFile(recording.file.absolutePath) },
                         onConvert = { onConvertFile(recording.file.absolutePath) },
                         onEq = { onEqFile(recording.file.absolutePath) },
@@ -202,9 +238,18 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Bitta yozuv qatori.
+ *
+ * [showTools] — soddalashtirilgan rejimda qatorning to'rt ikonkasi
+ * yashiriladi. Ular yo'qolmaydi: har bir amal bosh ekrandagi tugmalarda ham
+ * bor, ya'ni qator esa faqat «ochish» va «o'chirish» bo'lib qoladi — ekran
+ * o'quvchi uchun har bir yozuvdagi to'xtash nuqtalari soni keskin kamayadi.
+ */
 @Composable
 private fun RecordingRow(
     recording: Recording,
+    showTools: Boolean,
     onOpen: () -> Unit,
     onConvert: () -> Unit,
     onEq: () -> Unit,
@@ -235,40 +280,42 @@ private fun RecordingRow(
             )
         }
 
-        // Konvertatsiya shu qatordan boshlanadi, chunki ilovaning o'z
-        // papkasidagi fayllar tizim tanlagichida ko'rinmaydi: foydalanuvchi
-        // ularni faqat shu ro'yxat orqali topa oladi.
-        IconButton(onClick = onConvert) {
-            Icon(
-                imageVector = Icons.Filled.Refresh,
-                contentDescription = stringResource(R.string.home_action_convert) + ": " + title,
-            )
-        }
+        if (showTools) {
+            // Konvertatsiya shu qatordan boshlanadi, chunki ilovaning o'z
+            // papkasidagi fayllar tizim tanlagichida ko'rinmaydi: foydalanuvchi
+            // ularni faqat shu ro'yxat orqali topa oladi.
+            IconButton(onClick = onConvert) {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.home_action_convert) + ": " + title,
+                )
+            }
 
-        IconButton(onClick = onEq) {
-            Icon(
-                imageVector = Icons.Filled.Build,
-                contentDescription = stringResource(R.string.eq_title) + ": " + title,
-            )
-        }
+            IconButton(onClick = onEq) {
+                Icon(
+                    imageVector = Icons.Filled.Build,
+                    contentDescription = stringResource(R.string.eq_title) + ": " + title,
+                )
+            }
 
-        // «FastForward» ikonkasi material-icons-core da yo'q; «Create» —
-        // tahrirlash amalini bildiradi va mavjud to'plamdan olinadi.
-        IconButton(onClick = onSpeed) {
-            Icon(
-                imageVector = Icons.Filled.Create,
-                contentDescription = stringResource(R.string.speed_title) + ": " + title,
-            )
-        }
+            // «FastForward» ikonkasi material-icons-core da yo'q; «Create» —
+            // tahrirlash amalini bildiradi va mavjud to'plamdan olinadi.
+            IconButton(onClick = onSpeed) {
+                Icon(
+                    imageVector = Icons.Filled.Create,
+                    contentDescription = stringResource(R.string.speed_title) + ": " + title,
+                )
+            }
 
-        // Shovqin tozalash uchun ham alohida ikonka kerak: asosiy to'plamda
-        // «tozalash» ikonkasi yo'q, pastga strelka esa shovqin darajasini
-        // pasaytirishni bildiradi.
-        IconButton(onClick = onNoise) {
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = stringResource(R.string.noise_title) + ": " + title,
-            )
+            // Shovqin tozalash uchun ham alohida ikonka kerak: asosiy to'plamda
+            // «tozalash» ikonkasi yo'q, pastga strelka esa shovqin darajasini
+            // pasaytirishni bildiradi.
+            IconButton(onClick = onNoise) {
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    contentDescription = stringResource(R.string.noise_title) + ": " + title,
+                )
+            }
         }
 
         IconButton(onClick = onDeleteRequest) {

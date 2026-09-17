@@ -95,6 +95,10 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/tag/Mp3Tagger.kt
     app/src/main/java/uz/ovozstudio/app/media/tag/TagDraft.kt
     app/src/main/java/uz/ovozstudio/app/ui/mix/MixUiState.kt
+    app/src/main/java/uz/ovozstudio/app/ui/settings/SettingsUiState.kt
+    app/src/main/java/uz/ovozstudio/app/settings/AppLanguage.kt
+    app/src/main/java/uz/ovozstudio/app/settings/AppSettings.kt
+    app/src/main/java/uz/ovozstudio/app/settings/AppSettingsStore.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -148,6 +152,9 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/tag/Id3v2TagTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/Mp3TaggerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/TagDraftTest.kt
+    app/src/test/java/uz/ovozstudio/app/settings/LanguageMatchTest.kt
+    app/src/test/java/uz/ovozstudio/app/settings/AppSettingsStoreTest.kt
+    app/src/test/java/uz/ovozstudio/app/ui/settings/SettingsUiStateTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

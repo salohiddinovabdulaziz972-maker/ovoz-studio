@@ -252,7 +252,11 @@ private fun targetLabel(state: ConvertUiState, format: AudioFormat): String {
 private fun sampleRateText(rate: Int): String = if (rate % 1000 == 0) {
     "${rate / 1000} kHz"
 } else {
-    String.format(Locale.getDefault(), "%.1f kHz", rate / 1000.0)
+    // `Locale.US` ataylab: ilovadagi barcha sonlar nuqta bilan yoziladi
+    // (`DecimalText`, `TimeFormat` ham shunday). Rus yoki o'zbek tilida
+    // `Locale.getDefault()` vergul qo'yardi va bir ekranda ikki xil
+    // ajratgich chiqardi.
+    String.format(Locale.US, "%.1f kHz", rate / 1000.0)
 }
 
 @Composable

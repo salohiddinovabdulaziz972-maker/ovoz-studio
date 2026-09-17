@@ -88,16 +88,33 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 - **Ulashish**: tayyor faylni tizim oynasi orqali boshqa ilovaga yuborish
   (Telegram, pochta, bulut). Fayl `content://` havola bilan, faqat o'qish
   uchun va bir marta beriladi.
+- **Sozlamalar**: til qo'lda tanlanadi — «tizim tili bilan bir xil», o'zbekcha
+  (lotin), o'zbekcha (kirill), ruscha yoki inglizcha. Ekranda **hozir amalda
+  ishlayotgan til** ham yozib qo'yiladi: «tizim tili» tanlanganda qaysi til
+  ochilishini foydalanuvchi oldindan biladi (qurilma tili ro'yxatdagi
+  tillardan biri bo'lmasa — o'zbekcha). Til darhol qo'llanadi, ekran qayta
+  ochiladi va tanlov keyingi ishga tushirishda ham saqlanadi; yozib
+  bo'lmasa (joy yo'q) — o'zgarish qo'llanmaydi va ekran buni aytadi, jimgina
+  «eski tilga qaytib qolish» bo'lmaydi. Soddalashtirilgan rejim ikkinchi
+  darajali tugmalarni yashiradi (ekran o'quvchi bilan har bir amalga yetish
+  osonlashadi), lekin **hech narsani yo'qotmaydi**: bosh ekranda «Boshqa
+  imkoniyatlar» tugmasi ochib beradi va rejim yoniqligi ekranda yozib
+  qo'yiladi. Ilova haqida bo'limida versiya, litsenziya nomi va manba kod
+  havolasi bor. Halol cheklov: til ilova ekranlariga va yozish bildirishnomasiga
+  ta'sir qiladi; tizim sozlagichlaridan keladigan bir necha satr (masalan,
+  ruxsat oynasi) qurilma tilida qolaveradi.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
-  kod yozish shart emas. Standart (zaxira) til — **o'zbekcha**: qurilma tili
-  ro'yxatdagi tillardan biri bo'lmasa ham, ilova o'zbekcha ochiladi.
+  kod yozish shart emas, xohlasa sozlamalarda qo'lda tanlanadi. Standart
+  (zaxira) til — **o'zbekcha**: qurilma tili ro'yxatdagi tillardan biri
+  bo'lmasa ham, ilova o'zbekcha ochiladi. Kirill yozuvini tanlash alohida:
+  o'zbekcha ikki yozuvda yoziladi, ya'ni «o'zbek tili» o'zi yetarli emas.
 
 ## Nima hali yo'q
 
 Nutqni matnga aylantirish (STT),
-sozlamalar ekrani, vokal/cholg'u ajratish va neyron shovqin
+vokal/cholg'u ajratish va neyron shovqin
 tozalash. Aralashtirishda manbalar hozircha faqat WAV (boshqa format
 konvertorda o'tkaziladi) va ularning chastotasi teng bo'lishi shart.
 ID3 teg faqat MP3 faylga yoziladi (M4A/FLAC teglari keyingi
@@ -136,7 +153,7 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-545 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+568 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
 holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
 matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
@@ -148,6 +165,11 @@ yozilishi va **o'qilishi** (kirill, UTF-8, UTF-16, v2.4 ramka o'lchami,
 buzilgan teg ilovani yiqitmasligi), aralashtirish ekranining hisoblari (aralashma
 uzunligi, tugma yoqilganmi) va yo'l sozlamalari matnining chegaralari
 (-60 dB maydonga sig'adimi, matn va son orasidagi aylanish aynanmi).
+Sozlamalar mantig'i ham shu yerda: qurilma tilidan ilova tilini aniqlash
+(kirill yozuvi `uz-Cyrl` tegidan ajraladi, tartib saqlanadi, notanish til —
+o'zbekchaga tushadi), sozlama faylining har bir holati (yo'q, bo'sh, buzuq,
+notanish teg — hech biri ilovani yiqitmaydi) va «hozir ishlatilayotgan til»
+satrining hisobi.
 Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -178,7 +200,17 @@ bash bin/verify-tag.sh      # ID3 teglarini ffprobe o'qiydi, tegni ilova
 bash bin/verify-mix.sh      # aralashmani ffmpeg o'qiydi: balandlik va
                             # panorama analitik javobga mosmi, kesish
                             # himoyasi ishlayaptimi
+bash bin/verify-locales.sh  # to'rt til fayli: kalitlar to'plami, o'rin
+                            # egallovchilar, qochirilmagan apostrof, yozuv
+                            # aralashuvi
 ```
+
+`verify-locales.sh` boshqalardan farq qiladi: u ilovani ishga solmaydi,
+balki uni **yig'ish** imkonsizligini qoplaydi. APK bu konteynerda
+yig'ilmaydi (`aapt2` faqat x86_64 uchun), ya'ni til fayllaridagi xatoni
+ushlaydigan aapt2 ham yo'q. Xatolar esa jim: ruscha faylda kalit yetishmasa,
+foydalanuvchi buni «xato» deb hisoblamaydi — shunchaki o'zbekcha satrni
+ko'radi. Shuning uchun har bir qoida sun'iy xato kiritib tekshirildi.
 
 Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
 mustaqil o'lchaydi (`ffmpeg`, `python3`). Batafsil natijalar va topilgan
@@ -229,6 +261,7 @@ app/src/main/java/uz/ovozstudio/app/
   media/tag/  ID3 tegini yozish va o'qish, foydalanuvchi kiritgan qiymatlar
   media/mix/  ko'p yo'lli aralashtirish: mikser, yo'l sozlamalari,
               loyihani saqlash
+  settings/   til tanlash mantig'i, sozlamalar fayli, litsenziya havolalari
   ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
@@ -241,6 +274,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/book/    hujjatdan audio-kitob ekrani va pleyer
   ui/tag/     ID3 teg muharriri va ulashish ekrani
   ui/mix/     ko'p yo'lli aralashtirish ekrani
+  ui/settings/ sozlamalar ekrani: til, soddalashtirilgan rejim, ilova haqida
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash
 bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari

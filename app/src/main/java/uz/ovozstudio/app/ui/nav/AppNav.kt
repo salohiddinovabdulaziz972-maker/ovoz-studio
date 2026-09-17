@@ -14,6 +14,7 @@ import uz.ovozstudio.app.ui.home.HomeScreen
 import uz.ovozstudio.app.ui.mix.MixScreen
 import uz.ovozstudio.app.ui.noise.NoiseScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
+import uz.ovozstudio.app.ui.settings.SettingsScreen
 import uz.ovozstudio.app.ui.speed.SpeedScreen
 import uz.ovozstudio.app.ui.tag.TagScreen
 import uz.ovozstudio.app.ui.trim.TrimScreen
@@ -73,6 +74,12 @@ object Routes {
      */
     const val MIX = "mix"
 
+    /**
+     * Sozlamalar ekrani. Fayl talab qilmaydi: til, soddalashtirilgan rejim
+     * va ilova haqida — hammasi ilovaning o'ziga tegishli.
+     */
+    const val SETTINGS = "settings"
+
     fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
 
     fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
@@ -108,6 +115,7 @@ fun AppNav() {
                 onMix = { navController.navigate(Routes.MIX) },
                 onVoice = { navController.navigate(Routes.VOICE) },
                 onBook = { navController.navigate(Routes.BOOK) },
+                onSettings = { navController.navigate(Routes.SETTINGS) },
             )
         }
 
@@ -214,6 +222,10 @@ fun AppNav() {
 
         composable(Routes.BOOK) {
             BookScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

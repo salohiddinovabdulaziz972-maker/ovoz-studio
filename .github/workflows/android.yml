@@ -36,6 +36,12 @@ jobs:
         with:
           gradle-version: "8.11.1"
 
+      # Til fayllari aapt2 dan oldin tekshiriladi: aapt2 qochirilmagan
+      # apostrofni ushlaydi, lekin yetishmagan kalitni, tushib qolgan
+      # `%1$s` ni va aralashgan yozuvni ushlamaydi — ular jim o'tadi.
+      - name: Check locale files
+        run: bash bin/verify-locales.sh
+
       - name: Run unit tests
         run: gradle testDebugUnitTest --no-daemon --stacktrace
 

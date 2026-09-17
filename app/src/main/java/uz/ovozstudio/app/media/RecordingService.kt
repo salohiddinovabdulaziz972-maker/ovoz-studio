@@ -14,6 +14,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import uz.ovozstudio.app.MainActivity
 import uz.ovozstudio.app.R
+import uz.ovozstudio.app.settings.AppSettingsStore
+import uz.ovozstudio.app.settings.LocaleContext
 
 /**
  * Yozib olish davomida ilovani tirik ushlab turadigan fon xizmati.
@@ -53,8 +55,25 @@ class RecordingService : Service() {
         return START_NOT_STICKY
     }
 
+    /**
+     * Matnlari tanlangan tilda bo'lgan kontekst.
+     *
+     * Xizmat konteksti `Application` kontekstidan, ya'ni unda tizim tili
+     * ishlaydi; tanlangan til esa faqat Activity kontekstiga qo'llanadi
+     * (`MainActivity.attachBaseContext`). Shuning uchun bildirishnoma matni
+     * shu yerda o'ralgan kontekstdan olinadi — aks holda ilova ruscha
+     * bo'lib turib, bildirishnoma o'zbekcha chiqardi.
+     *
+     * O'qish muvaffaqiyatsiz bo'lsa — xizmatning o'z konteksti: bildirishnoma
+     * tizim tilida chiqadi, lekin yozuv hech qachon to'xtamaydi.
+     */
+    private fun localized(): Context = runCatching {
+        LocaleContext.apply(this, AppSettingsStore.inFiles(filesDir).load().language)
+    }.getOrDefault(this)
+
     private fun buildNotification(): Notification {
         createChannel()
+        val strings = localized()
         val openApp = PendingIntent.getActivity(
             this,
             0,
@@ -62,8 +81,8 @@ class RecordingService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(getString(R.string.record_notification_title))
-            .setContentText(getString(R.string.record_notification_text))
+            .setContentTitle(strings.getString(R.string.record_notification_title))
+            .setContentText(strings.getString(R.string.record_notification_text))
             .setSmallIcon(R.drawable.ic_mic)
             .setContentIntent(openApp)
             // Yozuv ketayotganda bildirishnomani supurib tashlab bo'lmaydi:
@@ -78,14 +97,15 @@ class RecordingService : Service() {
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val strings = localized()
         val channel = NotificationChannel(
             CHANNEL_ID,
-            getString(R.string.record_notification_channel),
+            strings.getString(R.string.record_notification_channel),
             // MUHIM: eng past muhimlik. O'rtacha muhimlikda bildirishnoma ovoz
             // chiqaradi va u ovoz to'g'ridan-to'g'ri yozuvga tushib qolardi.
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = getString(R.string.record_notification_channel_desc)
+            description = strings.getString(R.string.record_notification_channel_desc)
             setShowBadge(false)
         }
         // `getSystemService` null qaytarishi mumkin (nazariy holat) — kanal

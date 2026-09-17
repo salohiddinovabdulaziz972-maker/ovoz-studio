@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 335 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 342 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 545 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 568 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   106 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   115 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -220,6 +220,51 @@ Oxirgi yangilanish: 2026-09-17
     natija bilan kutgani mos kelmasdi).
     **Mustaqil tekshiruv:** `bin/verify-mix.sh` (sakkizinchi tekshiruv,
     pastda).
+21. **Sozlamalar ekrani** — `settings/` (til mantig'i, sozlama fayli) va
+    `ui/settings/` (ekran). Til: «tizim tili bilan bir xil», o'zbekcha
+    (lotin), o'zbekcha (kirill), ruscha, inglizcha.
+    **Qurilma tilidan aniqlash** (`LanguageMatch`) — teglar ro'yxati afzallik
+    bo'yicha o'qiladi va **birinchi mos kelgani** olinadi; kirill yozuvi
+    `uz-Cyrl` tegining ichidan ajratiladi (`uz-UZ` — lotin, `uz-Cyrl-UZ` —
+    kirill), notanish til o'zbekchaga tushadi. Pastki chiziqli teg
+    (`uz_Cyrl_UZ`) ham o'qiladi: Android teglarni har xil shaklda beradi.
+    **Ekranda amalda ishlayotgan til yoziladi** — «tizim tili» qaysi tilga
+    olib kelishini foydalanuvchi oldindan ko'radi, taxmin qilmaydi.
+    **Til almashtirish appcompat'siz** bajariladi: loyihada `appcompat`
+    yo'q, ya'ni `AppCompatDelegate.setApplicationLocales` mavjud emas —
+    shuning uchun `attachBaseContext` da `createConfigurationContext` bilan
+    yangi `Context` yasaladi va Activity `recreate()` qilinadi. Tizim tili
+    tanlanganda `Locale.setDefault` **qurilma tiliga qaytariladi**: aks
+    holda oldin tanlangan til raqam va sana formatlashda qolib ketardi.
+    Qurilma tili `Resources.getSystem()` dan o'qiladi, `Locale.getDefault()`
+    dan emas — ikkinchisini o'zimiz o'zgartirgan bo'lamiz.
+    **Yozuv sinxron** (`AppSettingsStore.save`): Activity qayta ochilganda
+    faylni `attachBaseContext` da **darhol** o'qiydi, ya'ni fondagi yozuv
+    bilan poyga chiqardi va foydalanuvchi tanlagan til «o'z-o'zidan qaytib
+    ketgandek» ko'rinardi. Fayl ~100 bayt, yozuv bir millisekunddan qisqa.
+    Shuning uchun `setLanguage` mantiqiy qiymat qaytaradi va ekran faqat
+    yozuv **haqiqatan** o'tganda qayta ochiladi; o'tmasa — ochiq xato
+    ko'rsatiladi, jimgina eski tilga qaytish bo'lmaydi.
+    **Buzuq sozlama fayli — xato emas, zaxira qiymat**: yo'q fayl, bo'sh
+    fayl, buzuq fayl va notanish til tegi — hammasi standart holatga
+    tushadi. Sozlama fayli uchun xato oynasi ko'rsatish noto'g'ri bo'lardi:
+    foydalanuvchi ilovani ochib ishlatishi kerak, faylni esa o'zi tuzata
+    olmaydi.
+    **Soddalashtirilgan rejim** ikkinchi darajali tugmalarni yashiradi (bosh
+    ekranda 7 ta asbob tugmasi «Boshqa imkoniyatlar» ortiga, har bir yozuv
+    qatorida 4 ta ikonka), lekin **funksiyani yo'qotmaydi**: har bir amal
+    bosh ekranda ham bor, rejim yoniqligi ekranda yozib qo'yiladi va
+    ochish tugmasi ko'rinib turadi. Maqsad — ekran o'quvchi bilan har bir
+    yozuvdagi to'xtash nuqtalari sonini kamaytirish, imkoniyatni emas.
+    **Ilova haqida**: versiya (paketdan, `runCatching` bilan — `BuildConfig`
+    AGP 8 da o'chiq), litsenziya nomi va manba kod havolasi. Havola
+    ochilmasa (brauzer yo'q) — ochiq xato.
+    **Mustaqil tekshiruv:** `bin/verify-locales.sh` (to'qqizinchi tekshiruv,
+    pastda).
+    **Qolgani (faqat qurilmada tekshiriladi):** til almashtirishning
+    haqiqiy qurilmada ishlashi (Activity qayta ochilishi, matn kirill
+    yozuviga o'tishi) va soddalashtirilgan rejimning TalkBack bilan
+    yengillashishi.
 
 ## Muhim texnik qarorlar
 
@@ -737,6 +782,66 @@ solishtiriladi. Qolgan ikkisi — aralashma qanday **eshitilishi** (yo'llar
 muvozanati, panorama ta'siri) va ekranning TalkBack bilan ishlashi — faqat
 qurilmada, quloq bilan baholanadi.
 
+### To'qqizinchi tekshiruv — til fayllari (2026-09-17)
+
+Bu tekshiruv boshqalardan farq qiladi: u ovozni emas, **matnni** o'lchaydi.
+Sababi — konteynerda APK yig'ilmaydi (`aapt2` faqat x86_64 uchun), ya'ni
+til fayllaridagi xatoni ushlaydigan asbob ham yo'q. Xatolar esa jim:
+ruscha faylda kalit yetishmasa, foydalanuvchi o'zbekcha satrni ko'radi va
+buni hech kim xato deb hisoblamaydi. Shuning uchun
+`bin/verify-locales.py` yozildi — tashqi haqiqat sifatida `values/strings.xml`
+(tayanch til) olinadi.
+
+**A. Kalitlar to'plami.** To'rt fayl (values, values-b+uz+Cyrl, values-ru,
+values-en) 342 tadan kalitga ega, to'plamlari **aynan bir xil**: yetishmagan
+ham, ortiqcha ham yo'q.
+
+**B. O'rin egallovchilar.** Bitta kalit uchun `%1$s` kabi belgilar to'rt
+faylda bir xil bo'lishi shart. Tarjimada tushib qolsa, foydalanuvchi
+«Versiya: » kabi bo'sh satr ko'radi.
+
+**C. Qochirilmagan apostrof.** Android resurslarida `'` faqat `\'` bo'lib
+yozilishi kerak, aks holda aapt2 yig'ishni to'xtatadi. O'zbek tilida apostrof
+ko'p (`o'zbek`, `to'g'ri`), ya'ni bu — shu loyihada eng ehtimolli yig'ish
+xatosi, va uni bu konteynerda boshqa yo'l bilan topib bo'lmaydi.
+
+**D. Yozuv aralashuvi.** Belgilar ataylab aniq tanlandi (keng qoida yolg'on
+signal beradi — `OvozStudio`, `Telegram`, `MP3` ham lotin harflarida):
+tayanch faylda kirill harfi bo'lmasligi, kirill faylida esa o'zbek
+lotiniga xos `o'`/`g'` digrafi bo'lmasligi kerak (kirill yozuvida ular
+`ў`/`ғ`), va kirill faylida butunlay lotin yozuvidagi satr bo'lmasligi kerak
+(o'rin egallovchilar olib tashlangandan keyin).
+
+**E. O'lik kalitlar.** Kodda va manifestda ishlatilmagan kalitlar
+ogohlantirish sifatida chiqadi. Birinchi yurgizishda **9 ta** topildi —
+`record_elapsed_a11y`, `record_level_label`, `record_format`, `record_channel`,
+`record_channel_mono`, `record_stopped`, `record_error_start`,
+`trim_fade_length`, `tag_share_missing`. Hammasi eski ekran qoralamalaridan
+qolgan: keyingi versiyalarda o'rniga boshqa kalit ishlatilgan
+(`record_error_generic`, `record_level_a11y`, `trim_fade_length_label`).
+Har biri kotlinda ham, manifestda ham qo'lda tekshirildi va to'rt fayldan
+o'chirildi (342 ta kalit qoldi). O'lik tarjima zararli: tarjimon uni ko'radi,
+tarjima qiladi, u esa hech qachon ekranga chiqmaydi.
+
+**Har bir qoida sun'iy xato bilan sinaldi** — hech narsani tutmaydigan
+tekshiruv foydasiz, shuning uchun har bir qoida uchun fayl ataylab
+buzildi va skript xatoni ko'rsatishi tasdiqlandi, so'ng fayl qaytarildi:
+
+| kiritilgan xato | skript javobi |
+|---|---|
+| `values-en` dan kalit o'chirildi | «yetishmayotgan kalitlar: home_action_settings» |
+| `values-en` da `%1$s` tushirildi | «o'rin egallovchilari mos emas: kutilgan ['%1$s'], topilgan yo`q» |
+| `values-en` da yolg'iz apostrof | «qochirilmagan apostrof» |
+| kirill faylga lotin matni | «o'zbek lotin digrafi (o'/g') bor — yozuv aralashgan» |
+| tayanch faylga kirill matni | «kirill harfi bor — yozuv aralashgan» |
+
+**Nima tekshirilmaydi.** Tilning **haqiqiy** almashishi: `attachBaseContext` +
+`createConfigurationContext` + `Activity.recreate()` — bular Android
+framework ishi, JVM'da ham, bu konteynerda ham yurgizilmaydi. Skript
+fayllarning to'g'riligini kafolatlaydi; ekranda til haqiqatan o'zgarganini
+faqat qurilma ko'rsatadi. Shuningdek tarjima **sifatini** (ma'nosi to'g'rimi,
+tabiiy o'qiladimi) skript baholay olmaydi — u faqat shaklni tekshiradi.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -831,7 +936,16 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    manbalar faqat WAV va ularning chastotasi teng bo'lishi shart;
    har xil chastotali yo'llarni avtomatik qayta namunalash keyingi ish.
    **Qolgani (faqat qurilmada tekshiriladi):** pastda.
-9. **Sozlamalar ekrani** — til tanlash, soddalashtirilgan rejim, ilova haqida.
+9. ~~**Sozlamalar ekrani**~~ — **tayyor** (21-band). Til tanlash (tizim /
+   o'zbek lotin / o'zbek kirill / rus / ingliz), soddalashtirilgan rejim,
+   ilova haqida (versiya, litsenziya, manba kod).
+   **Mustaqil tekshiruv:** `bin/verify-locales.sh` (to'qqizinchi tekshiruv,
+   pastda).
+   **Hozircha yo'q:** til faqat ilova ekranlariga va yozish
+   bildirishnomasiga ta'sir qiladi — tizim sozlagichlaridan keladigan satrlar
+   (ruxsat oynasi kabi) qurilma tilida qolaveradi. Soddalashtirilgan rejim
+   ikkinchi darajali tugmalarni yashiradi, funksiyani o'chirmaydi.
+   **Qolgani (faqat qurilmada tekshiriladi):** pastda.
 10. **Vokal/cholg'u ajratish** — qurilmada ishlaydigan model (ONNX/TFLite);
     eng og'ir band, shuning uchun oxirida.
 11. **Neyron shovqin tozalash** — 4-band statistik usul bilan bajarildi, ya'ni
@@ -892,6 +1006,16 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   tekshirish; «orqaga qaytarish» ishlayaptimi. Skript matematikani
   o'lchaydi, lekin **qaysi sozlama qanday eshitilishini** va ekranning
   o'qilishini faqat qurilma ko'rsatadi.
+- Sozlamalar ekranini sinash: tilni «o'zbekcha (kirill)» ga o'zgartirib,
+  ekran haqiqatan qayta ochilishini va butun interfeys kirill yozuviga
+  o'tishini ko'rish; ilovani butunlay yopib qayta ochganda tanlov
+  saqlanganini tekshirish; «tizim tili bilan bir xil» ga qaytarib, satrda
+  qurilma tili ko'rsatilishini ko'rish; rus va ingliz tillarini ham.
+  Soddalashtirilgan rejimni yoqib, ekranda kam tugma qolganini va
+  «Boshqa imkoniyatlar» ularni qaytarishini, TalkBack bilan yozuv
+  qatoridagi to'xtash nuqtalari kamayganini ko'rish. Til fayllarining
+  shaklini skript tekshiradi, lekin ekranda til haqiqatan almashganini va
+  soddalashtirilgan rejim **yengilroq** bo'lganini faqat qurilma ko'rsatadi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 
@@ -917,6 +1041,18 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 - Ducking (bir yo'l ko'tarilganda boshqasini avtomatik tushirish) hozir
   qo'lda bajariladi — balandlik maydonini o'zgartirib. Avtomatik ducking
   alohida ish.
+- Til ilova ekranlariga va yozish bildirishnomasiga ta'sir qiladi.
+  Tizim sozlagichlaridan keladigan satrlar (ruxsat oynasi, fayl tanlagich
+  kabi) qurilma tilida qolaveradi — ular ilovaning resurslari emas.
+  `Application` konteksti bilan olingan satrlar uchun ham shu hol: til
+  Activity yaratilishida qo'llanadi.
+- Soddalashtirilgan rejim faqat ikkinchi darajali tugmalarni yashiradi;
+  ekran tuzilishi o'zgarmaydi (masalan, kesish ekranidagi maydonlar soni
+  o'sha-o'sha). Rejimning maqsadi — ekran o'quvchi bilan navigatsiyani
+  yengillashtirish, interfeysni qaytadan loyihalash emas.
+- Sozlama fayli (`filesDir/sozlamalar.properties`) yozilmasa, o'zgarish
+  qo'llanmaydi va ekran buni aytadi — lekin sababini aniqlash imkoni yo'q
+  (joy yo'qmi, ruxsatmi). Xato matni ikkalasini ham qamrab oladi.
 
 ## Ochiq savollar
 
