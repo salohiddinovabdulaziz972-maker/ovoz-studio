@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,8 +61,11 @@ fun RecordScreen(
 
     var hasPermission by remember { mutableStateOf(context.hasRecordPermission()) }
     val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted ->
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { results ->
+        // Faqat mikrofon hal qiluvchi: bildirishnoma ruxsati berilmasa ham
+        // yozuv ishlaydi, shuning uchun u «ruxsat yo'q» holatini yaratmaydi.
+        val granted = results[Manifest.permission.RECORD_AUDIO] ?: context.hasRecordPermission()
         hasPermission = granted
         if (!granted) {
             announce(context.getString(R.string.record_permission_message))
@@ -83,6 +87,14 @@ fun RecordScreen(
     LaunchedEffect(state.savedPath) {
         state.savedPath?.let {
             announce(context.getString(R.string.record_saved, savedSpoken))
+        }
+    }
+
+    // Ogohlantirish ovoz bilan ham aytiladi: ekran o'quvchi foydalanuvchisi
+    // matnni ko'rmaydi, yozuvi xavf ostida qolganini bilishi kerak.
+    LaunchedEffect(state.backgroundWarning) {
+        if (state.backgroundWarning) {
+            announce(context.getString(R.string.record_background_failed))
         }
     }
 
@@ -114,7 +126,7 @@ fun RecordScreen(
 
         if (!hasPermission) {
             PermissionBlock(
-                onRequest = { permissionLauncher.launch(Manifest.permission.RECORD_AUDIO) },
+                onRequest = { permissionLauncher.launch(recordingPermissions()) },
                 onOpenSettings = { context.openAppSettings() },
             )
             return@Column
@@ -150,6 +162,17 @@ fun RecordScreen(
                     onOpenSaved(savedPath)
                     viewModel.consumeSaved()
                 },
+            )
+        }
+
+        if (state.backgroundWarning) {
+            Text(
+                text = stringResource(R.string.record_background_failed),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            A11yOutlinedButton(
+                label = stringResource(R.string.common_ok),
+                onClick = { viewModel.dismissBackgroundWarning() },
             )
         }
 
@@ -338,6 +361,19 @@ private fun PermissionBlock(
 private fun Context.hasRecordPermission(): Boolean =
     ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
         PackageManager.PERMISSION_GRANTED
+
+/**
+ * Yozish uchun so'raladigan ruxsatlar.
+ *
+ * Bildirishnoma ruxsati faqat Android 13+ da mavjud; eski versiyalarda uni
+ * so'rash mazmunsiz bo'lardi (tizim darhol «berilmadi» deb qaytaradi).
+ */
+private fun recordingPermissions(): Array<String> =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+        arrayOf(Manifest.permission.RECORD_AUDIO)
+    }
 
 private fun Context.openAppSettings() {
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

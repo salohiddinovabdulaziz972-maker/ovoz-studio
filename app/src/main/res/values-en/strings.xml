@@ -37,6 +37,11 @@
     <string name="record_stopped">Recording stopped</string>
     <string name="record_error_start">Could not start recording.</string>
     <string name="record_error_generic">Something went wrong: %1$s</string>
+    <string name="record_notification_channel">Recording</string>
+    <string name="record_notification_channel_desc">Shown while recording continues. It makes no sound.</string>
+    <string name="record_notification_title">Recording in progress</string>
+    <string name="record_notification_text">Recording continues while the app is in the background. Open the app to stop it.</string>
+    <string name="record_background_failed">Could not enable background mode — recording may stop if the screen turns off.</string>
     <string name="record_permission_title">Microphone access needed</string>
     <string name="record_permission_message">To record audio, allow microphone access.</string>
     <string name="record_permission_grant">Allow</string>

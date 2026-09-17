@@ -66,26 +66,37 @@ if [ ! -d "$LIBS" ] || [ -z "$(ls -A "$LIBS" 2>/dev/null)" ]; then
     python3 bin/resolve-android-deps.py
 fi
 
-# `R` sinfi: ilovada faqat `R.string` ishlatiladi, shuning uchun uni
-# resurslardan generatsiya qilamiz. Qiymatlar ahamiyatsiz — muhimi tiplar.
+# `R` sinfi: ishlatiladigan har bir resurs turi shu yerda generatsiya qilinadi.
+# Qiymatlar ahamiyatsiz — muhimi tiplar. Yangi tur ishlatilsa (masalan
+# `R.mipmap`), uni ham shu ro'yxatga qo'shish kerak, aks holda type-check
+# «unresolved reference» deb yon beradi.
 python3 - "$ROOT" "$CACHE/R.kt" <<'PY'
 import re, sys, pathlib
 root, dest = sys.argv[1], sys.argv[2]
-names = re.findall(
-    r'<string name="([^"]+)"',
-    pathlib.Path(root, 'app/src/main/res/values/strings.xml').read_text(),
-)
+res = pathlib.Path(root, 'app/src/main/res')
+
+def drawable_names():
+    d = res / 'drawable'
+    if not d.is_dir():
+        return []
+    return sorted({f.stem for f in d.iterdir() if f.is_file()})
+
+strings = re.findall(r'<string name="([^"]+)"', (res / 'values/strings.xml').read_text())
+drawables = drawable_names()
+
 lines = [
     "package uz.ovozstudio.app",
     "",
     "// Generatsiya qilingan stub — faqat kompilyatsiyani tekshirish uchun.",
     "object R {",
-    "    object string {",
 ]
-lines += [f"        const val {n}: Int = {i + 1}" for i, n in enumerate(names)]
-lines += ["    }", "}", ""]
+for name, names in (("string", strings), ("drawable", drawables)):
+    lines.append(f"    object {name} {{")
+    lines += [f"        const val {n}: Int = {i + 1}" for i, n in enumerate(names)]
+    lines.append("    }")
+lines += ["}", ""]
 pathlib.Path(dest).write_text("\n".join(lines))
-print(f"R.kt: {len(names)} satr kaliti")
+print(f"R.kt: {len(strings)} satr, {len(drawables)} drawable kaliti")
 PY
 
 CP="$ANDROID_JAR:$STDLIB"

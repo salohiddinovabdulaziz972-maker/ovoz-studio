@@ -6,6 +6,15 @@
          foydalanuvchi uchun xavf va ishonchsizlik. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Yozuv ekran o'chganda ham davom etishi uchun. `FOREGROUND_SERVICE_MICROPHONE`
+         Android 14+ da majburiy; eski versiyalar uni shunchaki tanimaydi. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+
+    <!-- Yozuv bildirishnomasi ko'rinishi uchun (Android 13+). Ruxsat berilmasa
+         ham yozuv ishlaydi — faqat bildirishnoma ko'rinmaydi. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Mikrofon bo'lmasa ham ilova o'rnatiladi: tahrirlash qismi ishlayveradi. -->
     <uses-feature
         android:name="android.hardware.microphone"
@@ -31,6 +40,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Yozuv davomida jarayonni tirik ushlab turadi. Chaqiruvchi faqat
+             ilovaning o'zi, shuning uchun `exported=false`. -->
+        <service
+            android:name=".media.RecordingService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
     </application>
 
 </manifest>

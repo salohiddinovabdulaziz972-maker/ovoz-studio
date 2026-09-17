@@ -37,6 +37,11 @@
     <string name="record_stopped">Ёзиш тўхтатилди</string>
     <string name="record_error_start">Ёзишни бошлаб бўлмади.</string>
     <string name="record_error_generic">Хатолик юз берди: %1$s</string>
+    <string name="record_notification_channel">Ёзиб олиш</string>
+    <string name="record_notification_channel_desc">Ёзув давом этаётганда кўринадиган билдиришнома. Овоз чиқармайди.</string>
+    <string name="record_notification_title">Ёзиб олинмоқда</string>
+    <string name="record_notification_text">Илова фонда бўлса ҳам ёзув давом этади. Тўхтатиш учун иловани очинг.</string>
+    <string name="record_background_failed">Фон режимини ёқиб бўлмади — экран ўчса ёзув тўхтатилиши мумкин.</string>
     <string name="record_permission_title">Микрофон рухсати керак</string>
     <string name="record_permission_message">Аудио ёзиш учун микрофонга рухсат беринг.</string>
     <string name="record_permission_grant">Рухсат бериш</string>

@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import uz.ovozstudio.app.media.AudioRecorderEngine
 import uz.ovozstudio.app.media.RecorderConfig
+import uz.ovozstudio.app.media.RecordingService
 import uz.ovozstudio.app.media.RecordingStore
 
 data class RecordUiState(
@@ -27,6 +28,11 @@ data class RecordUiState(
     val savedPath: String? = null,
     val savedDurationMs: Long = 0L,
     val errorMessage: String? = null,
+    /**
+     * Fon xizmatini yoqib bo'lmadi — yozuv davom etadi, lekin ekran o'chsa
+     * tizim uni to'xtatishi mumkin. Xato emas, ogohlantirish.
+     */
+    val backgroundWarning: Boolean = false,
 ) {
     /** Sozlamalarni faqat yozuv ketmayotganda o'zgartirish mumkin. */
     val configEditable: Boolean get() = !isRecording
@@ -70,6 +76,7 @@ class RecordViewModel(application: Application) :
                     markerCount = 0,
                     savedPath = null,
                     errorMessage = null,
+                    backgroundWarning = !startBackgroundService(),
                 )
             }
         } catch (error: Exception) {
@@ -101,6 +108,9 @@ class RecordViewModel(application: Application) :
         if (!_state.value.isRecording) return
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { engine.stop() }
+            // Fon xizmati fayl to'liq yozilgandan KEYIN o'chiriladi: aks holda
+            // jarayon sarlavha yozilishidan oldin o'ldirilishi mumkin edi.
+            stopBackgroundService()
             _state.update { current ->
                 if (result == null) {
                     current.copy(
@@ -130,6 +140,10 @@ class RecordViewModel(application: Application) :
         _state.update { it.copy(savedPath = null) }
     }
 
+    fun dismissBackgroundWarning() {
+        _state.update { it.copy(backgroundWarning = false) }
+    }
+
     // --- AudioRecorderEngine.Listener (ovoz oqimidan chaqiriladi) ---
 
     override fun onProgress(elapsedMs: Long, level: Float) {
@@ -143,6 +157,9 @@ class RecordViewModel(application: Application) :
     }
 
     private fun engineError(message: String) {
+        // Yadro o'zi to'xtab qoldi — fon xizmati ham keraksiz bo'lib qoldi,
+        // aks holda bildirishnoma «yozib olinmoqda» deb turib olardi.
+        stopBackgroundService()
         _state.update {
             it.copy(
                 isRecording = false,
@@ -153,8 +170,24 @@ class RecordViewModel(application: Application) :
         }
     }
 
+    /**
+     * Fon xizmatini yoqadi. `false` — yoqilmadi.
+     *
+     * Xatoni yutmaymiz, lekin yozuvni ham to'xtatmaymiz: yozish ishlayapti,
+     * shunchaki ekran o'chganda tizim uni to'xtatishi mumkin. Bu holat
+     * foydalanuvchiga ogohlantirish sifatida ko'rsatiladi.
+     */
+    private fun startBackgroundService(): Boolean = runCatching {
+        RecordingService.start(getApplication())
+    }.isSuccess
+
+    private fun stopBackgroundService() {
+        runCatching { RecordingService.stop(getApplication()) }
+    }
+
     override fun onCleared() {
         super.onCleared()
+        stopBackgroundService()
         if (engine.isRunning) {
             engine.stop()
         }
