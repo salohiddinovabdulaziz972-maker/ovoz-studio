@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Овоз Студио</string>
+
+    <string name="home_title">Овоз Студио</string>
+    <string name="home_subtitle">Ёзиб олиш, таҳрирлаш, конвертация — ҳаммаси битта иловада.</string>
+    <string name="home_action_record">Аудио ёзиб олиш</string>
+    <string name="home_action_trim">Кесиш ва бўлиш</string>
+    <string name="home_action_convert">Формат конвертори</string>
+    <string name="home_action_settings">Созламалар</string>
+    <string name="home_recent_title">Охирги файллар</string>
+    <string name="home_empty">Ҳозирча ёзувлар йўқ.</string>
+
+    <string name="record_title">Ёзиб олиш</string>
+    <string name="record_start">Ёзишни бошлаш</string>
+    <string name="record_pause">Пауза</string>
+    <string name="record_resume">Давом эттириш</string>
+    <string name="record_stop">Тўхтатиш ва сақлаш</string>
+    <string name="record_marker">Белги қўйиш</string>
+    <string name="record_marker_added">%1$d-белги қўйилди</string>
+    <string name="record_marker_count">Белгилар: %1$d</string>
+    <string name="record_started">Ёзиш бошланди</string>
+    <string name="record_announce_time">Вақтни айтиб бер</string>
+    <string name="record_elapsed_a11y">Ўтган вақт %1$s</string>
+    <string name="record_level_a11y">Кириш даражаси %1$d фоиз</string>
+    <string name="record_level_label">Кириш даражаси</string>
+    <string name="record_quality_title">Сифат</string>
+    <string name="record_sample_rate">Дискретизация частотаси</string>
+    <string name="record_bit_depth">Бит чуқурлиги</string>
+    <string name="record_format">Формат</string>
+    <string name="record_channel">Каналлар</string>
+    <string name="record_channel_mono">Моно</string>
+    <string name="record_channel_stereo">Стерео</string>
+    <string name="record_noise_suppression">Шовқинни бостириш</string>
+    <string name="record_echo_cancellation">Эхони йўқотиш</string>
+    <string name="record_saved">Сақланди: %1$s</string>
+    <string name="record_stopped">Ёзиш тўхтатилди</string>
+    <string name="record_error_start">Ёзишни бошлаб бўлмади.</string>
+    <string name="record_error_generic">Хатолик юз берди: %1$s</string>
+    <string name="record_permission_title">Микрофон рухсати керак</string>
+    <string name="record_permission_message">Аудио ёзиш учун микрофонга рухсат беринг.</string>
+    <string name="record_permission_grant">Рухсат бериш</string>
+    <string name="record_permission_settings">Созламаларни очиш</string>
+
+    <string name="trim_title">Кесиш ва бўлиш</string>
+    <string name="trim_start_label">Бошланиш</string>
+    <string name="trim_end_label">Тугаш</string>
+    <string name="trim_hint">соат:дақиқа:сония.миллисония</string>
+    <string name="trim_invalid">Вақтни соат:дақиқа:сония.миллисония кўринишида киритинг</string>
+    <string name="time_unit_hours">соат</string>
+    <string name="time_unit_minutes">дақиқа</string>
+    <string name="time_unit_seconds">сония</string>
+    <string name="time_unit_millis">миллисония</string>
+    <string name="time_input_invalid">Вақтни текширинг: дақиқа ва сония 0–59, миллисония 0–999</string>
+    <string name="trim_play">Танланган қисмни эшитиш</string>
+    <string name="trim_stop">Эшитишни тўхтатиш</string>
+    <string name="trim_fade_in">Силлиқ бошланиш (Fade In)</string>
+    <string name="trim_fade_out">Силлиқ тугаш (Fade Out)</string>
+    <string name="trim_fade_length">Силлиқлаш узунлиги %1$s мс</string>
+    <string name="trim_fade_length_label">Силлиқлаш узунлиги, мс</string>
+    <string name="trim_file_duration">Узунлиги: %1$s</string>
+    <string name="trim_selection_range">%1$s — %2$s</string>
+    <string name="trim_apply">Қўллаш</string>
+    <string name="trim_delete">Танланган қисмни ўчириш</string>
+    <string name="trim_save">Сақлаш</string>
+    <string name="trim_error_file_not_found">Файл топилмади</string>
+    <string name="trim_error_selection_empty">Танланган оралиқ бўш</string>
+    <string name="trim_error_selection_all">Бутун файлни ўчириб бўлмайди</string>
+    <string name="trim_error_nothing_to_undo">Қайтариладиган амал йўқ</string>
+    <string name="trim_error_save_failed">Файлни сақлаб бўлмади</string>
+    <string name="trim_error_edit_failed">Таҳрирлашни бажариб бўлмади</string>
+    <string name="trim_undo">Орқага қайтариш</string>
+    <string name="trim_redo">Олдинга қайтариш</string>
+    <string name="trim_nothing_to_undo">Қайтариладиган амал йўқ</string>
+    <string name="trim_saved">Сақланди: %1$s</string>
+    <string name="trim_split_at">Курсор жойидан бўлиш</string>
+    <string name="trim_duration_a11y">Танланган қисм узунлиги %1$s</string>
+    <string name="trim_cursor_label">Курсор жойи</string>
+    <string name="trim_selection_title">Танланган қисм</string>
+
+    <string name="common_play">Эшитиш</string>
+    <string name="common_pause">Пауза</string>
+    <string name="common_delete">Ўчириш</string>
+    <string name="common_cancel">Бекор қилиш</string>
+    <string name="common_ok">Яхши</string>
+    <string name="common_back">Орқага</string>
+    <string name="common_more">Бошқа амаллар</string>
+    <string name="common_loading">Юкланмоқда…</string>
+
+    <string name="settings_title">Созламалар</string>
+    <string name="settings_language">Илова тили</string>
+    <string name="settings_language_system">Тизим тили билан бир хил</string>
+    <string name="settings_simplified_mode">Экран ўқувчи учун соддалаштирилган режим</string>
+    <string name="settings_simplified_mode_desc">Тўлқин шакллари ва слайдерлар ўрнига матнли рўйхат ва тугмалар ишлатилади.</string>
+    <string name="settings_about">Илова ҳақида</string>
+</resources>

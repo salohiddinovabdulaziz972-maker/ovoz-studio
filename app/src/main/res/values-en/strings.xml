@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ovoz Studio</string>
+
+    <string name="home_title">Ovoz Studio</string>
+    <string name="home_subtitle">Record, edit, convert — all in one app.</string>
+    <string name="home_action_record">Record audio</string>
+    <string name="home_action_trim">Trim and split</string>
+    <string name="home_action_convert">Format converter</string>
+    <string name="home_action_settings">Settings</string>
+    <string name="home_recent_title">Recent files</string>
+    <string name="home_empty">No recordings yet.</string>
+
+    <string name="record_title">Recording</string>
+    <string name="record_start">Start recording</string>
+    <string name="record_pause">Pause</string>
+    <string name="record_resume">Resume</string>
+    <string name="record_stop">Stop and save</string>
+    <string name="record_marker">Add marker</string>
+    <string name="record_marker_added">Marker %1$d added</string>
+    <string name="record_marker_count">Markers: %1$d</string>
+    <string name="record_started">Recording started</string>
+    <string name="record_announce_time">Announce elapsed time</string>
+    <string name="record_elapsed_a11y">Elapsed time %1$s</string>
+    <string name="record_level_a11y">Input level %1$d percent</string>
+    <string name="record_level_label">Input level</string>
+    <string name="record_quality_title">Quality</string>
+    <string name="record_sample_rate">Sample rate</string>
+    <string name="record_bit_depth">Bit depth</string>
+    <string name="record_format">Format</string>
+    <string name="record_channel">Channels</string>
+    <string name="record_channel_mono">Mono</string>
+    <string name="record_channel_stereo">Stereo</string>
+    <string name="record_noise_suppression">Noise suppression</string>
+    <string name="record_echo_cancellation">Echo cancellation</string>
+    <string name="record_saved">Saved: %1$s</string>
+    <string name="record_stopped">Recording stopped</string>
+    <string name="record_error_start">Could not start recording.</string>
+    <string name="record_error_generic">Something went wrong: %1$s</string>
+    <string name="record_permission_title">Microphone access needed</string>
+    <string name="record_permission_message">To record audio, allow microphone access.</string>
+    <string name="record_permission_grant">Allow</string>
+    <string name="record_permission_settings">Open settings</string>
+
+    <string name="trim_title">Trim and split</string>
+    <string name="trim_start_label">Start</string>
+    <string name="trim_end_label">End</string>
+    <string name="trim_hint">hh:mm:ss.mmm</string>
+    <string name="trim_invalid">Enter time as hh:mm:ss.mmm</string>
+    <string name="time_unit_hours">hours</string>
+    <string name="time_unit_minutes">min</string>
+    <string name="time_unit_seconds">sec</string>
+    <string name="time_unit_millis">ms</string>
+    <string name="time_input_invalid">Check the time: 0–59 for min and sec, 0–999 for ms</string>
+    <string name="trim_play">Play selection</string>
+    <string name="trim_stop">Stop playback</string>
+    <string name="trim_fade_in">Fade in</string>
+    <string name="trim_fade_out">Fade out</string>
+    <string name="trim_fade_length">Fade length %1$s ms</string>
+    <string name="trim_fade_length_label">Fade length, ms</string>
+    <string name="trim_file_duration">Length: %1$s</string>
+    <string name="trim_selection_range">%1$s — %2$s</string>
+    <string name="trim_apply">Apply</string>
+    <string name="trim_delete">Delete selection</string>
+    <string name="trim_save">Save</string>
+    <string name="trim_error_file_not_found">File not found</string>
+    <string name="trim_error_selection_empty">The selection is empty</string>
+    <string name="trim_error_selection_all">The whole file cannot be deleted</string>
+    <string name="trim_error_nothing_to_undo">Nothing to undo</string>
+    <string name="trim_error_save_failed">Could not save the file</string>
+    <string name="trim_error_edit_failed">Could not apply the edit</string>
+    <string name="trim_undo">Undo</string>
+    <string name="trim_redo">Redo</string>
+    <string name="trim_nothing_to_undo">Nothing to undo</string>
+    <string name="trim_saved">Saved: %1$s</string>
+    <string name="trim_split_at">Split at cursor</string>
+    <string name="trim_duration_a11y">Selection length %1$s</string>
+    <string name="trim_cursor_label">Cursor position</string>
+    <string name="trim_selection_title">Selection</string>
+
+    <string name="common_play">Play</string>
+    <string name="common_pause">Pause</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_ok">OK</string>
+    <string name="common_back">Back</string>
+    <string name="common_more">More options</string>
+    <string name="common_loading">Loading…</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_language_system">Same as system</string>
+    <string name="settings_simplified_mode">Simplified mode for screen readers</string>
+    <string name="settings_simplified_mode_desc">Replaces waveforms and sliders with text lists and buttons.</string>
+    <string name="settings_about">About</string>
+</resources>

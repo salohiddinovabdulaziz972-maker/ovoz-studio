@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ovoz Studio</string>
+
+    <string name="home_title">Ovoz Studio</string>
+    <string name="home_subtitle">Yozib olish, tahrirlash, konvertatsiya — hammasi bitta ilovada.</string>
+    <string name="home_action_record">Audio yozib olish</string>
+    <string name="home_action_trim">Kesish va bo\'lish</string>
+    <string name="home_action_convert">Format konvertori</string>
+    <string name="home_action_settings">Sozlamalar</string>
+    <string name="home_recent_title">Oxirgi fayllar</string>
+    <string name="home_empty">Hozircha yozuvlar yo\'q.</string>
+
+    <string name="record_title">Yozib olish</string>
+    <string name="record_start">Yozishni boshlash</string>
+    <string name="record_pause">Pauza</string>
+    <string name="record_resume">Davom ettirish</string>
+    <string name="record_stop">To\'xtatish va saqlash</string>
+    <string name="record_marker">Belgi qo\'yish</string>
+    <string name="record_marker_added">%1$d-belgi qo\'yildi</string>
+    <string name="record_marker_count">Belgilar: %1$d</string>
+    <string name="record_started">Yozish boshlandi</string>
+    <string name="record_announce_time">Vaqtni aytib ber</string>
+    <string name="record_elapsed_a11y">O\'tgan vaqt %1$s</string>
+    <string name="record_level_a11y">Kirish darajasi %1$d foiz</string>
+    <string name="record_level_label">Kirish darajasi</string>
+    <string name="record_quality_title">Sifat</string>
+    <string name="record_sample_rate">Diskretizatsiya chastotasi</string>
+    <string name="record_bit_depth">Bit chuqurligi</string>
+    <string name="record_format">Format</string>
+    <string name="record_channel">Kanallar</string>
+    <string name="record_channel_mono">Mono</string>
+    <string name="record_channel_stereo">Stereo</string>
+    <string name="record_noise_suppression">Shovqinni bostirish</string>
+    <string name="record_echo_cancellation">Exoni yo\'qotish</string>
+    <string name="record_saved">Saqlandi: %1$s</string>
+    <string name="record_stopped">Yozish to\'xtatildi</string>
+    <string name="record_error_start">Yozishni boshlab bo\'lmadi.</string>
+    <string name="record_error_generic">Xatolik yuz berdi: %1$s</string>
+    <string name="record_permission_title">Mikrofon ruxsati kerak</string>
+    <string name="record_permission_message">Audio yozish uchun mikrofonga ruxsat bering.</string>
+    <string name="record_permission_grant">Ruxsat berish</string>
+    <string name="record_permission_settings">Sozlamalarni ochish</string>
+
+    <string name="trim_title">Kesish va bo\'lish</string>
+    <string name="trim_start_label">Boshlanish</string>
+    <string name="trim_end_label">Tugash</string>
+    <string name="trim_hint">soat:daqiqa:soniya.millisoniya</string>
+    <string name="trim_invalid">Vaqtni soat:daqiqa:soniya.millisoniya ko\'rinishida kiriting</string>
+    <string name="time_unit_hours">soat</string>
+    <string name="time_unit_minutes">daqiqa</string>
+    <string name="time_unit_seconds">soniya</string>
+    <string name="time_unit_millis">millisoniya</string>
+    <string name="time_input_invalid">Vaqtni tekshiring: daqiqa va soniya 0–59, millisoniya 0–999</string>
+    <string name="trim_play">Tanlangan qismni eshitish</string>
+    <string name="trim_stop">Eshitishni to\'xtatish</string>
+    <string name="trim_fade_in">Silliq boshlanish (Fade In)</string>
+    <string name="trim_fade_out">Silliq tugash (Fade Out)</string>
+    <string name="trim_fade_length">Silliqlash uzunligi %1$s ms</string>
+    <string name="trim_fade_length_label">Silliqlash uzunligi, ms</string>
+    <string name="trim_file_duration">Uzunligi: %1$s</string>
+    <string name="trim_selection_range">%1$s — %2$s</string>
+    <string name="trim_apply">Qo\'llash</string>
+    <string name="trim_delete">Tanlangan qismni o\'chirish</string>
+    <string name="trim_save">Saqlash</string>
+    <string name="trim_error_file_not_found">Fayl topilmadi</string>
+    <string name="trim_error_selection_empty">Tanlangan oraliq bo\'sh</string>
+    <string name="trim_error_selection_all">Butun faylni o\'chirib bo\'lmaydi</string>
+    <string name="trim_error_nothing_to_undo">Qaytariladigan amal yo\'q</string>
+    <string name="trim_error_save_failed">Faylni saqlab bo\'lmadi</string>
+    <string name="trim_error_edit_failed">Tahrirlashni bajarib bo\'lmadi</string>
+    <string name="trim_undo">Orqaga qaytarish</string>
+    <string name="trim_redo">Oldinga qaytarish</string>
+    <string name="trim_nothing_to_undo">Qaytariladigan amal yo\'q</string>
+    <string name="trim_saved">Saqlandi: %1$s</string>
+    <string name="trim_split_at">Kursor joyidan bo\'lish</string>
+    <string name="trim_duration_a11y">Tanlangan qism uzunligi %1$s</string>
+    <string name="trim_cursor_label">Kursor joyi</string>
+    <string name="trim_selection_title">Tanlangan qism</string>
+
+    <string name="common_play">Eshitish</string>
+    <string name="common_pause">Pauza</string>
+    <string name="common_delete">O\'chirish</string>
+    <string name="common_cancel">Bekor qilish</string>
+    <string name="common_ok">Yaxshi</string>
+    <string name="common_back">Orqaga</string>
+    <string name="common_more">Boshqa amallar</string>
+    <string name="common_loading">Yuklanmoqda…</string>
+
+    <string name="settings_title">Sozlamalar</string>
+    <string name="settings_language">Ilova tili</string>
+    <string name="settings_language_system">Tizim tili bilan bir xil</string>
+    <string name="settings_simplified_mode">Ekran o\'quvchi uchun soddalashtirilgan rejim</string>
+    <string name="settings_simplified_mode_desc">To\'lqin shakllari va slayderlar o\'rniga matnli ro\'yxat va tugmalar ishlatiladi.</string>
+    <string name="settings_about">Ilova haqida</string>
+</resources>

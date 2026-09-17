@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ilova qo'llab-quvvatlaydigan tillar. Android 13+ da bu ro'yxat tizim
+  sozlamalarida «Til va kiritish → Ilova tili» bo'limida ko'rinadi, ya'ni
+  foydalanuvchi tilni qurilma tilidan mustaqil tanlashi mumkin.
+
+  Tartib tasodifiy emas: o'zbek tili birinchi turadi — bu ilovaning
+  asosiy tili. Ro'yxatdagi tillar `res/values-*/strings.xml` papkalari
+  bilan bir xil bo'lishi kerak.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="uz" />
+    <locale android:name="uz-Cyrl" />
+    <locale android:name="ru" />
+    <locale android:name="en" />
+</locale-config>

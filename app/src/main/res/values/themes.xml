@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose o'z ranglarini o'zi boshqaradi; bu tema faqat oyna fonini
+         va status bar uslubini beradi. -->
+    <style name="Theme.OvozStudio" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>

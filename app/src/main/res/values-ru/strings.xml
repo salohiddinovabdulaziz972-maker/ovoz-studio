@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ovoz Studio</string>
+
+    <string name="home_title">Ovoz Studio</string>
+    <string name="home_subtitle">Запись, редактирование, конвертация — всё в одном приложении.</string>
+    <string name="home_action_record">Записать аудио</string>
+    <string name="home_action_trim">Обрезка и разделение</string>
+    <string name="home_action_convert">Конвертер форматов</string>
+    <string name="home_action_settings">Настройки</string>
+    <string name="home_recent_title">Недавние файлы</string>
+    <string name="home_empty">Записей пока нет.</string>
+
+    <string name="record_title">Запись</string>
+    <string name="record_start">Начать запись</string>
+    <string name="record_pause">Пауза</string>
+    <string name="record_resume">Продолжить</string>
+    <string name="record_stop">Остановить и сохранить</string>
+    <string name="record_marker">Поставить метку</string>
+    <string name="record_marker_added">Метка %1$d добавлена</string>
+    <string name="record_marker_count">Меток: %1$d</string>
+    <string name="record_started">Запись началась</string>
+    <string name="record_announce_time">Озвучить время</string>
+    <string name="record_elapsed_a11y">Прошло времени %1$s</string>
+    <string name="record_level_a11y">Уровень входного сигнала %1$d процентов</string>
+    <string name="record_level_label">Уровень входного сигнала</string>
+    <string name="record_quality_title">Качество</string>
+    <string name="record_sample_rate">Частота дискретизации</string>
+    <string name="record_bit_depth">Разрядность</string>
+    <string name="record_format">Формат</string>
+    <string name="record_channel">Каналы</string>
+    <string name="record_channel_mono">Моно</string>
+    <string name="record_channel_stereo">Стерео</string>
+    <string name="record_noise_suppression">Подавление шума</string>
+    <string name="record_echo_cancellation">Подавление эха</string>
+    <string name="record_saved">Сохранено: %1$s</string>
+    <string name="record_stopped">Запись остановлена</string>
+    <string name="record_error_start">Не удалось начать запись.</string>
+    <string name="record_error_generic">Произошла ошибка: %1$s</string>
+    <string name="record_permission_title">Нужен доступ к микрофону</string>
+    <string name="record_permission_message">Чтобы записывать аудио, разрешите доступ к микрофону.</string>
+    <string name="record_permission_grant">Разрешить</string>
+    <string name="record_permission_settings">Открыть настройки</string>
+
+    <string name="trim_title">Обрезка и разделение</string>
+    <string name="trim_start_label">Начало</string>
+    <string name="trim_end_label">Конец</string>
+    <string name="trim_hint">чч:мм:сс.мс</string>
+    <string name="trim_invalid">Введите время в формате чч:мм:сс.мс</string>
+    <string name="time_unit_hours">часы</string>
+    <string name="time_unit_minutes">мин</string>
+    <string name="time_unit_seconds">сек</string>
+    <string name="time_unit_millis">мс</string>
+    <string name="time_input_invalid">Проверьте время: минуты и секунды 0–59, миллисекунды 0–999</string>
+    <string name="trim_play">Прослушать выделенное</string>
+    <string name="trim_stop">Остановить воспроизведение</string>
+    <string name="trim_fade_in">Плавное начало (Fade In)</string>
+    <string name="trim_fade_out">Плавное окончание (Fade Out)</string>
+    <string name="trim_fade_length">Длина сглаживания %1$s мс</string>
+    <string name="trim_fade_length_label">Длина сглаживания, мс</string>
+    <string name="trim_file_duration">Длительность: %1$s</string>
+    <string name="trim_selection_range">%1$s — %2$s</string>
+    <string name="trim_apply">Применить</string>
+    <string name="trim_delete">Удалить выделенное</string>
+    <string name="trim_save">Сохранить</string>
+    <string name="trim_error_file_not_found">Файл не найден</string>
+    <string name="trim_error_selection_empty">Выделение пустое</string>
+    <string name="trim_error_selection_all">Нельзя удалить весь файл</string>
+    <string name="trim_error_nothing_to_undo">Нечего отменять</string>
+    <string name="trim_error_save_failed">Не удалось сохранить файл</string>
+    <string name="trim_error_edit_failed">Не удалось выполнить правку</string>
+    <string name="trim_undo">Отменить</string>
+    <string name="trim_redo">Вернуть</string>
+    <string name="trim_nothing_to_undo">Нечего отменять</string>
+    <string name="trim_saved">Сохранено: %1$s</string>
+    <string name="trim_split_at">Разделить в позиции курсора</string>
+    <string name="trim_duration_a11y">Длина выделения %1$s</string>
+    <string name="trim_cursor_label">Позиция курсора</string>
+    <string name="trim_selection_title">Выделение</string>
+
+    <string name="common_play">Слушать</string>
+    <string name="common_pause">Пауза</string>
+    <string name="common_delete">Удалить</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="common_ok">Хорошо</string>
+    <string name="common_back">Назад</string>
+    <string name="common_more">Другие действия</string>
+    <string name="common_loading">Загрузка…</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_language">Язык приложения</string>
+    <string name="settings_language_system">Как в системе</string>
+    <string name="settings_simplified_mode">Упрощённый режим для экранных дикторов</string>
+    <string name="settings_simplified_mode_desc">Вместо волновых форм и ползунков — текстовые списки и кнопки.</string>
+    <string name="settings_about">О приложении</string>
+</resources>
