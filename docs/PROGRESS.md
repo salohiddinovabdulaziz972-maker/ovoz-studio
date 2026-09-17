@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 400 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 423 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -125,6 +125,29 @@ Oxirgi yangilanish: 2026-09-17
     aytiladi (OCR ilovada yo'q). PDF o'quvchi **o'zimizniki** — tashqi
     kutubxona olinmadi (pastda sababi).
 
+18. **Kitob pleyeri va uxlash taymeri** — `media/book/BookPlaylist.kt`,
+    `BookPlaybackStore.kt`, `ui/book/` (pleyer bo'limi), `AudioPlayer.seekTo`.
+    Yasalgan kitob ilovaning o'zida tinglanadi: boblar ketma-ket o'tadi,
+    bob tugaganda keyingisi o'zi boshlanadi, oxirgi bobdan keyin pleyer
+    to'xtaydi va kitob boshiga qaytadi. Belgilar (bo'lak sarlavhalari)
+    bo'ylab oldinga/orqaga sakrash, 15 soniya orqaga/oldinga, boblar
+    bo'ylab o'tish — hammasi matnli yorliqli tugmalar bilan; slayder yo'q.
+    **Qoldirilgan joy** kitob nomi bilan `filesDir` dagi `Properties`
+    faylida saqlanadi (30 soniyada bir marta, pauzada va ekran yopilganda) —
+    kitob qayta yasalsa, tugma «Davom etish» bo'lib turadi.
+    **Uxlash taymeri** 15/30/60 daqiqa: vaqt faqat o'qish paytida sanaydi
+    (tanaffusda to'xtaydi), «bob oxirigacha» rejimida esa gap o'rtasida
+    uzilmaydi. Taymerning o'zi (`SleepTimer`) allaqachon yozilgan va
+    testlangan edi — endi ekranga ulangan.
+    Butun pleyer mantig'i **tovushsiz qatlamda**: `BookPlaylist` (qaysi bob
+    keyin, belgi bo'ylab sakrash, kitob bo'ylab vaqt hisobi) va
+    `BookPlaybackStore` (buzuq fayl, yo'q papka, g'alati nom — hech biri
+    tinglashga xalaqit bermaydi) 21 ta JVM testi bilan qoplangan.
+    `AudioPlayer`/`MediaPlayer` bilan bog'liq qism ViewModel'da qoladi.
+    **Halol cheklov:** pleyer faqat shu seansda yasalgan kitobni tinglaydi.
+    Ilova qayta ochilsa, fayllar joyida turadi, lekin ro'yxatni tiklash
+    uchun kitobni qayta yasash kerak. Bu — keyingi ish (papkadan o'qish).
+
 ## Muhim texnik qarorlar
 
 - **Ovoz har doim float ko'rinishida o'qiladi** (`ENCODING_PCM_FLOAT`), faylga
@@ -143,6 +166,26 @@ Oxirgi yangilanish: 2026-09-17
   ekran o'quvchisini bosib ketadi — vaqt faqat tugma bosilganda aytiladi.
 - **`MediaPlayer` ishlatilgan**, Media3 emas: WAV qurilmaning o'zi o'qiydi,
   ortiqcha kutubxona va versiya xatolari yo'q.
+- **Uxlash taymeri faqat o'qish paytida sanaydi.** Taymer alohida soat emas:
+  u pleyerning yangilanish tsikli ichida sanaladi. Aks holda tanaffusda ham
+  vaqt o'tib ketardi va kitob foydalanuvchi kutganidan erta to'xtardi.
+- **Pleyer mantig'i `BookPlaylist` da, ViewModel'da emas.** Qaysi bob keyin
+  keladi, belgi bo'ylab qanday sakraladi, kitob bo'ylab vaqt qanday
+  hisoblanadi — sof mantiq va shu sababli JVM'da sinovdan o'tadi. Buni
+  qo'lda, 300 bobli kitobda hamisha sinab bo'lmaydi; pleyerning eng ko'p
+  uchraydigan xatosi esa aynan chegarada bo'ladi (oxirgi bobdan keyin
+  birinchisiga qaytib ketish).
+- **Qoldirilgan joy hech qachon tinglashga xalaqit bermaydi.** Yozuv
+  fayli buzuq, papka yo'q, nom g'alati — har qanday holatda pleyer ishlaydi,
+  eng yomoni kitob boshidan boshlanadi. Shuning uchun saqlash qatlami
+  xatoni tashqariga chiqarmaydi va sinovlarining ko'pi xato yo'llari haqida.
+- **Pozitsiya qisqa formatda ko'rsatiladi** (`TimeFormat.formatShort`:
+  «12:04», soat bo'lsa «1:02:03»). Millisoniyali to'liq format har chorak
+  soniyada yangilanib ekranni titratardi va ekran o'quvchi har safar
+  keraksiz aniqlikni o'qib berardi.
+- **To'xtatilganda sakrash tugmalari o'chiriladi.** `pause()` faylni
+  yopadi, ya'ni pozitsiyani surish imkonsiz — tugma bosilib, hech narsa
+  qilmasligidan ko'ra, o'chirib turgani rost.
 - **Ovozli vaqt birliklari resurslardan olinadi** (`SpokenTime.kt`):
   o'zbekcha qurilmada ekran o'quvchi «3 daqiqa 12 soniya» deb o'qiydi,
   inglizcha «3 min 12 s» emas.
@@ -623,12 +666,12 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 6. ~~**Hujjat → audio-kitob**~~ — **tayyor** (5-bandga tayanadi).
    PDF/DOCX/EPUB/TXT o'qiladi, matn boblarga bo'linadi, har bob alohida MP3
    bo'ladi, belgilar varaqasi (CUE) yoziladi, `ui/book/` ekrani jarayonni
-   ko'rsatadi va to'xtatish mumkin. `SleepTimer` (uxlash taymeri) media
-   qatlamida tayyor va testlangan.
-   **Hozircha yo'q:** taymer va belgilar varaqasi ilovaning pleyerida hali
-   ishlatilmaydi — buning uchun kitobni boblar bo'ylab o'qiydigan pleyer
-   kerak; u alohida band bo'lib turadi (hozir kitobni istalgan tashqi
-   pleyerda tinglash mumkin, tartib fayl nomida saqlanadi).
+   ko'rsatadi va to'xtatish mumkin.
+   ~~Pleyer va taymer~~ — **tayyor** (18-band): kitob ilovaning o'zida
+   boblar bo'ylab tinglanadi, belgilar bo'ylab sakraladi, qoldirilgan joy
+   eslab qolinadi, uxlash taymeri 15/30/60 daqiqaga qo'yiladi.
+   **Hozircha yo'q:** ilova qayta ochilgach, pleyer ro'yxati qaytadan
+   tiklanmaydi — kitobni yana yasash kerak (fayllar joyida qoladi).
    **Qolgani (faqat qurilmada tekshiriladi):** pastda.
 7. **ID3 teglar va ulashish** — nom, ijrochi, albom, muqova; faylni boshqa
    ilovaga yuborish.
@@ -674,9 +717,13 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   to'g'ri bo'linganini ko'rish, o'zbek kitobini o'zbek ovozi o'qiyaptimi,
   yasalgan MP3 boblar pleyerda to'g'ri tartibda chalyaptimi, tezlik 2x da
   shitirlash yo'qmi, uzoq kitobda (bir necha soat) jarayon foizi
-  yangilanib turyaptimi va «to'xtatish» darhol ishlayaptimi. Bu — quloq
-  va qurilma ishi; skript faqat **fayl mazmunini** (MP3 kadrlari, CUE
-  yozuvlari, bob nomlari) tekshira oladi.
+  yangilanib turyaptimi va «to'xtatish» darhol ishlayaptimi. So'ng pleyer:
+  bob tugaganda keyingisi o'zi boshlanadimi, oxirgi bobdan keyin to'xtaydimi,
+  «15 soniya orqaga» va bob chegarasida kutilgan joyga tushadimi, uxlash
+  taymeri qo'yilgan vaqtda to'xtatadimi, «bob oxirigacha» rejimida gap
+  o'rtasida uzilmaydimi. Bu — quloq va qurilma ishi; skript faqat **fayl
+  mazmunini** (MP3 kadrlari, CUE yozuvlari, bob nomlari) va pleyer
+  mantig'ini tekshira oladi, ovozning o'zini emas.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 

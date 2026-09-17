@@ -81,6 +81,8 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/book/ChapterAssembler.kt
     app/src/main/java/uz/ovozstudio/app/media/book/SleepTimer.kt
     app/src/main/java/uz/ovozstudio/app/media/book/BookBuilder.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/BookPlaylist.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/BookPlaybackStore.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -123,6 +125,8 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/book/SleepTimerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/ChapterAssemblerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/BookPlaylistTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/BookPlaybackStoreTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

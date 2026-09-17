@@ -246,4 +246,26 @@
     <string name="book_error_speak_failed">Синтезатор не смог озвучить текст. Попробуйте ещё раз.</string>
     <string name="book_error_write_failed">Не удалось записать файл — на устройстве мало свободного места.</string>
     <string name="book_error_cancelled">Создание остановлено. Недостроенная книга не осталась.</string>
+    <string name="book_player_header">Прослушивание</string>
+    <string name="book_play">Начать прослушивание</string>
+    <string name="book_continue">Продолжить</string>
+    <string name="book_pause">Пауза</string>
+    <string name="book_restart">С начала</string>
+    <string name="book_previous_chapter">Предыдущая глава</string>
+    <string name="book_next_chapter">Следующая глава</string>
+    <string name="book_skip_back">%1$d секунд назад</string>
+    <string name="book_skip_forward">%1$d секунд вперёд</string>
+    <string name="book_previous_section">Предыдущий раздел</string>
+    <string name="book_next_section">Следующий раздел</string>
+    <string name="book_player_chapter">Глава %1$d из %2$d</string>
+    <string name="book_player_section">Раздел: %1$s</string>
+    <string name="book_player_left">До конца книги %1$s</string>
+    <string name="book_timer_header">Таймер сна</string>
+    <string name="book_timer_minutes">%1$d минут</string>
+    <string name="book_timer_remaining">Таймер: осталось %1$s</string>
+    <string name="book_timer_at_end">До конца главы</string>
+    <string name="book_timer_at_end_note">Когда время выйдет, текущая глава дочитается до конца.</string>
+    <string name="book_timer_off">Выключить таймер</string>
+    <string name="book_finished">Книга закончилась.</string>
+    <string name="book_error_file_missing">Файл главы не найден — соберите книгу заново.</string>
 </resources>

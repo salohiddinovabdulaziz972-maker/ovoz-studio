@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -71,6 +72,14 @@ fun BookScreen(
                 TimeFormat.format(state.durationMs),
             )
         )
+    }
+
+    // Kitob tugaganda bir marta e'lon qilinadi: ilova jim qolsa,
+    // foydalanuvchi o'qish davom etyaptimi yoki tugadimi — bilmaydi.
+    LaunchedEffect(state.bookFinished) {
+        if (!state.bookFinished) return@LaunchedEffect
+        announce(context.getString(R.string.book_finished))
+        viewModel.consumeFinished()
     }
 
     Column(
@@ -263,6 +272,25 @@ fun BookScreen(
             )
         }
 
+        // Pleyer faqat kitob yasalgan bo'lsa ko'rinadi: tinglash uchun fayl
+        // kerak, fayl esa yig'ishdan keyin paydo bo'ladi.
+        if (state.playable) {
+            PlayerSection(
+                state = state,
+                onTogglePlay = viewModel::togglePlay,
+                onRestart = viewModel::restart,
+                onSkipBack = { viewModel.skip(-BookUiState.SKIP_MS) },
+                onSkipForward = { viewModel.skip(BookUiState.SKIP_MS) },
+                onPreviousSection = { viewModel.jumpToSection(next = false) },
+                onNextSection = { viewModel.jumpToSection(next = true) },
+                onPreviousChapter = viewModel::previousChapter,
+                onNextChapter = viewModel::nextChapter,
+                onStartTimer = viewModel::startTimer,
+                onToggleTimerAtChapterEnd = viewModel::toggleTimerAtChapterEnd,
+                onCancelTimer = viewModel::cancelTimer,
+            )
+        }
+
         state.error?.let { error ->
             Text(
                 text = stringResource(error.messageRes()),
@@ -274,6 +302,180 @@ fun BookScreen(
                 onClick = viewModel::dismissError,
             )
         }
+    }
+}
+
+/**
+ * Tinglash bo'limi.
+ *
+ * Ovozsiz ilovada pleyer boshqaruvi ko'rinish bilan cheklanmaydi: **har bir
+ * tugma matnli yorliqqa ega** va aynan nima bo'lishini aytadi («Keyingi bob»,
+ * «15 soniya orqaga»), holat esa alohida qatorda ko'rinadi. Slayder yo'q —
+ * ilova bo'ylab yagona qoida: vaqtni qo'l bilan, aniq kiritish.
+ */
+@Composable
+private fun PlayerSection(
+    state: BookUiState,
+    onTogglePlay: () -> Unit,
+    onRestart: () -> Unit,
+    onSkipBack: () -> Unit,
+    onSkipForward: () -> Unit,
+    onPreviousSection: () -> Unit,
+    onNextSection: () -> Unit,
+    onPreviousChapter: () -> Unit,
+    onNextChapter: () -> Unit,
+    onStartTimer: (Int) -> Unit,
+    onToggleTimerAtChapterEnd: () -> Unit,
+    onCancelTimer: () -> Unit,
+) {
+    // Pozitsiya va sakrash faqat o'qish paytida mavjud: to'xtatilganda fayl
+    // yopiladi (pleyer uni ushlab turmaydi), shuning uchun «o'tkazib
+    // yuborish» tugmasi jimgina ishlamay qolardi — yoqilgani rostini
+    // ko'rsatish uchun o'chirib turamiz.
+    val seekingEnabled = state.playing
+
+    Text(
+        text = stringResource(R.string.book_player_header),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.a11yHeading(),
+    )
+    Text(
+        text = stringResource(R.string.book_player_chapter, state.chapterIndex + 1, state.chapterCount),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Text(
+        text = "${TimeFormat.formatShort(state.chapterPositionMs)} / " +
+            TimeFormat.formatShort(state.chapterDurationMs),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    if (state.section.isNotEmpty()) {
+        Text(
+            text = stringResource(R.string.book_player_section, state.section),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+    Text(
+        text = stringResource(
+            R.string.book_player_left,
+            TimeFormat.formatShort(state.bookRemainingMs),
+        ),
+        style = MaterialTheme.typography.bodyMedium,
+    )
+
+    A11yButton(
+        label = when {
+            state.playing -> stringResource(R.string.book_pause)
+            state.hasResume -> stringResource(R.string.book_continue)
+            else -> stringResource(R.string.book_play)
+        },
+        onClick = onTogglePlay,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !state.busy,
+    )
+
+    // «Boshidan» faqat qoldirilgan joy bor bo'lganda ma'noli: aks holda u
+    // «Tinglash» tugmasi bilan bir xil ish qilardi.
+    if (state.hasResume && !state.playing) {
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_restart),
+            onClick = onRestart,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.busy,
+        )
+    }
+
+    val skipSeconds = (BookUiState.SKIP_MS / 1000).toInt()
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_skip_back, skipSeconds),
+            onClick = onSkipBack,
+            modifier = Modifier.weight(1f),
+            enabled = seekingEnabled,
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_skip_forward, skipSeconds),
+            onClick = onSkipForward,
+            modifier = Modifier.weight(1f),
+            enabled = seekingEnabled,
+        )
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_previous_section),
+            onClick = onPreviousSection,
+            modifier = Modifier.weight(1f),
+            enabled = seekingEnabled,
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_next_section),
+            onClick = onNextSection,
+            modifier = Modifier.weight(1f),
+            enabled = seekingEnabled,
+        )
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_previous_chapter),
+            onClick = onPreviousChapter,
+            modifier = Modifier.weight(1f),
+            enabled = !state.busy,
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_next_chapter),
+            onClick = onNextChapter,
+            modifier = Modifier.weight(1f),
+            enabled = !state.busy,
+        )
+    }
+
+    Text(
+        text = stringResource(R.string.book_timer_header),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.a11yHeading(),
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        BookUiState.TIMER_MINUTES.forEach { minutes ->
+            A11yOutlinedButton(
+                label = stringResource(R.string.book_timer_minutes, minutes),
+                onClick = { onStartTimer(minutes) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+
+    if (state.timerActive) {
+        Text(
+            text = stringResource(
+                R.string.book_timer_remaining,
+                TimeFormat.formatShort(state.timerRemainingSec * 1000),
+            ),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_timer_at_end),
+            onClick = onToggleTimerAtChapterEnd,
+            modifier = Modifier.fillMaxWidth(),
+            // Izoh yorliqni almashtirmaydi, unga qo'shiladi: tugma nima
+            // qilishini ham, hozir qanday turganini ham eshitish kerak.
+            description = if (state.timerAtChapterEnd) {
+                stringResource(R.string.book_timer_at_end_note)
+            } else {
+                null
+            },
+        )
+        if (state.timerAtChapterEnd) {
+            Text(
+                text = stringResource(R.string.book_timer_at_end_note),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_timer_off),
+            onClick = onCancelTimer,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -297,4 +499,5 @@ private fun BookUiError.messageRes(): Int = when (this) {
     BookUiError.SPEAK_FAILED -> R.string.book_error_speak_failed
     BookUiError.WRITE_FAILED -> R.string.book_error_write_failed
     BookUiError.CANCELLED -> R.string.book_error_cancelled
+    BookUiError.FILE_MISSING -> R.string.book_error_file_missing
 }

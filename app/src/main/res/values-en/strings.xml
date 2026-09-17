@@ -246,4 +246,26 @@
     <string name="book_error_speak_failed">The speech engine could not turn the text into audio. Please try again.</string>
     <string name="book_error_write_failed">Could not write the file — the device is low on free space.</string>
     <string name="book_error_cancelled">Building stopped. No half-finished book was left behind.</string>
+    <string name="book_player_header">Listening</string>
+    <string name="book_play">Start listening</string>
+    <string name="book_continue">Continue</string>
+    <string name="book_pause">Pause</string>
+    <string name="book_restart">From the start</string>
+    <string name="book_previous_chapter">Previous chapter</string>
+    <string name="book_next_chapter">Next chapter</string>
+    <string name="book_skip_back">%1$d seconds back</string>
+    <string name="book_skip_forward">%1$d seconds forward</string>
+    <string name="book_previous_section">Previous section</string>
+    <string name="book_next_section">Next section</string>
+    <string name="book_player_chapter">Chapter %1$d of %2$d</string>
+    <string name="book_player_section">Section: %1$s</string>
+    <string name="book_player_left">%1$s left in the book</string>
+    <string name="book_timer_header">Sleep timer</string>
+    <string name="book_timer_minutes">%1$d minutes</string>
+    <string name="book_timer_remaining">Timer: %1$s left</string>
+    <string name="book_timer_at_end">Until chapter end</string>
+    <string name="book_timer_at_end_note">When the timer runs out, the current chapter finishes first.</string>
+    <string name="book_timer_off">Turn the timer off</string>
+    <string name="book_finished">The book has finished.</string>
+    <string name="book_error_file_missing">Chapter file not found — build the book again.</string>
 </resources>

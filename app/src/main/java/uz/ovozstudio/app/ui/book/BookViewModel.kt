@@ -8,6 +8,8 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,11 +17,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import uz.ovozstudio.app.R
+import uz.ovozstudio.app.media.AudioPlayer
 import uz.ovozstudio.app.media.RecordingStore
 import uz.ovozstudio.app.media.book.BookBuildError
 import uz.ovozstudio.app.media.book.BookBuildOutcome
 import uz.ovozstudio.app.media.book.BookBuilder
+import uz.ovozstudio.app.media.book.BookPlaybackStore
 import uz.ovozstudio.app.media.book.BookPlanner
+import uz.ovozstudio.app.media.book.BookPlaylist
+import uz.ovozstudio.app.media.book.BuiltBook
+import uz.ovozstudio.app.media.book.PlaylistChapter
+import uz.ovozstudio.app.media.book.SleepTimer
 import uz.ovozstudio.app.media.doc.Chapter
 import uz.ovozstudio.app.media.doc.DocumentFormat
 import uz.ovozstudio.app.media.doc.DocumentFormatException
@@ -66,6 +74,14 @@ enum class BookUiError {
 
     /** Foydalanuvchi to'xtatdi — nosozlik emas, lekin xabar ko'rinadi. */
     CANCELLED,
+
+    /**
+     * Yasalgan bob fayli topilmadi.
+     *
+     * Faqat qurilmaning o'zi tozalaganda bo'ladi (papka qo'lda o'chirildi
+     * yoki tizim joy bo'shatdi) — kitob qaytadan yasalishi kerak.
+     */
+    FILE_MISSING,
 }
 
 /**
@@ -98,6 +114,29 @@ data class BookUiState(
     val output: List<String> = emptyList(),
     val durationMs: Long = 0L,
     val error: BookUiError? = null,
+
+    // --- tinglash ---
+    /** Kitob yasalgan va tinglash mumkinmi. */
+    val playable: Boolean = false,
+    val playing: Boolean = false,
+    val chapterIndex: Int = 0,
+    /** Joriy bob ichidagi joy. */
+    val chapterPositionMs: Long = 0L,
+    val chapterDurationMs: Long = 0L,
+    /** Kitobning umumiy vaqti va qolgani. */
+    val bookDurationMs: Long = 0L,
+    val bookRemainingMs: Long = 0L,
+    /** Joriy bo'lak (belgi) sarlavhasi; belgi bo'lmasa — bo'sh. */
+    val section: String = "",
+    /** Uxlash taymeri: qolgan soniya va «bob oxirigacha» rejimi. */
+    val timerActive: Boolean = false,
+    val timerRemainingSec: Long = 0L,
+    val timerAtChapterEnd: Boolean = false,
+    /** Qoldirilgan joy: bob raqami (0 dan) va vaqt. */
+    val resumeChapter: Int = 0,
+    val resumePositionMs: Long = 0L,
+    /** Oxirgi bob ham o'qib bo'lindi — ekran bir marta e'lon qiladi. */
+    val bookFinished: Boolean = false,
 ) {
     val rateValue: Float get() = SpeedText.parseSpeed(rate).toFloat()
 
@@ -108,9 +147,26 @@ data class BookUiState(
     /** Hujjat yaroqli o'qildimi — tugmalar shunga qarab yoqiladi. */
     val hasDocument: Boolean get() = documentName.isNotEmpty() && chapterCount > 0
 
+    /** Qoldirilgan joy boshidan uzoqda — «davom etish» taklif qilinadi. */
+    val hasResume: Boolean get() = resumeChapter > 0 || resumePositionMs > RESUME_MIN_MS
+
     companion object {
         /** Ekranda ko'rsatiladigan bob sarlavhalari soni. */
         const val PREVIEW_TITLES = 5
+
+        /**
+         * «Davom etish» taklif qilinadigan eng kichik joy.
+         *
+         * Bir necha soniyalik tasodifiy to'xtash (qo'ng'iroq, xato
+         * bosish) uchun «davom etish» tugmasini ko'rsatish ortiqcha.
+         */
+        const val RESUME_MIN_MS = 20_000L
+
+        /** Orqaga/oldinga sakrash qadami. */
+        const val SKIP_MS = 15_000L
+
+        /** Uxlash taymeri uchun tayyor daqiqalar. */
+        val TIMER_MINUTES = listOf(15, 30, 60)
     }
 }
 
@@ -142,10 +198,30 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     /** Joriy yig'ish. Ishlamayotgan bo'lsa `null`. */
     private var builder: BookBuilder? = null
 
+    // --- tinglash ---
+    // Pleyer asosiy oqimda yaratiladi: `MediaPlayer` shu oqimga bog'lanadi
+    // va boshqa oqimdan boshqarilsa, chaqiruvlar navbatsiz bajarilardi.
+    private val player = AudioPlayer()
+    private val sleep = SleepTimer()
+
+    /** Qoldirilgan joy alohida faylda: jarayon o'lsa ham qoladi. */
+    private val progress = BookPlaybackStore(File(application.filesDir, PROGRESS_FILE))
+
+    private var playlist: BookPlaylist? = null
+
+    /** Kitob nomi — qoldirilgan joy shu nom bilan yoziladi. */
+    private var albumTitle: String = ""
+
+    private var ticker: Job? = null
+
+    /** Oxirgi tanlangan taymer vaqti (soniya) — «bob oxirigacha» uchun. */
+    private var timerTotalSeconds: Long = 0
+
     init {
         engine.prepare { failure ->
             _state.update { it.copy(ready = failure == null) }
         }
+        player.onFinished = { onChapterFinished() }
     }
 
     /** Tizim tanlagichidan kelgan hujjatni ochadi. */
@@ -200,9 +276,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val plan = BookPlanner.plan(chapters)
-        // Nom kengaytmasiz olinadi: fayl ichida «kitob.txt - 01 - ...»
-        // ko'rinishi foydalanuvchini chalg'itardi.
-        val title = current.documentName.substringBeforeLast('.')
+        val title = albumTitleOf(current.documentName)
         val voice = SpeechRequest(
             text = "",
             rate = current.rateValue,
@@ -261,9 +335,306 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(output = emptyList(), durationMs = 0L) }
     }
 
+    // --- tinglash ---
+
+    /**
+     * Joriy bobni tanlab, ko'rsatilgan joydan qo'yadi.
+     *
+     * Kitob boblar bo'ylab ketma-ket o'qiladi: bob tugaganda keyingisi
+     * o'zi boshlanadi, oxirgi bobdan keyin to'xtaydi.
+     */
+    fun playChapter(index: Int, positionMs: Long = 0L) {
+        val list = playlist ?: return
+        val chapter = list.select(index) ?: return
+        if (!chapter.file.exists()) {
+            pause()
+            _state.update { it.copy(error = BookUiError.FILE_MISSING) }
+            return
+        }
+        if (_state.value.busy) return
+
+        player.play(chapter.file, positionMs)
+        saveProgress(index, positionMs)
+        _state.update {
+            it.copy(
+                playing = true,
+                error = null,
+                bookFinished = false,
+                chapterIndex = index,
+                chapterDurationMs = chapter.durationMs,
+            )
+        }
+        startTicker()
+        publishPosition()
+    }
+
+    /** Qoldirilgan joydan davom ettiradi. */
+    fun resume() {
+        playChapter(_state.value.resumeChapter, _state.value.resumePositionMs)
+    }
+
+    /** Kitobni birinchi bobdan boshlaydi. */
+    fun restart() {
+        playChapter(0, 0L)
+        // «Boshidan» bosilgach qoldirilgan joy yo'q: aks holda tugma
+        // yana «Davom etish» bo'lib qolardi.
+        _state.update { it.copy(resumeChapter = 0, resumePositionMs = 0L) }
+    }
+
+    /** Ijroni to'xtatib turadi (joy eslab qolinadi). */
+    fun pause() {
+        ticker?.cancel()
+        ticker = null
+        player.stop()
+        val position = _state.value.chapterPositionMs
+        saveProgress(_state.value.chapterIndex, position)
+        // Qoldirilgan joy holatda ham yangilanadi: tugma yorlig'i («Davom
+        // etish» yoki «Tinglashni boshlash») haqiqiy holatga qarab tanlanadi.
+        _state.update {
+            it.copy(
+                playing = false,
+                resumeChapter = it.chapterIndex,
+                resumePositionMs = position,
+            )
+        }
+    }
+
+    /** Ijro/tanaffus tugmasi. */
+    fun togglePlay() {
+        if (_state.value.playing) pause() else playChapter(_state.value.chapterIndex, _state.value.chapterPositionMs)
+    }
+
+    fun nextChapter() {
+        val list = playlist ?: return
+        if (list.advance() == null) return
+        playChapter(list.currentIndex, 0L)
+    }
+
+    fun previousChapter() {
+        val list = playlist ?: return
+        if (list.rewind() == null) return
+        playChapter(list.currentIndex, 0L)
+    }
+
+    /**
+     * Joriy bob ichida orqaga/oldinga suradi.
+     *
+     * Bob chegarasidan chiqmaydi: keyingi bobga o'tish alohida tugma —
+     * tasodifiy surish kitobni boshqa bobga tashlab qo'ymasligi kerak.
+     */
+    fun skip(deltaMs: Long) {
+        val list = playlist ?: return
+        if (!_state.value.playing) return
+        val duration = list.current?.durationMs ?: return
+        val target = (_state.value.chapterPositionMs + deltaMs).coerceIn(0L, (duration - 1).coerceAtLeast(0L))
+        player.seekTo(target)
+        publishPosition(target)
+    }
+
+    /**
+     * Keyingi yoki oldingi bo'limga (belgi bo'ylab) sakraydi.
+     *
+     * Keyingi belgi bo'lmasa hech narsa qilinmaydi: bob oxirida turgan
+     * tinglovchi tugmani bosganda kitob boshidan boshlanib ketishi —
+     * yo'qotishdan ham yomonroq. Orqaga esa belgi bo'lmasa boshidan.
+     */
+    fun jumpToSection(next: Boolean) {
+        val list = playlist ?: return
+        if (!_state.value.playing) return
+        val position = _state.value.chapterPositionMs
+        val target = if (next) {
+            list.nextMarker(position)?.startMs ?: return
+        } else {
+            list.previousMarker(position)?.startMs ?: 0L
+        }
+        player.seekTo(target)
+        publishPosition(target)
+    }
+
+    /**
+     * Uxlash taymerini ishga tushiradi.
+     *
+     * Joriy rejim («bob oxirigacha») saqlanadi: foydalanuvchi rejimni
+     * tanlab, keyin vaqtni o'zgartirsa, tanlovi yo'qolmasligi kerak.
+     */
+    fun startTimer(minutes: Int) {
+        timerTotalSeconds = minutes * 60L
+        sleep.start(timerTotalSeconds, sleep.stopAtChapterEnd)
+        publishTimer()
+    }
+
+    /** «Bob oxirigacha» rejimini almashtiradi (ishlab turgan taymer uchun). */
+    fun toggleTimerAtChapterEnd() {
+        if (!sleep.isRunning) return
+        // Vaqt qaytadan boshlanmaydi: qolgan soniya saqlanadi.
+        sleep.start(sleep.remainingSeconds, !sleep.stopAtChapterEnd)
+        publishTimer()
+    }
+
+    fun cancelTimer() {
+        sleep.cancel()
+        timerTotalSeconds = 0
+        publishTimer()
+    }
+
+    /** Kitob tugagani e'lon qilinganini tasdiqlaydi. */
+    fun consumeFinished() {
+        _state.update { it.copy(bookFinished = false) }
+    }
+
+    /**
+     * Har chorak soniyada holatni yangilaydi.
+     *
+     * Nega taymer ham shu yerda: uxlash taymeri faqat **ijro paytida**
+     * sanaydi. Alohida soat qo'yilsa, tanaffusda ham vaqt o'tib ketardi va
+     * foydalanuvchi kutganidan erta to'xtardi.
+     */
+    private fun startTicker() {
+        ticker?.cancel()
+        ticker = viewModelScope.launch {
+            var elapsedMs = 0L
+            var sinceSaveMs = 0L
+            while (true) {
+                delay(TICK_MS)
+                elapsedMs += TICK_MS
+                sinceSaveMs += TICK_MS
+                if (elapsedMs >= 1000) {
+                    val seconds = elapsedMs / 1000
+                    elapsedMs -= seconds * 1000
+                    sleep.elapse(seconds)
+                }
+                publishPosition()
+                if (sleep.shouldStop(atChapterEnd = false)) {
+                    // Vaqt tugadi va «bob oxirigacha» rejimi o'chiq: darhol
+                    // to'xtaydi. Taymer o'chiriladi — aks holda davom
+                    // ettirilganda bir zumda yana to'xtardi.
+                    pause()
+                    cancelTimer()
+                    return@launch
+                }
+                if (sinceSaveMs >= SAVE_EVERY_MS) {
+                    sinceSaveMs = 0L
+                    saveProgress(_state.value.chapterIndex, _state.value.chapterPositionMs)
+                }
+            }
+        }
+    }
+
+    /** Bob tugaganda: keyingisiga o'tadi yoki to'xtaydi. */
+    private fun onChapterFinished() {
+        val list = playlist ?: return
+        if (sleep.shouldStop(atChapterEnd = true)) {
+            pause()
+            cancelTimer()
+            return
+        }
+        if (list.advance() == null) {
+            // Kitob tugadi: qoldirilgan joy endi kerak emas va pleyer
+            // boshiga qaytadi. Aks holda «Tinglash» tugmasi oxirgi bobning
+            // oxirini qo'yib, kitob darhol yana tugagandek ko'rinardi.
+            pause()
+            saveProgress(0, 0L)
+            list.select(0)
+            _state.update {
+                it.copy(
+                    bookFinished = true,
+                    chapterIndex = 0,
+                    chapterPositionMs = 0L,
+                    resumeChapter = 0,
+                    resumePositionMs = 0L,
+                    bookRemainingMs = list.remainingMs(0),
+                    section = "",
+                )
+            }
+            return
+        }
+        playChapter(list.currentIndex, 0L)
+    }
+
+    private fun publishPosition(position: Long = player.positionMs()) {
+        val list = playlist ?: return
+        val chapter = list.current ?: return
+        val clamped = position.coerceIn(0L, chapter.durationMs.coerceAtLeast(0L))
+        _state.update {
+            it.copy(
+                chapterPositionMs = clamped,
+                chapterDurationMs = chapter.durationMs,
+                bookDurationMs = list.totalDurationMs,
+                bookRemainingMs = list.remainingMs(clamped),
+                section = list.markerAt(clamped)?.title.orEmpty(),
+            )
+        }
+    }
+
+    private fun publishTimer() {
+        _state.update {
+            it.copy(
+                timerActive = sleep.isRunning,
+                timerRemainingSec = sleep.remainingSeconds,
+                timerAtChapterEnd = sleep.stopAtChapterEnd,
+            )
+        }
+    }
+
+    private fun saveProgress(chapterIndex: Int, positionMs: Long) {
+        val title = albumTitle
+        if (title.isBlank()) return
+        progress.save(title, chapterIndex, positionMs, System.currentTimeMillis())
+    }
+
+    /** Yasalgan kitobni tinglash uchun tayyorlaydi. */
+    private fun openForPlayback(book: BuiltBook, album: String) {
+        // Qayta yig'ish eski ijroni davom ettirmaydi: fayllar joyida
+        // almashgan bo'lishi mumkin, eski taymer esa endi ma'nosiz.
+        ticker?.cancel()
+        ticker = null
+        player.stop()
+        sleep.cancel()
+        timerTotalSeconds = 0
+
+        playlist = BookPlaylist(
+            book.chapters.map { chapter ->
+                PlaylistChapter(
+                    title = chapter.title,
+                    file = chapter.audio,
+                    durationMs = chapter.durationMs,
+                    markers = chapter.markers,
+                )
+            }
+        )
+        albumTitle = album
+        val saved = progress.load(album)
+        val list = playlist
+        val chapters = list?.size ?: 0
+        val chapterIndex = (saved?.chapterIndex ?: 0).coerceIn(0, (chapters - 1).coerceAtLeast(0))
+        // Ro'yxat qoldirilgan bobga suriladi: aks holda ekranda «3-bob»
+        // yozilib, uzunlik va qolgan vaqt birinchi bobdan hisoblanardi.
+        list?.select(chapterIndex)
+        val position = saved?.positionMs ?: 0L
+        _state.update {
+            it.copy(
+                playable = chapters > 0,
+                playing = false,
+                chapterIndex = chapterIndex,
+                chapterPositionMs = position,
+                chapterDurationMs = list?.current?.durationMs ?: 0L,
+                bookDurationMs = list?.totalDurationMs ?: 0L,
+                bookRemainingMs = list?.remainingMs(position) ?: 0L,
+                resumeChapter = chapterIndex,
+                resumePositionMs = position,
+                section = "",
+                timerActive = false,
+                timerRemainingSec = 0L,
+                timerAtChapterEnd = false,
+            )
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         builder?.cancel()
+        saveProgress(_state.value.chapterIndex, _state.value.chapterPositionMs)
+        player.release()
         // Ovoz sintezatori — tizim xizmati: bo'shatilmasa qurilmada ochiq
         // ulanish qoladi va batareyani yeydi.
         engine.release()
@@ -315,15 +686,18 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun applyOutcome(outcome: BookBuildOutcome) {
         when (outcome) {
-            is BookBuildOutcome.Done -> _state.update {
-                it.copy(
-                    busy = false,
-                    error = null,
-                    done = it.total,
-                    percent = 100,
-                    output = outcome.book.chapters.map { chapter -> chapter.audio.name },
-                    durationMs = outcome.book.durationMs,
-                )
+            is BookBuildOutcome.Done -> {
+                openForPlayback(outcome.book, albumTitleOf(_state.value.documentName))
+                _state.update {
+                    it.copy(
+                        busy = false,
+                        error = null,
+                        done = it.total,
+                        percent = 100,
+                        output = outcome.book.chapters.map { chapter -> chapter.audio.name },
+                        durationMs = outcome.book.durationMs,
+                    )
+                }
             }
 
             is BookBuildOutcome.Failed -> _state.update {
@@ -332,8 +706,31 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Kitob nomi — kengaytmasiz.
+     *
+     * Bob fayllarining nomlari ham shu nomdan yasaladi, shuning uchun
+     * qoldirilgan joy ham aynan shu kalit bilan yoziladi.
+     */
+    private fun albumTitleOf(documentName: String): String = documentName.substringBeforeLast('.')
+
     private companion object {
         const val TAG = "BookViewModel"
+
+        /** Holat yangilanishi orasidagi qadam: soniyasiga to'rt marta. */
+        const val TICK_MS = 250L
+
+        /**
+         * Qoldirilgan joyni saqlash qadami.
+         *
+         * Har chorak soniyada yozish ortiqcha: fayl har o'zgarishda to'liq
+         * qayta yoziladi va flesh xotirani bekorga yeydi. O'ttiz soniya —
+         * kutilmagan yopilishda yo'qoladigan eng ko'p joy.
+         */
+        const val SAVE_EVERY_MS = 30_000L
+
+        /** Qoldirilgan joy fayli — ilovaning ichki papkasida. */
+        const val PROGRESS_FILE = "kitob-jarayon.properties"
     }
 }
 

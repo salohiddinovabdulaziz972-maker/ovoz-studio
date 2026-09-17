@@ -246,4 +246,26 @@
     <string name="book_error_speak_failed">Синтезатор матнни овозга айлантира олмади. Қайтадан уриниб кўринг.</string>
     <string name="book_error_write_failed">Файлни ёзиб бўлмади — қурилмада бўш жой етарли эмас.</string>
     <string name="book_error_cancelled">Ясаш тўхтатилди. Чала китоб қолдирилмади.</string>
+    <string name="book_player_header">Тинглаш</string>
+    <string name="book_play">Тинглашни бошлаш</string>
+    <string name="book_continue">Давом этиш</string>
+    <string name="book_pause">Тўхтатиб туриш</string>
+    <string name="book_restart">Бошидан</string>
+    <string name="book_previous_chapter">Олдинги боб</string>
+    <string name="book_next_chapter">Кейинги боб</string>
+    <string name="book_skip_back">%1$d сония орқага</string>
+    <string name="book_skip_forward">%1$d сония олдинга</string>
+    <string name="book_previous_section">Олдинги бўлим</string>
+    <string name="book_next_section">Кейинги бўлим</string>
+    <string name="book_player_chapter">%1$d/%2$d боб</string>
+    <string name="book_player_section">Бўлим: %1$s</string>
+    <string name="book_player_left">Китоб охиригача %1$s</string>
+    <string name="book_timer_header">Ухлаш таймери</string>
+    <string name="book_timer_minutes">%1$d дақиқа</string>
+    <string name="book_timer_remaining">Таймер: %1$s қолди</string>
+    <string name="book_timer_at_end">Боб охиригача</string>
+    <string name="book_timer_at_end_note">Таймер тугагач, жорий боб охиригача ўқилади.</string>
+    <string name="book_timer_off">Таймерни ўчириш</string>
+    <string name="book_finished">Китоб тугади.</string>
+    <string name="book_error_file_missing">Боб файли топилмади — китобни қайтадан ясанг.</string>
 </resources>

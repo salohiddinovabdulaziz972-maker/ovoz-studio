@@ -29,6 +29,26 @@ object TimeFormat {
         )
     }
 
+    /**
+     * Qisqa ko'rinish: "12:04" yoki "1:02:03".
+     *
+     * Pleyer pozitsiyasi uchun: u har chorak soniyada yangilanadi va to'liq
+     * formatda (millisoniyagacha) ekran titrab ketardi, ekran o'quvchi esa
+     * har safar keraksiz aniqlikni o'qib berardi. Soat bo'lmasa soat qismi
+     * tushiriladi — «00:12:04» dan «12:04» ni o'qish osonroq.
+     */
+    fun formatShort(ms: Long): String {
+        val safe = ms.coerceAtLeast(0)
+        val hours = safe / MS_PER_HOUR
+        val minutes = (safe % MS_PER_HOUR) / MS_PER_MINUTE
+        val seconds = (safe % MS_PER_MINUTE) / MS_PER_SECOND
+        return if (hours > 0) {
+            String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format(Locale.US, "%02d:%02d", minutes, seconds)
+        }
+    }
+
     /** "01:02:03.456" -> 3 723 456 ms. Xato bo'lsa `null`. */
     fun parse(text: String): Long? {
         val trimmed = text.trim()

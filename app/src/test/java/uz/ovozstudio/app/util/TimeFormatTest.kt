@@ -22,6 +22,25 @@ class TimeFormatTest {
     }
 
     @Test
+    fun `formatShort soatni faqat kerak bolganda koradi`() {
+        assertEquals("00:00", TimeFormat.formatShort(0))
+        // Millisoniya yaxlitlanmaydi, tashlanadi: pozitsiya «orqaga» ketmasligi
+        // kerak — 59 999 ms «01:00» bo'lib ko'rinsa, vaqt oldinga sakragandek.
+        assertEquals("00:59", TimeFormat.formatShort(59_999))
+        assertEquals("12:04", TimeFormat.formatShort(724_000))
+        assertEquals("59:59", TimeFormat.formatShort(3_599_000))
+        assertEquals("1:00:00", TimeFormat.formatShort(3_600_000))
+        assertEquals("1:02:03", TimeFormat.formatShort(3_723_456))
+        assertEquals("10:00:00", TimeFormat.formatShort(36_000_000))
+    }
+
+    @Test
+    fun `formatShort manfiy vaqtni nolga keltiradi`() {
+        assertEquals("00:00", TimeFormat.formatShort(-1))
+        assertEquals("00:00", TimeFormat.formatShort(Long.MIN_VALUE))
+    }
+
+    @Test
     fun `format va parse bir birini qaytaradi`() {
         val values = listOf(0L, 1L, 999L, 1_000L, 59_999L, 60_000L, 3_723_456L, 86_399_999L)
         for (value in values) {

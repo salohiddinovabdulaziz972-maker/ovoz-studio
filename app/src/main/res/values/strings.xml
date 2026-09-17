@@ -246,4 +246,26 @@
     <string name="book_error_speak_failed">Sintezator matnni ovozga aylantira olmadi. Qaytadan urinib ko\'ring.</string>
     <string name="book_error_write_failed">Faylni yozib bo\'lmadi — qurilmada bo\'sh joy yetarli emas.</string>
     <string name="book_error_cancelled">Yasash to\'xtatildi. Chala kitob qoldirilmadi.</string>
+    <string name="book_player_header">Tinglash</string>
+    <string name="book_play">Tinglashni boshlash</string>
+    <string name="book_continue">Davom etish</string>
+    <string name="book_pause">To\'xtatib turish</string>
+    <string name="book_restart">Boshidan</string>
+    <string name="book_previous_chapter">Oldingi bob</string>
+    <string name="book_next_chapter">Keyingi bob</string>
+    <string name="book_skip_back">%1$d soniya orqaga</string>
+    <string name="book_skip_forward">%1$d soniya oldinga</string>
+    <string name="book_previous_section">Oldingi bo\'lim</string>
+    <string name="book_next_section">Keyingi bo\'lim</string>
+    <string name="book_player_chapter">%1$d/%2$d bob</string>
+    <string name="book_player_section">Bo\'lim: %1$s</string>
+    <string name="book_player_left">Kitob oxirigacha %1$s</string>
+    <string name="book_timer_header">Uxlash taymeri</string>
+    <string name="book_timer_minutes">%1$d daqiqa</string>
+    <string name="book_timer_remaining">Taymer: %1$s qoldi</string>
+    <string name="book_timer_at_end">Bob oxirigacha</string>
+    <string name="book_timer_at_end_note">Taymer tugagach, joriy bob oxirigacha o\'qiladi — gap o\'rtasida uzilmaydi.</string>
+    <string name="book_timer_off">Taymerni o\'chirish</string>
+    <string name="book_finished">Kitob tugadi.</string>
+    <string name="book_error_file_missing">Bob fayli topilmadi — kitobni qaytadan yasang.</string>
 </resources>

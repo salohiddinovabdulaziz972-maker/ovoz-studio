@@ -57,6 +57,15 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   skaner qilingan PDF'da matn qatlami yo'q (OCR ilovada yo'q) va `ToUnicode`
   jadvalisiz murakkab shriftli PDF **ataylab** o'qilmaydi — «savatcha» matn
   o'qigandan ko'ra ochiq xato yaxshiroq.
+- **Kitob pleyeri va uxlash taymeri**: yasalgan kitob ilovaning o'zida
+  tinglanadi — boblar ketma-ket o'tadi, bob tugaganda keyingisi o'zi
+  boshlanadi, oxirgi bobdan keyin pleyer to'xtaydi. Har bir tugma nima
+  qilishini aytadi: 15 soniya orqaga/oldinga, oldingi/keyingi bo'lim
+  (belgi bo'ylab), oldingi/keyingi bob. To'xtatilgan joy eslab qolinadi —
+  kitob qayta yasalsa, tugma «Davom etish» bo'lib turadi. Uxlash taymeri
+  15/30/60 daqiqaga qo'yiladi, «bob oxirigacha» rejimida esa gap
+  o'rtasida uzilmaydi: vaqt tugasa ham joriy bob oxirigacha o'qiladi.
+  Vaqt faqat o'qish paytida sanaydi — tanaffusda taymer ham to'xtaydi.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
@@ -67,9 +76,9 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 Nutqni matnga aylantirish (STT), ID3 teglar va ulashish, ko'p yo'lli
 aralashtirish, sozlamalar ekrani, vokal/cholg'u ajratish va neyron shovqin
-tozalash. Kitobni ilovaning o'zida boblar bo'ylab tinglaydigan pleyer ham
-hali yo'q (yasalgan MP3'larni istalgan tashqi pleyerda tinglash mumkin —
-tartib fayl nomida saqlanadi). Ovoz sintezi (TTS) bor, lekin hozircha faqat
+tozalash. Kitob pleyeri faqat shu seansda yasalgan kitobni tinglaydi:
+ilova qayta ochilgach, kitobni yana yasash kerak (fayllar joyida qoladi).
+Ovoz sintezi (TTS) bor, lekin hozircha faqat
 qurilma ovozi bilan — o'zbekcha neyron AI ovozi shu interfeys ortiga keyin
 ulanadi. Hammasi reja bo'yicha ketma-ket qo'shiladi — to'liq ro'yxat va
 tartib `docs/PROGRESS.md` da.
@@ -102,12 +111,14 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-400 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+423 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
 holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
 matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
 o'qish (PDF/DOCX/EPUB/TXT), boblarga bo'lish va kitob yig'ish (soxta
-sintezator bilan: tartib, pauza, to'xtatish, xato bob raqami).
+sintezator bilan: tartib, pauza, to'xtatish, xato bob raqami), kitob
+pleyerining mantig'i (boblar bo'ylab o'tish chegaralari, belgi bo'ylab
+sakrash, qoldirilgan joyni saqlash, uxlash taymeri).
 Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -179,7 +190,8 @@ app/src/main/java/uz/ovozstudio/app/
   media/format/ format aniqlash, kodlovchilar, formatni saqlash
   media/voice/ ovoz dvigateli interfeysi, qurilma TTS'i, matnni bo'laklash
   media/doc/  hujjat o'qish: TXT, DOCX, EPUB, PDF (o'zimizning o'quvchi)
-  media/book/ boblarga bo'lish, kitob yig'ish, belgilar, uxlash taymeri
+  media/book/ boblarga bo'lish, kitob yig'ish, belgilar, pleyer tartibi,
+              qoldirilgan joy, uxlash taymeri
   ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
@@ -189,7 +201,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/speed/   tezlik va ohang ekrani
   ui/noise/   shovqin tozalash ekrani
   ui/voice/   ovoz sinovi ekrani (qurilmada qanday ovozlar bor)
-  ui/book/    hujjatdan audio-kitob ekrani
+  ui/book/    hujjatdan audio-kitob ekrani va pleyer
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash
 bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari

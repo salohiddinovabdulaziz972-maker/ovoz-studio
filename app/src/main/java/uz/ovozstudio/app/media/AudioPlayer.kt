@@ -46,6 +46,17 @@ class AudioPlayer {
         }
     }
 
+    /**
+     * Belgilangan joyga o'tadi (millisoniya).
+     *
+     * Kitobda bu belgi bo'ylab sakrash va «o'tkazib yuborish» uchun kerak:
+     * fayl qaytadan ochilmaydi, ya'ni o'tish darhol bo'ladi.
+     */
+    fun seekTo(ms: Long) {
+        val media = player ?: return
+        runCatching { media.seekTo(ms.coerceAtLeast(0).toInt()) }
+    }
+
     /** Joriy pozitsiya (millisoniya); pleyer yo'q bo'lsa 0. */
     fun positionMs(): Long {
         val media = player ?: return 0
