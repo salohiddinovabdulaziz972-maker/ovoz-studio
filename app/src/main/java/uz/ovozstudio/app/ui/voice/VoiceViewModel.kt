@@ -14,7 +14,6 @@ import uz.ovozstudio.app.media.voice.SpeechRequest
 import uz.ovozstudio.app.media.voice.VoiceEngine
 import uz.ovozstudio.app.media.voice.VoiceError
 import uz.ovozstudio.app.util.SpeedText
-import kotlin.math.pow
 
 /**
  * Ovoz sinovi xatolari.
@@ -72,10 +71,9 @@ data class VoiceUiState(
 
     /** Yarim tonlardan ovoz balandligi ko'paytiruvchisiga. */
     val pitchValue: Float
-        get() = 2.0.pow(SpeedText.parseSemitones(semitones) / SEMITONES_PER_OCTAVE).toFloat()
+        get() = SpeedText.pitchRatio(SpeedText.parseSemitones(semitones)).toFloat()
 
     companion object {
-        const val SEMITONES_PER_OCTAVE = 12.0
         const val STEP_RATE = 0.05
         const val STEP_SEMITONES = 1.0
     }

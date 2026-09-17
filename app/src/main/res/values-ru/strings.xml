@@ -220,4 +220,30 @@
     <string name="settings_simplified_mode">Упрощённый режим для экранных дикторов</string>
     <string name="settings_simplified_mode_desc">Вместо волновых форм и ползунков — текстовые списки и кнопки.</string>
     <string name="settings_about">О приложении</string>
+
+    <string name="book_title">Документ в аудиокнигу</string>
+    <string name="book_hint">Выберите документ PDF, DOCX, EPUB или TXT — приложение разобьёт текст на главы и озвучит каждую главу в отдельный аудиофайл.</string>
+    <string name="book_pick">Выбрать документ</string>
+    <string name="book_pick_other">Другой документ</string>
+    <string name="book_file">Документ: %1$s</string>
+    <string name="book_format">Формат: %1$s</string>
+    <string name="book_chapters">Глав: %1$d</string>
+    <string name="book_chars">Символов: %1$d</string>
+    <string name="book_titles_header">Главы</string>
+    <string name="book_titles_more">Ещё глав: %1$d</string>
+    <string name="book_build">Создать книгу</string>
+    <string name="book_busy">Создаётся: глава %1$d, часть %2$d/%3$d — %4$d%%</string>
+    <string name="book_result_header">Готовые файлы</string>
+    <string name="book_result">Книга готова: %1$d файлов глав, всего %2$s</string>
+    <string name="book_saved_note">Файлы сохранены в папке OvozStudio: в имени указан номер главы, поэтому плеер не перепутает порядок.</string>
+    <string name="book_chapter_fallback">Книга</string>
+    <string name="book_preface_title">Предисловие</string>
+    <string name="book_error_no_text">В документе нет читаемого текста — возможно, это скан. Используйте PDF или DOCX с текстовым слоем.</string>
+    <string name="book_error_unsupported">Этот формат не поддерживается. Выберите PDF, DOCX, EPUB или TXT.</string>
+    <string name="book_error_too_large">Документ слишком большой — он должен быть меньше 32 МБ.</string>
+    <string name="book_error_broken">Не удалось прочитать файл: его внутренняя структура не та, что ожидалась.</string>
+    <string name="book_error_empty">Из документа не удалось выделить ни одной главы.</string>
+    <string name="book_error_speak_failed">Синтезатор не смог озвучить текст. Попробуйте ещё раз.</string>
+    <string name="book_error_write_failed">Не удалось записать файл — на устройстве мало свободного места.</string>
+    <string name="book_error_cancelled">Создание остановлено. Недостроенная книга не осталась.</string>
 </resources>

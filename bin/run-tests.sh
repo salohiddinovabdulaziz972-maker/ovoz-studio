@@ -64,6 +64,7 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/dsp/NoiseReducer.kt
     app/src/main/java/uz/ovozstudio/app/media/voice/TextChunker.kt
     app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/VoiceEngine.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/ChapterSplitter.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/PlainTextDecoder.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/DocumentErrors.kt
@@ -71,12 +72,15 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/doc/ZipEntries.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/DocxTextReader.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/EpubTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/PdfTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/DocumentLoader.kt
     app/src/main/java/uz/ovozstudio/app/media/book/BookErrors.kt
     app/src/main/java/uz/ovozstudio/app/media/book/BookPlan.kt
     app/src/main/java/uz/ovozstudio/app/media/book/WavJoiner.kt
     app/src/main/java/uz/ovozstudio/app/media/book/BookMarkers.kt
     app/src/main/java/uz/ovozstudio/app/media/book/ChapterAssembler.kt
     app/src/main/java/uz/ovozstudio/app/media/book/SleepTimer.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/BookBuilder.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -111,11 +115,14 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/doc/PlainTextDecoderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/DocxTextReaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/EpubTextReaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/PdfTextReaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/DocumentLoaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookPlannerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/WavJoinerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookMarkersTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/SleepTimerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/ChapterAssemblerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

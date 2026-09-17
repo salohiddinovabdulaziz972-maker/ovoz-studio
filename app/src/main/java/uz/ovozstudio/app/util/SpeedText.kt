@@ -1,5 +1,6 @@
 package uz.ovozstudio.app.util
 
+import kotlin.math.pow
 import uz.ovozstudio.app.media.dsp.SpeedPitch
 
 /**
@@ -65,4 +66,21 @@ object SpeedText {
         SEMITONE_FRACTION_DIGITS,
         FALLBACK_SEMITONES,
     )
+
+    /**
+     * Yarim tonlarni ovoz balandligi ko'paytiruvchisiga o'giradi.
+     *
+     * Sintezator yarim tonni bilmaydi — u «necha marta balandroq» ni oladi.
+     * O'n ikki yarim ton bir oktava, ya'ni ikki baravar baland; shu ta'rifdan
+     * formula chiqadi.
+     *
+     * Nega umumiy funksiya: bir xil «+12» ovoz sinovi ekranida ham,
+     * audio-kitobda ham bir xil eshitilishi kerak. Formula ikki joyda
+     * takrorlansa, ertami-kechmi ikkisi ajralib ketardi.
+     */
+    fun pitchRatio(semitones: Double): Double =
+        2.0.pow(semitones / SEMITONES_PER_OCTAVE)
+
+    /** Bir oktavadagi yarim tonlar soni. */
+    const val SEMITONES_PER_OCTAVE = 12.0
 }

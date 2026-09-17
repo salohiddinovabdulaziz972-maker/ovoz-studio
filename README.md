@@ -47,6 +47,16 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   esa matnning yozuvidan (lotin/kirill) tanlanadi. Halol cheklov: hozircha
   bu **qurilmaning o'z ovozi** — o'zbek ovozi o'rnatilmagan bo'lsa, u zaxira
   tilga o'tadi. Neyron AI ovozi keyin shu interfeys ortiga ulanadi.
+- **Hujjatdan audio-kitob**: PDF, DOCX, EPUB yoki TXT hujjatni tanlaysiz —
+  ilova matnni boblarga bo'lib, har bir bobni alohida **MP3** fayl qilib
+  o'qiydi. Fayl nomida bob tartib raqami turadi (`Kitob - 01 - BIRINCHI
+  BOB.mp3`), har bir bob uchun belgilar varaqasi (CUE) yoziladi. Boblar
+  ro'yxati yasashdan oldin ko'rsatiladi — bo'linish to'g'rimi, foydalanuvchi
+  o'zi ko'radi. Tezlik va balandlik qo'lda kiritiladi, jarayon foizda
+  ko'rinadi, to'xtatish istalgan paytda ishlaydi. Halol cheklovlar:
+  skaner qilingan PDF'da matn qatlami yo'q (OCR ilovada yo'q) va `ToUnicode`
+  jadvalisiz murakkab shriftli PDF **ataylab** o'qilmaydi — «savatcha» matn
+  o'qigandan ko'ra ochiq xato yaxshiroq.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
@@ -55,12 +65,14 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-Nutqni matnga aylantirish (STT), hujjatlarni audiolashtirish va audio-kitob,
-ID3 teglar va ulashish, ko'p yo'lli aralashtirish, sozlamalar ekrani,
-vokal/cholg'u ajratish va neyron shovqin tozalash. Ovoz sintezi (TTS) bor,
-lekin hozircha faqat qurilma ovozi bilan — o'zbekcha neyron AI ovozi shu
-interfeys ortiga keyin ulanadi. Hammasi reja bo'yicha ketma-ket qo'shiladi —
-to'liq ro'yxat va tartib `docs/PROGRESS.md` da.
+Nutqni matnga aylantirish (STT), ID3 teglar va ulashish, ko'p yo'lli
+aralashtirish, sozlamalar ekrani, vokal/cholg'u ajratish va neyron shovqin
+tozalash. Kitobni ilovaning o'zida boblar bo'ylab tinglaydigan pleyer ham
+hali yo'q (yasalgan MP3'larni istalgan tashqi pleyerda tinglash mumkin —
+tartib fayl nomida saqlanadi). Ovoz sintezi (TTS) bor, lekin hozircha faqat
+qurilma ovozi bilan — o'zbekcha neyron AI ovozi shu interfeys ortiga keyin
+ulanadi. Hammasi reja bo'yicha ketma-ket qo'shiladi — to'liq ro'yxat va
+tartib `docs/PROGRESS.md` da.
 
 ## Qurish
 
@@ -90,10 +102,12 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-257 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+400 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
 holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
-matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash.
+matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
+o'qish (PDF/DOCX/EPUB/TXT), boblarga bo'lish va kitob yig'ish (soxta
+sintezator bilan: tartib, pauza, to'xtatish, xato bob raqami).
 Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -164,6 +178,8 @@ app/src/main/java/uz/ovozstudio/app/
   media/dsp/  ekvalayzer, tezlik/ohang (WSOLA), shovqin tozalash, FFT
   media/format/ format aniqlash, kodlovchilar, formatni saqlash
   media/voice/ ovoz dvigateli interfeysi, qurilma TTS'i, matnni bo'laklash
+  media/doc/  hujjat o'qish: TXT, DOCX, EPUB, PDF (o'zimizning o'quvchi)
+  media/book/ boblarga bo'lish, kitob yig'ish, belgilar, uxlash taymeri
   ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
@@ -173,6 +189,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/speed/   tezlik va ohang ekrani
   ui/noise/   shovqin tozalash ekrani
   ui/voice/   ovoz sinovi ekrani (qurilmada qanday ovozlar bor)
+  ui/book/    hujjatdan audio-kitob ekrani
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash
 bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari

@@ -104,6 +104,30 @@ class SpeedTextTest {
     }
 
     @Test
+    fun `yarim tonlar kopaytiruvchiga togri ogiriladi`() {
+        // O'n ikki yarim ton — bir oktava, ya'ni ikki baravar baland.
+        assertEquals(1.0, SpeedText.pitchRatio(0.0), 1e-12)
+        assertEquals(2.0, SpeedText.pitchRatio(12.0), 1e-12)
+        assertEquals(0.5, SpeedText.pitchRatio(-12.0), 1e-12)
+
+        // Teng temperatsiyalangan kvinta: 2^(7/12). Qiymat tashqaridan
+        // ma'lum — shuning uchun bu yerda son bilan qotiriladi, «o'zini
+        // o'zi tekshirish» bo'lib qolmasin.
+        assertEquals(1.4983070768766815, SpeedText.pitchRatio(7.0), 1e-12)
+
+        // Kvarta pastga: 2^(-5/12).
+        assertEquals(0.7491535384383408, SpeedText.pitchRatio(-5.0), 1e-12)
+    }
+
+    @Test
+    fun `chegaradagi yarim tonlar oktavaga togri keladi`() {
+        // Ilova beradigan eng katta va eng kichik qiymat: ±12.
+        assertEquals(2.0, SpeedText.pitchRatio(SpeedText.MAX_SEMITONES), 1e-12)
+        assertEquals(0.5, SpeedText.pitchRatio(SpeedText.MIN_SEMITONES), 1e-12)
+        assertEquals(12.0, SpeedText.SEMITONES_PER_OCTAVE, 1e-12)
+    }
+
+    @Test
     fun `qadam chegaralari dvigatel chegaralariga mos`() {
         assertEquals(0.5, SpeedText.MIN_SPEED, 1e-9)
         assertEquals(2.0, SpeedText.MAX_SPEED, 1e-9)

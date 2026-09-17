@@ -55,6 +55,7 @@ fun HomeScreen(
     onNoiseFile: (String) -> Unit,
     onNoise: () -> Unit,
     onVoice: () -> Unit,
+    onBook: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -118,6 +119,14 @@ fun HomeScreen(
         A11yOutlinedButton(
             label = stringResource(R.string.voice_title),
             onClick = onVoice,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Audio-kitob ham faylga bog'lanmagan: hujjat ekranning o'zida
+        // tanlanadi, chunki kirish audio emas — PDF, DOCX, EPUB yoki TXT.
+        A11yOutlinedButton(
+            label = stringResource(R.string.book_title),
+            onClick = onBook,
             modifier = Modifier.fillMaxWidth(),
         )
 

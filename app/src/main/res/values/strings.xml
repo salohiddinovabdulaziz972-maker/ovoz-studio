@@ -220,4 +220,30 @@
     <string name="settings_simplified_mode">Ekran o\'quvchi uchun soddalashtirilgan rejim</string>
     <string name="settings_simplified_mode_desc">To\'lqin shakllari va slayderlar o\'rniga matnli ro\'yxat va tugmalar ishlatiladi.</string>
     <string name="settings_about">Ilova haqida</string>
+
+    <string name="book_title">Hujjatdan audio-kitob</string>
+    <string name="book_hint">PDF, DOCX, EPUB yoki TXT hujjatni tanlang — ilova matnni boblarga bo\'lib, har bir bobni alohida audio fayl qilib o\'qiydi.</string>
+    <string name="book_pick">Hujjat tanlash</string>
+    <string name="book_pick_other">Boshqa hujjat</string>
+    <string name="book_file">Hujjat: %1$s</string>
+    <string name="book_format">Format: %1$s</string>
+    <string name="book_chapters">Boblar: %1$d</string>
+    <string name="book_chars">Belgilar: %1$d</string>
+    <string name="book_titles_header">Boblar</string>
+    <string name="book_titles_more">Yana %1$d ta bob</string>
+    <string name="book_build">Kitob yasash</string>
+    <string name="book_busy">Yasalmoqda: %1$d-bob, %2$d/%3$d bo\'lak — %4$d%%</string>
+    <string name="book_result_header">Tayyor fayllar</string>
+    <string name="book_result">Kitob tayyor: %1$d ta bob fayli, jami %2$s</string>
+    <string name="book_saved_note">Fayllar OvozStudio papkasiga saqlandi: nomida bob tartib raqami bor, shuning uchun pleyerda tartib aralashmaydi.</string>
+    <string name="book_chapter_fallback">Kitob</string>
+    <string name="book_preface_title">Muqaddima</string>
+    <string name="book_error_no_text">Hujjatda o\'qiladigan matn yo\'q — u skaner qilingan rasm bo\'lishi mumkin. Matn qatlami bor PDF yoki DOCX ishlating.</string>
+    <string name="book_error_unsupported">Bu format qo\'llab-quvvatlanmaydi. PDF, DOCX, EPUB yoki TXT tanlang.</string>
+    <string name="book_error_too_large">Hujjat juda katta — hajmi 32 MB dan oshmasligi kerak.</string>
+    <string name="book_error_broken">Faylni o\'qib bo\'lmadi: ichki tuzilishi kutilganidek emas.</string>
+    <string name="book_error_empty">Hujjatdan birorta bob chiqmadi.</string>
+    <string name="book_error_speak_failed">Sintezator matnni ovozga aylantira olmadi. Qaytadan urinib ko\'ring.</string>
+    <string name="book_error_write_failed">Faylni yozib bo\'lmadi — qurilmada bo\'sh joy yetarli emas.</string>
+    <string name="book_error_cancelled">Yasash to\'xtatildi. Chala kitob qoldirilmadi.</string>
 </resources>

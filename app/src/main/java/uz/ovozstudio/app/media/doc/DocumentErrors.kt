@@ -11,4 +11,14 @@ class DocumentTooLargeException(limitBytes: Long) :
     Exception("Hujjat juda katta: $limitBytes baytdan oshdi")
 
 /** Fayl tuzilishi kutilganidek emas (buzuq arxiv, kerakli fayl yo'q). */
-class DocumentFormatException(reason: String) : Exception(reason)
+open class DocumentFormatException(reason: String) : Exception(reason)
+
+/**
+ * Fayl to'g'ri o'qildi, lekin ichida o'qiladigan matn yo'q.
+ *
+ * Alohida tur, chunki foydalanuvchi uchun bu **boshqa muammo**: format
+ * qo'llab-quvvatlanmaydi degan xabar «boshqa formatda saqlang» deb
+ * yo'naltirsa, bu — «kitob skaner qilingan rasm, matn qatlami yo'q» va
+ * yechim boshqa (OCR). Eng ko'p uchraydigan joyi — skaner qilingan PDF.
+ */
+class DocumentTextMissingException(reason: String) : DocumentFormatException(reason)

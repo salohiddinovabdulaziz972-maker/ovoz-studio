@@ -220,4 +220,30 @@
     <string name="settings_simplified_mode">Экран ўқувчи учун соддалаштирилган режим</string>
     <string name="settings_simplified_mode_desc">Тўлқин шакллари ва слайдерлар ўрнига матнли рўйхат ва тугмалар ишлатилади.</string>
     <string name="settings_about">Илова ҳақида</string>
+
+    <string name="book_title">Ҳужжатдан аудио-китоб</string>
+    <string name="book_hint">PDF, DOCX, EPUB ёки TXT ҳужжатни танланг — илова матнни бобларга бўлиб, ҳар бир бобни алоҳида аудио файл қилиб ўқийди.</string>
+    <string name="book_pick">Ҳужжат танлаш</string>
+    <string name="book_pick_other">Бошқа ҳужжат</string>
+    <string name="book_file">Ҳужжат: %1$s</string>
+    <string name="book_format">Формат: %1$s</string>
+    <string name="book_chapters">Боблар: %1$d</string>
+    <string name="book_chars">Белгилар: %1$d</string>
+    <string name="book_titles_header">Боблар</string>
+    <string name="book_titles_more">Яна %1$d та боб</string>
+    <string name="book_build">Китоб ясаш</string>
+    <string name="book_busy">Ясалмоқда: %1$d-боб, %2$d/%3$d бўлак — %4$d%%</string>
+    <string name="book_result_header">Тайёр файллар</string>
+    <string name="book_result">Китоб тайёр: %1$d та боб файли, жами %2$s</string>
+    <string name="book_saved_note">Файллар OvozStudio папкасига сақланди: номида боб тартиб рақами бор, шунинг учун плеерда тартиб аралашмайди.</string>
+    <string name="book_chapter_fallback">Китоб</string>
+    <string name="book_preface_title">Муқаддима</string>
+    <string name="book_error_no_text">Ҳужжатда ўқиладиган матн йўқ — у сканер қилинган расм бўлиши мумкин. Матн қатлами бор PDF ёки DOCX ишлатинг.</string>
+    <string name="book_error_unsupported">Бу формат қўллаб-қувватланмайди. PDF, DOCX, EPUB ёки TXT танланг.</string>
+    <string name="book_error_too_large">Ҳужжат жуда катта — ҳажми 32 МБ дан ошмаслиги керак.</string>
+    <string name="book_error_broken">Файлни ўқиб бўлмади: ички тузилиши кутилганидек эмас.</string>
+    <string name="book_error_empty">Ҳужжатдан бирорта боб чиқмади.</string>
+    <string name="book_error_speak_failed">Синтезатор матнни овозга айлантира олмади. Қайтадан уриниб кўринг.</string>
+    <string name="book_error_write_failed">Файлни ёзиб бўлмади — қурилмада бўш жой етарли эмас.</string>
+    <string name="book_error_cancelled">Ясаш тўхтатилди. Чала китоб қолдирилмади.</string>
 </resources>

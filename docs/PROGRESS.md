@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 257 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 400 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -100,6 +100,31 @@ Oxirgi yangilanish: 2026-09-17
     talaffuz boshqacha bo'lishi mumkin. Buni skript bilan tekshirib bo'lmaydi:
     ovozning talaffuzi faqat quloq bilan, faqat o'sha qurilmada tekshiriladi.
 
+17. **Hujjat → audio-kitob** — `media/doc/` va `media/book/` + `ui/book/`.
+    Hujjat to'rt formatda o'qiladi: **TXT** (jadval aniqlanadi: UTF-8,
+    UTF-16, windows-1251), **DOCX**, **EPUB**, **PDF**. Matn boblarga
+    bo'linadi (`ChapterSplitter` — hujjat formati o'z sarlavhalarini bersa
+    o'shandan, oddiy matnda esa sarlavha naqshidan), har bir bo'lak qurilma
+    sintezatori bilan **faylga** o'qiladi (`synthesizeToFile`), bo'laklar
+    bitta bob fayliga qo'shiladi (`WavJoiner` + `ChapterAssembler`) va bob
+    **MP3** bo'lib chiqadi (`Mp3Encoder`). Har bir bob uchun belgilar
+    varaqasi (CUE) yoziladi, fayl nomida bob tartib raqami turadi
+    (`Kitob - 01 - BIRINCHI BOB.mp3`) — pleyerda tartib aralashmasin.
+    `ui/book/` ekrani: hujjat tanlash, boblar ro'yxatini oldindan ko'rsatish
+    (bo'linish to'g'rimi — foydalanuvchi yasashdan oldin ko'radi), tezlik va
+    balandlikni qo'lda kiritish, jarayon foizi, to'xtatish, tayyor fayllar.
+    Butun zanjir sof JVM'da 44 ta test bilan qoplangan (`BookBuilder` soxta
+    sintezator bilan: tartib, pauza, tozalash, to'xtatish, xato bob raqami).
+    **Mustaqil tekshiruv:** PDF o'quvchi `fpdf2` bilan yasalgan namunalarda
+    tekshiriladi (`tools/make-pdf-fixtures.py`) — matn to'liq solishtiriladi,
+    o'zimiz yozgan PDF'ni o'zimiz o'qib «to'g'ri» deb qo'ya qolmaymiz.
+    **Halol cheklovlar:** PDF'da Type0 shrifti bo'lib, `ToUnicode` jadvali
+    bo'lmasa — o'qish **ataylab to'xtatiladi** (aks holda matn «savatcha»
+    bo'lib chiqardi, ya'ni foydalanuvchi tushunarsiz kitobni tinglardi);
+    skaner qilingan PDF'da matn qatlami yo'q va bu alohida xabar bilan
+    aytiladi (OCR ilovada yo'q). PDF o'quvchi **o'zimizniki** — tashqi
+    kutubxona olinmadi (pastda sababi).
+
 ## Muhim texnik qarorlar
 
 - **Ovoz har doim float ko'rinishida o'qiladi** (`ENCODING_PCM_FLOAT`), faylga
@@ -160,6 +185,24 @@ Oxirgi yangilanish: 2026-09-17
   chegaralanadi (±12 dB). Sabab: ekran o'quvchi bilan ishlaganda
   foydalanuvchi kiritgan matnni «keyin tuzatamiz» deb qoldirib bo'lmaydi —
   u qaysi sonni kiritganini eshitmaydi.
+
+- **PDF o'quvchi o'zimizniki, tashqi kutubxona olinmadi.** Odatdagi yo'l —
+  `pdfbox-android`, lekin u Android-only AAR: bu konteynerda uni na yig'ib,
+  na sinab bo'ladi, ya'ni matn to'g'ri o'qilayotganini hech kim
+  tekshirmagan bo'lardi. Buning o'rniga `media/doc/PdfTextReader.kt`
+  yozildi (arxiv oqimlarini ochish, sahifa daraxti, `Tj`/`TJ` amallari,
+  `ToUnicode` jadvali) va u **fpdf2** bilan yasalgan namunalarda so'zma-so'z
+  solishtiriladi. Narxi: PDF'ning hamma imkoniyati qo'llanmaydi (shifrlangan
+  fayl, `LZWDecode`, ba'zi CMap shakllari) — bunday fayl jimgina noto'g'ri
+  o'qilmaydi, ochiq xato beradi.
+- **Audio-kitob mantig'i `media/` da, ViewModel'da emas.** `BookBuilder`
+  sintezatorni interfeys orqali oladi, ya'ni butun zanjir (tartib, pauza,
+  xato bob raqami, to'xtatish, vaqtinchalik fayllarni tozalash) soxta
+  sintezator bilan sof JVM'da tekshiriladi. ViewModel'da faqat fayl
+  tanlash, holat va jarayon qoladi.
+- **Import qilingan hujjat ilova papkasiga nusxalanadi.** Tizim tanlagichi
+  bergan `content://` havolasi faqat shu seansda yashaydi; kitob yasash esa
+  undan keyin ham davom etadi. Nusxa `manba/` papkasiga tushadi.
 
 ## Formatni saqlash — egasining talabi
 
@@ -577,8 +620,16 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    emas**: `TextChunker` va `ScriptDetector` 33 ta JVM testi bilan qoplangan,
    lekin ovozning o'zi — sintezatorning talaffuzi — faqat quloq bilan
    baholanadi. **Qolgani (faqat qurilmada tekshiriladi):** pastda.
-6. **Hujjat → audio-kitob** — PDF/DOCX/TXT/EPUB, boblarga bo'lish, har bob
-   alohida MP3, avtomatik belgilar, uxlash taymeri. 5-bandga tayanadi.
+6. ~~**Hujjat → audio-kitob**~~ — **tayyor** (5-bandga tayanadi).
+   PDF/DOCX/EPUB/TXT o'qiladi, matn boblarga bo'linadi, har bob alohida MP3
+   bo'ladi, belgilar varaqasi (CUE) yoziladi, `ui/book/` ekrani jarayonni
+   ko'rsatadi va to'xtatish mumkin. `SleepTimer` (uxlash taymeri) media
+   qatlamida tayyor va testlangan.
+   **Hozircha yo'q:** taymer va belgilar varaqasi ilovaning pleyerida hali
+   ishlatilmaydi — buning uchun kitobni boblar bo'ylab o'qiydigan pleyer
+   kerak; u alohida band bo'lib turadi (hozir kitobni istalgan tashqi
+   pleyerda tinglash mumkin, tartib fayl nomida saqlanadi).
+   **Qolgani (faqat qurilmada tekshiriladi):** pastda.
 7. **ID3 teglar va ulashish** — nom, ijrochi, albom, muqova; faylni boshqa
    ilovaga yuborish.
 8. **Ko'p yo'lli aralashtirish** — har bir yo'lga ovoz balandligi, panorama,
@@ -619,6 +670,13 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   tabiiy eshitiladimi va shovqin haqiqatan kamayganmi. Skript faqat
   shovqinning **kamayganini** o'lchaydi; nutqning **yaxshi eshitilishini**
   faqat quloq aytadi.
+- Audio-kitob ekranini sinash: qurilmadan PDF/DOCX/EPUB/TXT tanlab, boblar
+  to'g'ri bo'linganini ko'rish, o'zbek kitobini o'zbek ovozi o'qiyaptimi,
+  yasalgan MP3 boblar pleyerda to'g'ri tartibda chalyaptimi, tezlik 2x da
+  shitirlash yo'qmi, uzoq kitobda (bir necha soat) jarayon foizi
+  yangilanib turyaptimi va «to'xtatish» darhol ishlayaptimi. Bu — quloq
+  va qurilma ishi; skript faqat **fayl mazmunini** (MP3 kadrlari, CUE
+  yozuvlari, bob nomlari) tekshira oladi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 

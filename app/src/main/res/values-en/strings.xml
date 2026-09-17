@@ -220,4 +220,30 @@
     <string name="settings_simplified_mode">Simplified mode for screen readers</string>
     <string name="settings_simplified_mode_desc">Replaces waveforms and sliders with text lists and buttons.</string>
     <string name="settings_about">About</string>
+
+    <string name="book_title">Document to audiobook</string>
+    <string name="book_hint">Pick a PDF, DOCX, EPUB or TXT document — the app splits the text into chapters and reads each chapter into its own audio file.</string>
+    <string name="book_pick">Choose document</string>
+    <string name="book_pick_other">Another document</string>
+    <string name="book_file">Document: %1$s</string>
+    <string name="book_format">Format: %1$s</string>
+    <string name="book_chapters">Chapters: %1$d</string>
+    <string name="book_chars">Characters: %1$d</string>
+    <string name="book_titles_header">Chapters</string>
+    <string name="book_titles_more">%1$d more chapters</string>
+    <string name="book_build">Build the book</string>
+    <string name="book_busy">Building: chapter %1$d, part %2$d/%3$d — %4$d%%</string>
+    <string name="book_result_header">Finished files</string>
+    <string name="book_result">The book is ready: %1$d chapter files, %2$s in total</string>
+    <string name="book_saved_note">The files are saved in the OvozStudio folder: each name carries the chapter number, so players keep the order.</string>
+    <string name="book_chapter_fallback">Book</string>
+    <string name="book_preface_title">Preface</string>
+    <string name="book_error_no_text">The document has no readable text — it may be a scanned image. Use a PDF or DOCX that has a text layer.</string>
+    <string name="book_error_unsupported">This format is not supported. Choose PDF, DOCX, EPUB or TXT.</string>
+    <string name="book_error_too_large">The document is too large — it must be under 32 MB.</string>
+    <string name="book_error_broken">Could not read the file: its internal structure is not what was expected.</string>
+    <string name="book_error_empty">No chapter could be extracted from the document.</string>
+    <string name="book_error_speak_failed">The speech engine could not turn the text into audio. Please try again.</string>
+    <string name="book_error_write_failed">Could not write the file — the device is low on free space.</string>
+    <string name="book_error_cancelled">Building stopped. No half-finished book was left behind.</string>
 </resources>

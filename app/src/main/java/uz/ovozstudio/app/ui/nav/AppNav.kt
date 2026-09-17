@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import uz.ovozstudio.app.ui.book.BookScreen
 import uz.ovozstudio.app.ui.convert.ConvertScreen
 import uz.ovozstudio.app.ui.eq.EqScreen
 import uz.ovozstudio.app.ui.home.HomeScreen
@@ -51,6 +52,12 @@ object Routes {
      */
     const val VOICE = "voice"
 
+    /**
+     * Hujjatdan audio-kitob ekrani. Fayl talab qilmaydi: hujjat ekranning
+     * o'zida tanlanadi, chunki fayl tizimidan audio emas, hujjat olinadi.
+     */
+    const val BOOK = "book"
+
     fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
 
     fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
@@ -81,6 +88,7 @@ fun AppNav() {
                 onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
                 onNoise = { navController.navigate(Routes.noise("")) },
                 onVoice = { navController.navigate(Routes.VOICE) },
+                onBook = { navController.navigate(Routes.BOOK) },
             )
         }
 
@@ -159,6 +167,10 @@ fun AppNav() {
 
         composable(Routes.VOICE) {
             VoiceScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.BOOK) {
+            BookScreen(onBack = { navController.popBackStack() })
         }
     }
 }
