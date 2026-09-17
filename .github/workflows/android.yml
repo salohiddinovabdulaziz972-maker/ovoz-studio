@@ -6,15 +6,25 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Ish uchun faqat o'qish huquqi kerak: kodni yozmaydi, reliz yaratmaydi.
+permissions:
+  contents: read
+
+# Bir shoxobchaga ketma-ket push bo'lsa, eski yurish bekor qilinadi —
+# navbat to'planib qolmaydi va daqiqalar behuda ketmaydi.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
@@ -22,7 +32,7 @@ jobs:
       # Gradle wrapper JAR repoda saqlanmaydi (binary fayl), shuning uchun
       # Gradle to'g'ridan-to'g'ri o'rnatiladi va `gradle` buyrug'i chaqiriladi.
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "8.11.1"
 
@@ -36,14 +46,14 @@ jobs:
       # faqat logdan qidirishga to'g'ri keladi.
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-report
           path: app/build/reports/tests/
           if-no-files-found: ignore
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ovozstudio-debug-apk
           path: app/build/outputs/apk/debug/*.apk

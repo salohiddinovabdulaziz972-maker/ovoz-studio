@@ -5,6 +5,17 @@ professional audio tahrirlovchi — Android uchun.
 
 > Bu ishchi nom. Yakuniy nom va brendni egasi tanlaydi.
 
+## Ilovani yuklab olish
+
+Tayyor APK GitHub Actions artifact sifatida turadi — kompyuter kerak emas,
+telefondan ham yuklab olish mumkin:
+
+https://github.com/salohiddinovabdulaziz972-maker/ovoz-studio/actions
+
+Eng yuqoridagi yashil yozuvni oching → pastdagi **Artifacts** → `ovozstudio-debug-apk`.
+Yuklangan fayl ustiga bosib o'rnatasiz (Android «noma'lum manba» ruxsatini
+so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
+
 ## Nima bor (V1, hozirgi holat)
 
 - **Yozib olish**: PCM WAV, 44.1 / 48 / 96 kHz, 16 yoki 24-bit, mono/stereo,

@@ -110,9 +110,11 @@ haqiqiy kompilyatordan o'tdi. Topilgani:
 
 ## Keyingi qadamlar (tartibi bilan)
 
-1. **APK yig'ish va qurilmada sinash** — GitHub Actions yoki Android Studio.
-   Konteyner aarch64, Google esa `aapt2` ni faqat x86_64 uchun beradi, shuning
-   uchun APK faqat CI'da (yoki Android Studio'da) yig'iladi.
+1. ~~**APK yig'ish**~~ — **bajarildi (2026-09-17).** Repozitoriy ochildi
+   (github.com/salohiddinovabdulaziz972-maker/ovoz-studio), CI birinchi
+   yurishdayoq yashil bo'ldi: 36 ta test + debug APK. APK egasiga yuborildi.
+   Qolgani — qurilmada, TalkBack bilan qo'lda sinash (bu qadam faqat egasi
+   tomonidan bajariladi).
 2. **Bo'lish (split)** — kesish ekraniga qo'shiladi (`AudioTrimmer.split` allaqachon bor).
 3. **Ko'p nuqtali o'chirish** — yadro bir nechta `Cut` ni qabul qiladi, UI da
    oraliqlar ro'yxatini yig'ish kerak.
