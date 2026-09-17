@@ -45,8 +45,6 @@
     <string name="trim_title">Trim and split</string>
     <string name="trim_start_label">Start</string>
     <string name="trim_end_label">End</string>
-    <string name="trim_hint">hh:mm:ss.mmm</string>
-    <string name="trim_invalid">Enter time as hh:mm:ss.mmm</string>
     <string name="time_unit_hours">hours</string>
     <string name="time_unit_minutes">min</string>
     <string name="time_unit_seconds">sec</string>
@@ -71,21 +69,29 @@
     <string name="trim_error_edit_failed">Could not apply the edit</string>
     <string name="trim_undo">Undo</string>
     <string name="trim_redo">Redo</string>
-    <string name="trim_nothing_to_undo">Nothing to undo</string>
     <string name="trim_saved">Saved: %1$s</string>
-    <string name="trim_split_at">Split at cursor</string>
     <string name="trim_duration_a11y">Selection length %1$s</string>
-    <string name="trim_cursor_label">Cursor position</string>
     <string name="trim_selection_title">Selection</string>
+    <string name="trim_split_title">Split file</string>
+    <string name="trim_split_label">Split point</string>
+    <string name="trim_split_apply">Split at this point</string>
+    <string name="trim_split_note">The file is cut in two at this point. The first part stays in the editor, the second is saved to the library.</string>
+    <string name="trim_split_done">Second part saved to the library: %1$s</string>
+    <string name="trim_error_split_point">The split point must be after the start and before the end of the file</string>
+    <string name="trim_cuts_title">Delete several ranges</string>
+    <string name="trim_cuts_note">Add ranges to the list, then delete them all at once.</string>
+    <string name="trim_cut_add">Add selection to list</string>
+    <string name="trim_cut_count">%1$d ranges in the list</string>
+    <string name="trim_cut_remove">Remove from list: %1$s</string>
+    <string name="trim_cut_clear">Clear list</string>
+    <string name="trim_cut_apply">Delete listed ranges</string>
+    <string name="trim_error_cuts_empty">The list is empty — add a range first</string>
+    <string name="trim_error_cuts_all">The listed ranges cover the whole file</string>
 
-    <string name="common_play">Play</string>
-    <string name="common_pause">Pause</string>
     <string name="common_delete">Delete</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>
     <string name="common_back">Back</string>
-    <string name="common_more">More options</string>
-    <string name="common_loading">Loading…</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_language">App language</string>

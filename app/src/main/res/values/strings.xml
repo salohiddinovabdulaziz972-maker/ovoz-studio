@@ -45,8 +45,6 @@
     <string name="trim_title">Kesish va bo\'lish</string>
     <string name="trim_start_label">Boshlanish</string>
     <string name="trim_end_label">Tugash</string>
-    <string name="trim_hint">soat:daqiqa:soniya.millisoniya</string>
-    <string name="trim_invalid">Vaqtni soat:daqiqa:soniya.millisoniya ko\'rinishida kiriting</string>
     <string name="time_unit_hours">soat</string>
     <string name="time_unit_minutes">daqiqa</string>
     <string name="time_unit_seconds">soniya</string>
@@ -71,21 +69,29 @@
     <string name="trim_error_edit_failed">Tahrirlashni bajarib bo\'lmadi</string>
     <string name="trim_undo">Orqaga qaytarish</string>
     <string name="trim_redo">Oldinga qaytarish</string>
-    <string name="trim_nothing_to_undo">Qaytariladigan amal yo\'q</string>
     <string name="trim_saved">Saqlandi: %1$s</string>
-    <string name="trim_split_at">Kursor joyidan bo\'lish</string>
     <string name="trim_duration_a11y">Tanlangan qism uzunligi %1$s</string>
-    <string name="trim_cursor_label">Kursor joyi</string>
     <string name="trim_selection_title">Tanlangan qism</string>
+    <string name="trim_split_title">Faylni bo\'lish</string>
+    <string name="trim_split_label">Bo\'lish nuqtasi</string>
+    <string name="trim_split_apply">Shu nuqtadan bo\'lish</string>
+    <string name="trim_split_note">Fayl shu nuqtada ikki qismga bo\'linadi. Birinchi qism tahrirlashda qoladi, ikkinchisi kutubxonaga saqlanadi.</string>
+    <string name="trim_split_done">Ikkinchi qism kutubxonaga saqlandi: %1$s</string>
+    <string name="trim_error_split_point">Bo\'lish nuqtasi fayl boshidan keyin va oxiridan oldin bo\'lishi kerak</string>
+    <string name="trim_cuts_title">Ko\'p nuqtali o\'chirish</string>
+    <string name="trim_cuts_note">Bir nechta bo\'lakni ro\'yxatga qo\'shib, keyin hammasini bir marta o\'chirish mumkin.</string>
+    <string name="trim_cut_add">Tanlovni ro\'yxatga qo\'shish</string>
+    <string name="trim_cut_count">Ro\'yxatda %1$d ta bo\'lak</string>
+    <string name="trim_cut_remove">Ro\'yxatdan olib tashlash: %1$s</string>
+    <string name="trim_cut_clear">Ro\'yxatni tozalash</string>
+    <string name="trim_cut_apply">Ro\'yxatdagilarni o\'chirish</string>
+    <string name="trim_error_cuts_empty">Ro\'yxat bo\'sh — avval bo\'lak qo\'shing</string>
+    <string name="trim_error_cuts_all">Ro\'yxatdagi bo\'laklar butun faylni qamrab olgan</string>
 
-    <string name="common_play">Eshitish</string>
-    <string name="common_pause">Pauza</string>
     <string name="common_delete">O\'chirish</string>
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">Yaxshi</string>
     <string name="common_back">Orqaga</string>
-    <string name="common_more">Boshqa amallar</string>
-    <string name="common_loading">Yuklanmoqda…</string>
 
     <string name="settings_title">Sozlamalar</string>
     <string name="settings_language">Ilova tili</string>

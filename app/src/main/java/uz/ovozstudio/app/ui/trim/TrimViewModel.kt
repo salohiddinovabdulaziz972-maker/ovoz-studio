@@ -40,6 +40,12 @@ enum class TrimError {
     SELECTION_EMPTY,
     SELECTION_ALL,
     NOTHING_TO_UNDO,
+    /** Ro'yxat bo'sh — o'chirish uchun hech narsa qo'shilmagan. */
+    CUTS_EMPTY,
+    /** Ro'yxatdagi bo'laklar butun faylni qamrab olgan. */
+    CUTS_ALL,
+    /** Bo'lish nuqtasi fayl chegarasida yoki kiritilmagan. */
+    SPLIT_POINT_INVALID,
     /** Tahrirlashning o'zi bajarilmadi (o'qish/yozish xatosi). */
     EDIT_FAILED,
     SAVE_FAILED,
@@ -50,6 +56,15 @@ data class TrimUiState(
     val info: WavInfo? = null,
     val startParts: TimeParts = TimeParts(),
     val endParts: TimeParts = TimeParts(),
+    val splitParts: TimeParts = TimeParts(),
+    /**
+     * Ko'p nuqtali o'chirish ro'yxati.
+     *
+     * Bo'laklar fayl vaqtida saqlanadi, ya'ni ro'yxat tahrirlar orasida
+     * o'zgarmaydi: foydalanuvchi ularni bir to'plam qilib yig'ib, keyin bir
+     * marta qo'llaydi. Har bir tahrir ularni tozalaydi.
+     */
+    val cuts: List<AudioTrimmer.Cut> = emptyList(),
     val fadeIn: Boolean = false,
     val fadeOut: Boolean = false,
     val fadeMs: String = DEFAULT_FADE_MS,
@@ -59,6 +74,8 @@ data class TrimUiState(
     val canRedo: Boolean = false,
     val busy: Boolean = false,
     val savedPath: String? = null,
+    /** Bo'lishdan keyingi ikkinchi qism — kutubxonaga tushgan yangi fayl. */
+    val splitSecondPath: String? = null,
     val error: TrimError? = null,
 ) {
     val durationMs: Long get() = info?.durationMs ?: 0L
@@ -104,6 +121,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setStart(parts: TimeParts) = _state.update { it.copy(startParts = parts) }
     fun setEnd(parts: TimeParts) = _state.update { it.copy(endParts = parts) }
+    fun setSplitPoint(parts: TimeParts) = _state.update { it.copy(splitParts = parts) }
     fun setFadeIn(enabled: Boolean) = _state.update { it.copy(fadeIn = enabled) }
     fun setFadeOut(enabled: Boolean) = _state.update { it.copy(fadeOut = enabled) }
     fun setFadeMs(value: String) = _state.update {
@@ -112,6 +130,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun consumeSaved() = _state.update { it.copy(savedPath = null) }
+    fun consumeSplit() = _state.update { it.copy(splitSecondPath = null) }
 
     /** Tanlangan oraliqning boshlanishi (ms). Butun fayl kiritilmagan bo'lsa — 0. */
     fun selectionStartMs(state: TrimUiState = _state.value): Long =
@@ -183,6 +202,101 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Joriy tanlovni o'chirish ro'yxatiga qo'shadi.
+     *
+     * Hech narsa o'chirilmaydi — faqat ro'yxat to'ladi. Shu sababli bu amal
+     * tarixga ham tushmaydi: bekor qilish uchun «ro'yxatdan olib tashlash» bor.
+     */
+    fun addCut() {
+        val current = _state.value
+        val start = selectionStartMs(current)
+        val end = selectionEndMs(current)
+        if (end <= start) {
+            _state.update { it.copy(error = TrimError.SELECTION_EMPTY) }
+            return
+        }
+        _state.update {
+            it.copy(cuts = it.cuts + AudioTrimmer.Cut(start, end), error = null)
+        }
+    }
+
+    fun removeCut(index: Int) = _state.update {
+        if (index in it.cuts.indices) it.copy(cuts = it.cuts.filterIndexed { i, _ -> i != index })
+        else it
+    }
+
+    fun clearCuts() = _state.update { it.copy(cuts = emptyList(), error = null) }
+
+    /** Ro'yxatdagi barcha bo'laklarni bir marta o'chiradi. */
+    fun applyCuts() {
+        val source = currentFile ?: return
+        val current = _state.value
+        val info = current.info
+        if (current.cuts.isEmpty()) {
+            _state.update { it.copy(error = TrimError.CUTS_EMPTY) }
+            return
+        }
+        if (info == null) {
+            _state.update { it.copy(error = TrimError.FILE_NOT_FOUND) }
+            return
+        }
+        // Butun fayl o'chirilishini oldindan aytamiz: aks holda foydalanuvchi
+        // umumiy «tahrirlab bo'lmadi» xatosini olardi va sababini bilmasdi.
+        if (AudioTrimmer.coversWholeFile(info, current.cuts)) {
+            _state.update { it.copy(error = TrimError.CUTS_ALL) }
+            return
+        }
+        val cuts = current.cuts
+        runEdit(tag = TAG_DELETE, onSuccess = { clearCuts() }) { destination ->
+            AudioTrimmer.deleteRanges(source, destination, cuts, fadesOf(current))
+        }
+    }
+
+    /**
+     * Faylni bo'lish nuqtasidan ikki qismga ajratadi.
+     *
+     * Birinchi qism tahrirlash zanjirida qoladi (ya'ni uni yana tahrirlab,
+     * «Saqlash» bilan yakunlash mumkin), ikkinchisi esa darhol kutubxonaga —
+     * asosiy yozuvlar papkasiga — tushadi. Shu sababli bo'lish hech qachon
+     * ma'lumot yo'qotmaydi: ikkala qism ham fayl ko'rinishida mavjud.
+     */
+    fun applySplit() {
+        val source = currentFile ?: return
+        val current = _state.value
+        val at = current.splitParts.toMillisOrNull()
+        if (at == null || at <= 0L || at >= current.durationMs) {
+            _state.update { it.copy(error = TrimError.SPLIT_POINT_INVALID) }
+            return
+        }
+        viewModelScope.launch {
+            stopPlayback()
+            _state.update { it.copy(busy = true, error = null) }
+            val first = store.newEditFile(TAG_SPLIT)
+            val second = store.newRecordingFile("${source.nameWithoutExtension}-2")
+            val result = withContext(Dispatchers.IO) {
+                runCatching { AudioTrimmer.split(source, first, second, at) }
+            }
+            result.fold(
+                onSuccess = {
+                    while (history.size > historyIndex + 1) history.removeAt(history.size - 1)
+                    history += first
+                    historyIndex = history.size - 1
+                    _state.update {
+                        it.copy(busy = false, splitSecondPath = second.absolutePath)
+                    }
+                    refreshFromCurrent()
+                },
+                onFailure = {
+                    // Yarim yozilgan fayllar qolib ketmasligi kerak.
+                    first.delete()
+                    second.delete()
+                    _state.update { it.copy(busy = false, error = TrimError.EDIT_FAILED) }
+                },
+            )
+        }
+    }
+
     fun undo() {
         if (historyIndex <= 0) {
             _state.update { it.copy(error = TrimError.NOTHING_TO_UNDO) }
@@ -234,7 +348,11 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- yordamchi ---
 
-    private fun runEdit(tag: String, operation: (File) -> WavInfo) {
+    private fun runEdit(
+        tag: String,
+        onSuccess: () -> Unit = {},
+        operation: (File) -> WavInfo,
+    ) {
         if (currentFile == null) return
         viewModelScope.launch {
             stopPlayback()
@@ -250,6 +368,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                     history += destination
                     historyIndex = history.size - 1
                     _state.update { it.copy(busy = false) }
+                    onSuccess()
                     refreshFromCurrent()
                 },
                 onFailure = { error ->
@@ -269,9 +388,12 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 fileName = file.nameWithoutExtension,
                 info = info,
-                // Har bir amaldan keyin tanlov butun faylni qamrab oladi.
+                // Har bir amaldan keyin tanlov butun faylni qamrab oladi,
+                // bo'lish nuqtasi esa bo'shatiladi: eski raqam yangi fayl
+                // uzunligiga to'g'ri kelmasligi mumkin.
                 startParts = TimeParts.fromMillis(0),
                 endParts = TimeParts.fromMillis(info?.durationMs ?: 0L),
+                splitParts = TimeParts(),
                 canUndo = historyIndex > 0,
                 canRedo = historyIndex < history.size - 1,
             )
@@ -319,6 +441,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private companion object {
         const val TAG_TRIM = "kesish"
         const val TAG_DELETE = "ochirish"
+        const val TAG_SPLIT = "bolish"
         const val POSITION_TICK_MS = 100L
     }
 }

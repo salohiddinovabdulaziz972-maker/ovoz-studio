@@ -45,8 +45,6 @@
     <string name="trim_title">Обрезка и разделение</string>
     <string name="trim_start_label">Начало</string>
     <string name="trim_end_label">Конец</string>
-    <string name="trim_hint">чч:мм:сс.мс</string>
-    <string name="trim_invalid">Введите время в формате чч:мм:сс.мс</string>
     <string name="time_unit_hours">часы</string>
     <string name="time_unit_minutes">мин</string>
     <string name="time_unit_seconds">сек</string>
@@ -71,21 +69,29 @@
     <string name="trim_error_edit_failed">Не удалось выполнить правку</string>
     <string name="trim_undo">Отменить</string>
     <string name="trim_redo">Вернуть</string>
-    <string name="trim_nothing_to_undo">Нечего отменять</string>
     <string name="trim_saved">Сохранено: %1$s</string>
-    <string name="trim_split_at">Разделить в позиции курсора</string>
     <string name="trim_duration_a11y">Длина выделения %1$s</string>
-    <string name="trim_cursor_label">Позиция курсора</string>
     <string name="trim_selection_title">Выделение</string>
+    <string name="trim_split_title">Разделить файл</string>
+    <string name="trim_split_label">Точка разделения</string>
+    <string name="trim_split_apply">Разделить в этой точке</string>
+    <string name="trim_split_note">Файл делится на две части в этой точке. Первая остаётся в редакторе, вторая сохраняется в библиотеку.</string>
+    <string name="trim_split_done">Вторая часть сохранена в библиотеку: %1$s</string>
+    <string name="trim_error_split_point">Точка разделения должна быть после начала и до конца файла</string>
+    <string name="trim_cuts_title">Удаление нескольких участков</string>
+    <string name="trim_cuts_note">Добавьте участки в список, затем удалите их все сразу.</string>
+    <string name="trim_cut_add">Добавить выделение в список</string>
+    <string name="trim_cut_count">В списке участков: %1$d</string>
+    <string name="trim_cut_remove">Убрать из списка: %1$s</string>
+    <string name="trim_cut_clear">Очистить список</string>
+    <string name="trim_cut_apply">Удалить участки из списка</string>
+    <string name="trim_error_cuts_empty">Список пуст — сначала добавьте участок</string>
+    <string name="trim_error_cuts_all">Участки в списке охватывают весь файл</string>
 
-    <string name="common_play">Слушать</string>
-    <string name="common_pause">Пауза</string>
     <string name="common_delete">Удалить</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">Хорошо</string>
     <string name="common_back">Назад</string>
-    <string name="common_more">Другие действия</string>
-    <string name="common_loading">Загрузка…</string>
 
     <string name="settings_title">Настройки</string>
     <string name="settings_language">Язык приложения</string>

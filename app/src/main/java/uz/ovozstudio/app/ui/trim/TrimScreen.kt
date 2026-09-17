@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
+import uz.ovozstudio.app.media.AudioTrimmer
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.SwitchRow
@@ -35,6 +36,7 @@ import uz.ovozstudio.app.ui.common.a11yHeading
 import uz.ovozstudio.app.ui.common.rememberAnnouncer
 import uz.ovozstudio.app.ui.common.spokenTime
 import uz.ovozstudio.app.util.TimeFormat
+import uz.ovozstudio.app.util.TimeParts
 
 @Composable
 fun TrimScreen(
@@ -51,6 +53,17 @@ fun TrimScreen(
     LaunchedEffect(state.savedPath) {
         if (state.savedPath != null) {
             announce(context.getString(R.string.trim_saved, state.savedPath!!.substringAfterLast('/')))
+        }
+    }
+
+    LaunchedEffect(state.splitSecondPath) {
+        if (state.splitSecondPath != null) {
+            announce(
+                context.getString(
+                    R.string.trim_split_done,
+                    state.splitSecondPath!!.substringAfterLast('/'),
+                ),
+            )
         }
     }
 
@@ -91,6 +104,12 @@ fun TrimScreen(
         if (state.busy) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
+
+        Text(
+            text = stringResource(R.string.trim_selection_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.a11yHeading(),
+        )
 
         TimeInput(
             label = stringResource(R.string.trim_start_label),
@@ -151,6 +170,22 @@ fun TrimScreen(
             onFadeMs = viewModel::setFadeMs,
         )
 
+        SplitBlock(
+            parts = state.splitParts,
+            enabled = !state.busy,
+            onPartsChange = viewModel::setSplitPoint,
+            onApply = { viewModel.applySplit() },
+        )
+
+        MultiCutBlock(
+            cuts = state.cuts,
+            enabled = !state.busy,
+            onAdd = { viewModel.addCut() },
+            onRemove = { index -> viewModel.removeCut(index) },
+            onClear = { viewModel.clearCuts() },
+            onApply = { viewModel.applyCuts() },
+        )
+
         EditControls(
             state = state,
             onApply = { viewModel.applyTrim() },
@@ -180,6 +215,17 @@ fun TrimScreen(
             A11yOutlinedButton(
                 label = stringResource(R.string.common_ok),
                 onClick = { viewModel.consumeSaved() },
+            )
+        }
+
+        state.splitSecondPath?.let { path ->
+            Text(
+                text = stringResource(R.string.trim_split_done, path.substringAfterLast('/')),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            A11yOutlinedButton(
+                label = stringResource(R.string.common_ok),
+                onClick = { viewModel.consumeSplit() },
             )
         }
     }
@@ -220,6 +266,115 @@ private fun FadeBlock(
                     imeAction = ImeAction.Done,
                 ),
                 modifier = Modifier.width(160.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Faylni ikki qismga bo'lish.
+ *
+ * Bo'lish nuqtasi alohida maydonda kiritiladi — tanlovning «boshlanishi» ni
+ * bo'lish nuqtasi sifatida ishlatish mumkin edi, lekin u holda bitta maydon
+ * ikki xil ma'noni bildirardi va ekran o'quvchi foydalanuvchisi qaysi raqam
+ * nimaga tegishli ekanini bilib olmasdi.
+ */
+@Composable
+private fun SplitBlock(
+    parts: TimeParts,
+    enabled: Boolean,
+    onPartsChange: (TimeParts) -> Unit,
+    onApply: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.trim_split_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.a11yHeading(),
+        )
+        Text(
+            text = stringResource(R.string.trim_split_note),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        TimeInput(
+            label = stringResource(R.string.trim_split_label),
+            parts = parts,
+            onPartsChange = onPartsChange,
+            isError = !parts.isEmpty && parts.toMillisOrNull() == null,
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        // Tugma maydon to'ldirilmagan bo'lsa ham bosiladi: sabab umumiy
+        // «bo'lmadi» emas, aniq aytilishi kerak.
+        A11yOutlinedButton(
+            label = stringResource(R.string.trim_split_apply),
+            onClick = onApply,
+            enabled = enabled,
+        )
+    }
+}
+
+/**
+ * Ko'p nuqtali o'chirish: bo'laklar avval ro'yxatga yig'iladi, keyin bir marta
+ * o'chiriladi. Har bir bo'lak uchun «olib tashlash» tugmasi bor — bekor qilish
+ * uchun tarixga qaytish shart emas.
+ */
+@Composable
+private fun MultiCutBlock(
+    cuts: List<AudioTrimmer.Cut>,
+    enabled: Boolean,
+    onAdd: () -> Unit,
+    onRemove: (Int) -> Unit,
+    onClear: () -> Unit,
+    onApply: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.trim_cuts_title),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.a11yHeading(),
+        )
+        Text(
+            text = stringResource(R.string.trim_cuts_note),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.trim_cut_add),
+            onClick = onAdd,
+            enabled = enabled,
+        )
+
+        if (cuts.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.trim_cut_count, cuts.size),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            cuts.forEachIndexed { index, cut ->
+                val range = stringResource(
+                    R.string.trim_selection_range,
+                    TimeFormat.format(cut.startMs),
+                    TimeFormat.format(cut.endMs),
+                )
+                // Har bir tugma o'z bo'lagini nomlaydi: «olib tashlash» degan
+                // yorliq bilan ekran o'quvchi qaysi bo'lak o'chishini aytmasdi.
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(text = range, style = MaterialTheme.typography.bodyLarge)
+                    A11yOutlinedButton(
+                        label = stringResource(R.string.trim_cut_remove, range),
+                        onClick = { onRemove(index) },
+                        enabled = enabled,
+                    )
+                }
+            }
+            A11yOutlinedButton(
+                label = stringResource(R.string.trim_cut_clear),
+                onClick = onClear,
+                enabled = enabled,
+            )
+            A11yButton(
+                label = stringResource(R.string.trim_cut_apply),
+                onClick = onApply,
+                enabled = enabled,
             )
         }
     }
@@ -276,6 +431,9 @@ private fun TrimError.message(): String = stringResource(
         TrimError.SELECTION_EMPTY -> R.string.trim_error_selection_empty
         TrimError.SELECTION_ALL -> R.string.trim_error_selection_all
         TrimError.NOTHING_TO_UNDO -> R.string.trim_error_nothing_to_undo
+        TrimError.CUTS_EMPTY -> R.string.trim_error_cuts_empty
+        TrimError.CUTS_ALL -> R.string.trim_error_cuts_all
+        TrimError.SPLIT_POINT_INVALID -> R.string.trim_error_split_point
         TrimError.EDIT_FAILED -> R.string.trim_error_edit_failed
         TrimError.SAVE_FAILED -> R.string.trim_error_save_failed
     },

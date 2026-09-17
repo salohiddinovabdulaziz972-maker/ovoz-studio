@@ -143,8 +143,9 @@ object AudioTrimmer {
     }
 
     /**
-     * Ko'p nuqtali o'chirish: [ranges] da ko'rsatilgan bo'laklar chiqarib tashlanadi,
-     * qolgan qismlar ketma-ket qo'shiladi. Bo'sh bo'laklar e'tiborsiz qoldiriladi.
+     * Ko'p nuqtali o'chirish: [cuts] da ko'rsatilgan bo'laklar chiqarib tashlanadi,
+     * qolgan qismlar ketma-ket qo'shiladi. Bo'sh bo'laklar e'tiborsiz qoldiriladi,
+     * ustma-ust tushganlari birlashtiriladi.
      */
     @Throws(IOException::class)
     fun deleteRanges(
@@ -159,21 +160,7 @@ object AudioTrimmer {
             val totalFrames = info.frames
             if (totalFrames <= 0) throw IOException("Fayl bo'sh")
 
-            // Barcha oraliqlar kadrlarda va yarim ochiq: `[boshlanish, tugash)`.
-            val removed = cuts
-                .map { info.msToFrame(it.startMs)..info.msToFrame(it.endMs) }
-                .map { it.first.coerceIn(0, totalFrames)..it.last.coerceIn(0, totalFrames) }
-                .filter { it.last > it.first }
-                .sortedBy { it.first }
-
-            // Qoladigan bo'laklar — o'sha kelishuvda.
-            val keep = mutableListOf<LongRange>()
-            var cursor = 0L
-            for (cut in removed) {
-                if (cut.first > cursor) keep += cursor..cut.first
-                cursor = maxOf(cursor, cut.last)
-            }
-            if (cursor < totalFrames) keep += cursor..totalFrames
+            val keep = keptRanges(info, cuts)
             if (keep.isEmpty()) throw IOException("Butun fayl o'chirilishini oldini olish")
 
             val keptFrames = keep.sumOf { (it.last - it.first).toLong() }
@@ -219,6 +206,40 @@ object AudioTrimmer {
             return WavFile.readInfo(dest)
         }
     }
+
+    /**
+     * [cuts] o'chirilgandan keyin qoladigan bo'laklar (kadrlarda, yarim ochiq).
+     *
+     * Butun hisob-kitob — `deleteRanges` ham, foydalanuvchiga aniq xato
+     * ko'rsatish ham — shu bitta funksiyaga tayanadi. Ilgari bu mantiq
+     * `deleteRanges` ichida yopiq edi va ViewModel «butun fayl o'chirilmoqda»
+     * holatini oldindan ayta olmasdi: xato faqat ish boshlangandan keyin,
+     * umumiy «tahrirlab bo'lmadi» ko'rinishida chiqardi.
+     */
+    fun keptRanges(info: WavInfo, cuts: List<Cut>): List<LongRange> {
+        val totalFrames = info.frames
+        if (totalFrames <= 0) return emptyList()
+
+        // Barcha oraliqlar kadrlarda va yarim ochiq: `[boshlanish, tugash)`.
+        val removed = cuts
+            .map { info.msToFrame(it.startMs)..info.msToFrame(it.endMs) }
+            .map { it.first.coerceIn(0, totalFrames)..it.last.coerceIn(0, totalFrames) }
+            .filter { it.last > it.first }
+            .sortedBy { it.first }
+
+        val keep = mutableListOf<LongRange>()
+        var cursor = 0L
+        for (cut in removed) {
+            if (cut.first > cursor) keep += cursor..cut.first
+            cursor = maxOf(cursor, cut.last)
+        }
+        if (cursor < totalFrames) keep += cursor..totalFrames
+        return keep
+    }
+
+    /** [cuts] butun faylni qamrab oladimi — ya'ni o'chirishdan keyin hech narsa qolmaydimi. */
+    fun coversWholeFile(info: WavInfo, cuts: List<Cut>): Boolean =
+        info.frames > 0 && keptRanges(info, cuts).isEmpty()
 
     /** Faylni [atMs] nuqtasidan ikki qismga bo'ladi. */
     @Throws(IOException::class)

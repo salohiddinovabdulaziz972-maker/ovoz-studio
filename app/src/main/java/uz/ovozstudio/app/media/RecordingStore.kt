@@ -35,7 +35,7 @@ class RecordingStore(context: Context) {
     /** Tahrirlash paytidagi oraliq fayllar — foydalanuvchiga ko'rsatilmaydi. */
     val editsDirectory: File = File(directory, "tahrir").apply { mkdirs() }
 
-    fun newRecordingFile(): File = uniqueFile(directory, "yozuv")
+    fun newRecordingFile(prefix: String = "yozuv"): File = uniqueFile(directory, prefix)
 
     fun newEditFile(tag: String): File = uniqueFile(editsDirectory, tag)
 
@@ -47,7 +47,14 @@ class RecordingStore(context: Context) {
      * Ya'ni yangi yozuv eski yozuvni yo'q qilishi mumkin edi. Endi nom band
      * bo'lsa, oxiriga raqam qo'shiladi.
      */
-    private fun uniqueFile(directory: File, prefix: String): File {
+    private fun uniqueFile(directory: File, rawPrefix: String): File {
+        // Prefiks endi tashqaridan (masalan, bo'lingan faylning nomidan) kelishi
+        // mumkin, shuning uchun faqat xavfsiz belgilar qoldiriladi: `/` yoki
+        // `..` fayl nomida bo'lsa, yozuv butunlay boshqa papkaga tushib qolardi.
+        val prefix = rawPrefix
+            .replace(Regex("[^A-Za-z0-9._-]"), "_")
+            .take(40)
+            .ifEmpty { "yozuv" }
         val stamp = timestamp()
         var candidate = File(directory, "$prefix-$stamp.wav")
         var counter = 2

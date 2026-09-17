@@ -45,8 +45,6 @@
     <string name="trim_title">Кесиш ва бўлиш</string>
     <string name="trim_start_label">Бошланиш</string>
     <string name="trim_end_label">Тугаш</string>
-    <string name="trim_hint">соат:дақиқа:сония.миллисония</string>
-    <string name="trim_invalid">Вақтни соат:дақиқа:сония.миллисония кўринишида киритинг</string>
     <string name="time_unit_hours">соат</string>
     <string name="time_unit_minutes">дақиқа</string>
     <string name="time_unit_seconds">сония</string>
@@ -71,21 +69,29 @@
     <string name="trim_error_edit_failed">Таҳрирлашни бажариб бўлмади</string>
     <string name="trim_undo">Орқага қайтариш</string>
     <string name="trim_redo">Олдинга қайтариш</string>
-    <string name="trim_nothing_to_undo">Қайтариладиган амал йўқ</string>
     <string name="trim_saved">Сақланди: %1$s</string>
-    <string name="trim_split_at">Курсор жойидан бўлиш</string>
     <string name="trim_duration_a11y">Танланган қисм узунлиги %1$s</string>
-    <string name="trim_cursor_label">Курсор жойи</string>
     <string name="trim_selection_title">Танланган қисм</string>
+    <string name="trim_split_title">Файлни бўлиш</string>
+    <string name="trim_split_label">Бўлиш нуқтаси</string>
+    <string name="trim_split_apply">Шу нуқтадан бўлиш</string>
+    <string name="trim_split_note">Файл шу нуқтада икки қисмга бўлинади. Биринчи қисм таҳрирлашда қолади, иккинчиси кутубхонага сақланади.</string>
+    <string name="trim_split_done">Иккинчи қисм кутубхонага сақланди: %1$s</string>
+    <string name="trim_error_split_point">Бўлиш нуқтаси файл бошидан кейин ва охиридан олдин бўлиши керак</string>
+    <string name="trim_cuts_title">Кўп нуқтали ўчириш</string>
+    <string name="trim_cuts_note">Бир нечта бўлакни рўйхатга қўшиб, кейин ҳаммасини бир марта ўчириш мумкин.</string>
+    <string name="trim_cut_add">Танловни рўйхатга қўшиш</string>
+    <string name="trim_cut_count">Рўйхатда %1$d та бўлак</string>
+    <string name="trim_cut_remove">Рўйхатдан олиб ташлаш: %1$s</string>
+    <string name="trim_cut_clear">Рўйхатни тозалаш</string>
+    <string name="trim_cut_apply">Рўйхатдагиларни ўчириш</string>
+    <string name="trim_error_cuts_empty">Рўйхат бўш — аввал бўлак қўшинг</string>
+    <string name="trim_error_cuts_all">Рўйхатдаги бўлаклар бутун файлни қамраб олган</string>
 
-    <string name="common_play">Эшитиш</string>
-    <string name="common_pause">Пауза</string>
     <string name="common_delete">Ўчириш</string>
     <string name="common_cancel">Бекор қилиш</string>
     <string name="common_ok">Яхши</string>
     <string name="common_back">Орқага</string>
-    <string name="common_more">Бошқа амаллар</string>
-    <string name="common_loading">Юкланмоқда…</string>
 
     <string name="settings_title">Созламалар</string>
     <string name="settings_language">Илова тили</string>

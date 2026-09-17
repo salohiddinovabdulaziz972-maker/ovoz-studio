@@ -143,6 +143,65 @@ class AudioTrimmerTest {
         assertFrames(second, expected = 400..999)
     }
 
+    @Test
+    fun `keptRanges ustma-ust tushgan oraliqlarni birlashtiradi`() {
+        val info = WavFile.readInfo(ramp(frames = 1_000))
+
+        val keep = AudioTrimmer.keptRanges(
+            info,
+            listOf(AudioTrimmer.Cut(100, 300), AudioTrimmer.Cut(200, 400)),
+        )
+
+        assertEquals(listOf(0L to 100L, 400L to 1_000L), keep.map { it.first to it.last })
+    }
+
+    @Test
+    fun `keptRanges fayl chegarasidan chiqqan oraliqni qisqartiradi`() {
+        val info = WavFile.readInfo(ramp(frames = 1_000))
+
+        val keep = AudioTrimmer.keptRanges(info, listOf(AudioTrimmer.Cut(-500, 200)))
+
+        assertEquals(listOf(200L to 1_000L), keep.map { it.first to it.last })
+    }
+
+    @Test
+    fun `keptRanges bosh oraliqni etiborsiz qoldiradi`() {
+        val info = WavFile.readInfo(ramp(frames = 1_000))
+
+        val keep = AudioTrimmer.keptRanges(info, listOf(AudioTrimmer.Cut(400, 400)))
+
+        assertEquals(listOf(0L to 1_000L), keep.map { it.first to it.last })
+    }
+
+    @Test
+    fun `coversWholeFile butun fayl qamrab olinganini aniqlaydi`() {
+        val info = WavFile.readInfo(ramp(frames = 1_000))
+
+        assertTrue(
+            "bitta oraliq butun faylni qamrab oladi",
+            AudioTrimmer.coversWholeFile(info, listOf(AudioTrimmer.Cut(0, 1_000))),
+        )
+        assertTrue(
+            "ikki qo'shni oraliq birgalikda butun faylni qamrab oladi",
+            AudioTrimmer.coversWholeFile(
+                info,
+                listOf(AudioTrimmer.Cut(0, 500), AudioTrimmer.Cut(500, 1_000)),
+            ),
+        )
+    }
+
+    @Test
+    fun `coversWholeFile oraliq orasida bolak qolsa false qaytaradi`() {
+        val info = WavFile.readInfo(ramp(frames = 1_000))
+
+        val covered = AudioTrimmer.coversWholeFile(
+            info,
+            listOf(AudioTrimmer.Cut(0, 400), AudioTrimmer.Cut(600, 1_000)),
+        )
+
+        assertTrue("400–599 oralig'i saqlanib qoladi", !covered)
+    }
+
     // --- yordamchi ---
 
     /** Har bir kadri o'z indeksiga teng bo'lgan fayl: solishtirish oson. */
