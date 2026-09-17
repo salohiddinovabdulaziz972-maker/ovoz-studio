@@ -17,15 +17,23 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 36 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 41 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   23 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   24 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
-   darhol topadi.
+   darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
+   `R.drawable`); yangi tur ishlatilsa, skriptga ham qo'shiladi.
+8. **Bo'lish va ko'p nuqtali o'chirish** — kesish ekranining oxirgi
+   yetishmagan qismi. Bo'lish nuqtasi alohida maydonda kiritiladi;
+   birinchi qism tahrirlash zanjirida qoladi, ikkinchisi kutubxonaga
+   tushadi. Ko'p nuqtali o'chirishda bo'laklar ro'yxatga yig'iladi va
+   har biri alohida olib tashlanadi.
+9. **Fon rejimida yozish** — `media/RecordingService.kt`. Ekran o'chganda
+   yoki ilova fonda qolganda jarayon endi o'ldirilmaydi.
 
 ## Muhim texnik qarorlar
 
@@ -107,24 +115,57 @@ haqiqiy kompilyatordan o'tdi. Topilgani:
     so'raydi.
 15. `locales_config.xml` qo'shildi: Android 13+ da foydalanuvchi tilni qurilma
     tilidan mustaqil tanlay oladi (o'zbek, o'zbek-kirill, rus, ingliz).
+16. `RecordingService` — `getSystemService(NotificationManager::class.java)`
+    null bo'lishi mumkin, kod esa darhol metod chaqirardi. **Ilova
+    yig'ilmasdi.** Type-check skripti topdi (CI'ni kutmasdan).
+17. `RecordingService` uchun `R.drawable.ic_mic` ishlatilgan edi, type-check
+    `R` stub'i esa faqat `R.string` ni bilardi — skript resurs turlarini
+    generatsiya qiladigan qilib kengaytirildi. Sabab: tekshiruv vositasi
+    kod ortidan emas, kod bilan birga o'sishi kerak.
 
-## Keyingi qadamlar (tartibi bilan)
+## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
-1. ~~**APK yig'ish**~~ — **bajarildi (2026-09-17).** Repozitoriy ochildi
-   (github.com/salohiddinovabdulaziz972-maker/ovoz-studio), CI birinchi
-   yurishdayoq yashil bo'ldi: 36 ta test + debug APK. APK egasiga yuborildi.
-   Qolgani — qurilmada, TalkBack bilan qo'lda sinash (bu qadam faqat egasi
-   tomonidan bajariladi).
-2. **Bo'lish (split)** — kesish ekraniga qo'shiladi (`AudioTrimmer.split` allaqachon bor).
-3. **Ko'p nuqtali o'chirish** — yadro bir nechta `Cut` ni qabul qiladi, UI da
-   oraliqlar ro'yxatini yig'ish kerak.
-4. **Fon rejimida yozish** — foreground service (`FOREGROUND_SERVICE_MICROPHONE`).
-   Hozir ekran o'chsa yozish to'xtaydi — bu ma'lum kamchilik.
-5. **Format konvertori** — MP3/M4A/FLAC/OGG. Kodlash uchun MediaCodec yoki
-   ffmpeg kerak; fayl hajmi bo'yicha qaror qabul qilinadi.
-6. **Ovoz dvigateli abstraksiyasi** (`VoiceEngine` + `DeviceTtsEngine`) —
-   qurilmaning TTS'i, keyin bulut AI ovozini shu interfeys ortiga ulash.
-7. Effektlar, ekvalayzer, shovqin tozalash, stem separation, audio-kitob.
+Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
+imkoniyatni mustahkamlash, keyin yangisini qo'shish.
+
+**Tayyor**
+
+- Til va accessibility: tizim tilini aniqlash, o'zbek (lotin + kirill),
+  rus, ingliz; yorliqsiz tugma yo'q; 48 dp tegish maydoni; vaqt faqat
+  so'ralganda aytiladi.
+- Aniq kesish: soat/daqiqa/soniya/millisoniya qo'lda kiritiladi, fade in/out,
+  tanlangan qismni eshitish, orqaga/oldinga qaytarish.
+- Bo'lish va ko'p nuqtali o'chirish.
+- Yozib olish: WAV 16/24-bit, 44.1/48/96 kHz, pauza/davom, belgilar,
+  shovqin bostirish va exo yo'qotish; endi fon rejimida ham.
+- Fayl kutubxonasi: ro'yxat, o'chirish, kesishga o'tish.
+
+**Keyingi navbat (shu tartibda)**
+
+1. **Format konvertori** — MP3, M4A, FLAC, OGG, OPUS, AAC, WMA. Qaror
+   qilinmagan: `MediaCodec` (APK o'smaydi, lekin WMA/WAV-dan tashqari
+   hammasi API darajasiga bog'liq) yoki ffmpeg (hammasi ishlaydi, APK ~10 MB
+   oshadi). Avval `MediaCodec` bilan boshlanadi — APK hajmi muhim.
+2. **Parametrik ekvalayzer** — 10 va 31 polosa, biquad filtrlar, float
+   domenida. Ekran o'quvchi uchun har bir polosa raqamli maydonda.
+3. **Tezlik va ohang** — ohangni saqlab tezlashtirish (WSOLA), 0.5x–2x.
+4. **Shovqin tozalash** — spektral ayirish; avval shovqin namunasi olinadi.
+5. **Ovoz dvigateli abstraksiyasi** (`VoiceEngine` + `DeviceTtsEngine`) —
+   qurilma TTS'i, keyin bulut AI ovozini shu interfeys ortiga ulash.
+6. **Hujjat → audio-kitob** — PDF/DOCX/TXT/EPUB, boblarga bo'lish, har bob
+   alohida MP3, avtomatik belgilar, uxlash taymeri. 5-bandga tayanadi.
+7. **ID3 teglar va ulashish** — nom, ijrochi, albom, muqova; faylni boshqa
+   ilovaga yuborish.
+8. **Ko'p yo'lli aralashtirish** — har bir yo'lga ovoz balandligi, panorama,
+   ducking.
+9. **Sozlamalar ekrani** — til tanlash, soddalashtirilgan rejim, ilova haqida.
+10. **Vokal/cholg'u ajratish** — qurilmada ishlaydigan model (ONNX/TFLite);
+    eng og'ir band, shuning uchun oxirida.
+
+**Faqat egasi bajaradi**
+
+- APK'ni qurilmada, TalkBack yoqilgan holda qo'lda sinash: yozish, kesish,
+  bo'lish, ekran o'chganda yozuv davom etishi.
 
 ## Ochiq savollar
 

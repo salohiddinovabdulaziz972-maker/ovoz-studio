@@ -20,9 +20,13 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 - **Yozib olish**: PCM WAV, 44.1 / 48 / 96 kHz, 16 yoki 24-bit, mono/stereo,
   pauza-davom ettirish, belgilar (marker), shovqin bostirish va exo yo'qotish.
+  Ekran o'chsa yoki ilova fonda qolsa ham yozuv davom etadi.
 - **Aniq kesish**: vaqtni slayder bilan emas, to'rt maydonda qo'lda kiritish
   (soat / daqiqa / soniya / millisoniya), tanlangan qismni eshitish,
   silliq boshlanish va tugash (fade in/out), orqaga va oldinga qaytarish.
+- **Bo'lish va ko'p nuqtali o'chirish**: faylni ixtiyoriy nuqtadan ikki
+  qismga bo'lish; bir nechta oraliqni ro'yxatga yig'ib, hammasini bir marta
+  o'chirish.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
@@ -31,9 +35,10 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-Effektlar (ekvalayzer, shovqin tozalash), format konvertori, vokal/cholg'u
-ajratish, TTS/STT, hujjatlarni audiolashtirish va audio-kitob. Bularning hammasi
-reja bo'yicha keyingi bosqichlarda — tartibi `docs/PROGRESS.md` da.
+Format konvertori, ekvalayzer, tezlik/ohang, shovqin tozalash, TTS/STT,
+hujjatlarni audiolashtirish va audio-kitob, ID3 teglar, ko'p yo'lli
+aralashtirish, vokal/cholg'u ajratish. Hammasi reja bo'yicha ketma-ket
+qo'shiladi — to'liq ro'yxat va tartib `docs/PROGRESS.md` da.
 
 ## Qurish
 
@@ -63,8 +68,9 @@ Ikki qatlam bor — ikkalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-36 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
-kesish, ko'p nuqtali o'chirish, bo'lish, fade. Gradle orqali ham ishlaydi
+41 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
+holatini oldindan aniqlash. Gradle orqali ham ishlaydi
 (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -114,7 +120,7 @@ yoki kirill yozuvi avtomatik tanlanadi.
 
 ```
 app/src/main/java/uz/ovozstudio/app/
-  media/      WAV yozish/o'qish, kesish, pleyer, fayl saqlash
+  media/      WAV yozish/o'qish, kesish, pleyer, fayl saqlash, fon xizmati
   ui/common/  Accessibility komponentlari, vaqt kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
