@@ -54,6 +54,7 @@ fun HomeScreen(
     onSpeed: () -> Unit,
     onNoiseFile: (String) -> Unit,
     onNoise: () -> Unit,
+    onVoice: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -109,6 +110,14 @@ fun HomeScreen(
         A11yOutlinedButton(
             label = stringResource(R.string.noise_title),
             onClick = onNoise,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        // Ovoz sinovi faylga bog'lanmagan: u matnni o'qiydi, shuning uchun
+        // faqat shu yerda — qatorlar ichida takrorlanmaydi.
+        A11yOutlinedButton(
+            label = stringResource(R.string.voice_title),
+            onClick = onVoice,
             modifier = Modifier.fillMaxWidth(),
         )
 

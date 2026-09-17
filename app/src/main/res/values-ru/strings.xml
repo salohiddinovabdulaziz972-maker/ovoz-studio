@@ -188,6 +188,27 @@
     <string name="noise_error_sample_range">Участок образца задан неверно: конец должен быть позже начала</string>
     <string name="noise_error_sample_quiet">Выбранный участок тихий — выберите место, где слышен только шум</string>
 
+    <string name="voice_title">Проверка голоса</string>
+    <string name="voice_hint">Этот экран проверяет голос устройства: какие голоса есть, есть ли узбекский, правильно ли длинный текст делится на части. Введите текст или вставьте отрывок из книги и нажмите «Читать».</string>
+    <string name="voice_text_label">Текст для чтения</string>
+    <string name="voice_text_note">Длинный текст автоматически делится на части, которые читаются по очереди.</string>
+    <string name="voice_rate_label">Скорость чтения</string>
+    <string name="voice_rate_note">От %1$s до %2$s. 1 — обычная скорость, 2 — вдвое быстрее, 0.5 — вдвое медленнее.</string>
+    <string name="voice_pitch_label">Высота голоса, полутоны</string>
+    <string name="voice_pitch_note">Полутоны задают, насколько выше или ниже звучит голос: 12 — на октаву выше, -12 — на октаву ниже. 0 — без изменений.</string>
+    <string name="voice_play">Читать</string>
+    <string name="voice_stop">Остановить</string>
+    <string name="voice_chunk">Часть %1$d из %2$d</string>
+    <string name="voice_ready">Голос готов.</string>
+    <string name="voice_preparing">Голос готовится, подождите…</string>
+    <string name="voice_language">Выбранный язык: %1$s</string>
+    <string name="voice_language_missing">На устройстве не нашлось подходящего голоса — текст читается текущим голосом. Произношение может немного отличаться.</string>
+    <string name="voice_voices">Голосов на устройстве: %1$d</string>
+    <string name="voice_done">Чтение завершено</string>
+    <string name="voice_error_not_available">Синтезатор речи на устройстве не работает — озвучить текст нельзя.</string>
+    <string name="voice_error_empty_text">Сначала введите текст для чтения</string>
+    <string name="voice_error_speak_failed">Во время чтения произошла ошибка</string>
+
     <string name="common_delete">Удалить</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">Хорошо</string>

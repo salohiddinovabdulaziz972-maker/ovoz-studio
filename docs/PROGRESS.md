@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 190 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 210 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 226 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 257 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   62 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   68 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -83,6 +83,22 @@ Oxirgi yangilanish: 2026-09-17
     esa **qo'lda kiritiladi** (ilova bo'ylab yagona qoida).
     Mustaqil tekshiruv: `bin/verify-noise.sh` (yettinchi tekshiruv, pastda).
     **Muhim:** bu statistik usul — neyron tarmoq emas (pastda ochiq yozilgan).
+16. **Ovoz dvigateli abstraksiyasi** — `media/voice/`. `VoiceEngine` interfeysi
+    (tayyorlash, ovozlar ro'yxati, tilni tanlash, o'qish, to'xtatish) va uning
+    birinchi amalga oshirilishi `DeviceTtsEngine` — qurilmaning o'z sintezatori
+    (`android.speech.tts.TextToSpeech`). Yonida ikkita sof Kotlin bo'lagi:
+    `TextChunker` (uzun matnni jumla chegarasida bo'laklarga bo'ladi — sintezator
+    chegaradan uzun matnni jimgina tashlab ketadi) va `ScriptDetector` (matn
+    lotin yoki kirill ekanini aniqlab, mos til nomzodlarini beradi).
+    `ui/voice/` — tekshiruv ekrani: qurilmada qanday ovozlar bor, o'zbek ovozi
+    topildimi, uzun matn to'g'ri bo'linyaptimi. Matn, tezlik va balandlik
+    **qo'lda kiritiladi** (ilova bo'ylab yagona qoida).
+    Manifestga `<queries>` bloki qo'shildi: Android 11+ da ilova o'zi ko'rmagan
+    xizmatni so'ray olmaydi, usiz ovozlar ro'yxati bo'sh qaytardi.
+    Halol izoh: bu **qurilma ovozi**, neyron AI ovozi emas. O'zbek ovozi
+    o'rnatilgan bo'lsa — o'zbekcha o'qiydi; bo'lmasa zaxira tilga o'tadi va
+    talaffuz boshqacha bo'lishi mumkin. Buni skript bilan tekshirib bo'lmaydi:
+    ovozning talaffuzi faqat quloq bilan, faqat o'sha qurilmada tekshiriladi.
 
 ## Muhim texnik qarorlar
 
@@ -553,8 +569,14 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    namuna oraliqlarini kiritib, natijani eshitish.
    **Aytilmagan, lekin muhim:** bu **statistik usul, neyron tarmoq emas**.
    Tavsifdagi «AI shovqin tozalash» shu bilan chegaralanadi — quyida 11-band.
-5. **Ovoz dvigateli abstraksiyasi** (`VoiceEngine` + `DeviceTtsEngine`) —
-   qurilma TTS'i, keyin bulut AI ovozini shu interfeys ortiga ulash.
+5. ~~**Ovoz dvigateli abstraksiyasi**~~ — **tayyor** (`VoiceEngine` +
+   `DeviceTtsEngine`, `media/voice/`). Hozircha faqat qurilma TTS'i ulangan;
+   bulut AI ovozi keyin shu interfeys ortiga ulanadi — ekranlar o'zgarmaydi.
+   Uzun matn jumla chegarasida bo'laklarga bo'linadi, til matnning yozuvidan
+   (lotin/kirill) tanlanadi. Mustaqil tekshiruv yo'q va **bo'lishi ham mumkin
+   emas**: `TextChunker` va `ScriptDetector` 33 ta JVM testi bilan qoplangan,
+   lekin ovozning o'zi — sintezatorning talaffuzi — faqat quloq bilan
+   baholanadi. **Qolgani (faqat qurilmada tekshiriladi):** pastda.
 6. **Hujjat → audio-kitob** — PDF/DOCX/TXT/EPUB, boblarga bo'lish, har bob
    alohida MP3, avtomatik belgilar, uxlash taymeri. 5-bandga tayanadi.
 7. **ID3 teglar va ulashish** — nom, ijrochi, albom, muqova; faylni boshqa
@@ -586,6 +608,12 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   birikkan joyda shitirlash yo'qmi), ohang surilganda tabiiy eshitiladimi,
   0.5x da uzunlik to'g'ri chiqadimi. Bu — quloq bilan baholanadigan narsa,
   skript uni o'lchay olmaydi.
+- Ovoz ekranini sinash: qurilmada o'zbek ovozi o'rnatilganmi (qurilma
+  Sozlamalarida «Til va kiritish» → «Matnni ovozga aylantirish»), ekran buni
+  to'g'ri ko'rsatyaptimi,
+  uzun matn bo'laklarga bo'linib, tanaffussiz o'qilyaptimi, «to'xtat» darhol
+  ishlayaptimi. O'zbek ovozi bo'lmasa — Sozlamalardan o'zbek ovozini o'rnatish
+  kerak; ilova o'zi ovoz o'rnatib bera olmaydi, bu Android'ning ishi.
 - Shovqin tozalash ekranini sinash: namuna oraliqlari vaqt maydonlarida
   kiritiladimi, kuch/qoldiq maydonlari o'qiladimi, tozalangandan keyin nutq
   tabiiy eshitiladimi va shovqin haqiqatan kamayganmi. Skript faqat

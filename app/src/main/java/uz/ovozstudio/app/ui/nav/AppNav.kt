@@ -14,6 +14,7 @@ import uz.ovozstudio.app.ui.noise.NoiseScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
 import uz.ovozstudio.app.ui.speed.SpeedScreen
 import uz.ovozstudio.app.ui.trim.TrimScreen
+import uz.ovozstudio.app.ui.voice.VoiceScreen
 
 object Routes {
     const val HOME = "home"
@@ -44,6 +45,12 @@ object Routes {
      */
     const val NOISE = "noise?path={path}"
 
+    /**
+     * Ovoz sinovi ekrani. Fayl talab qilmaydi: u matn bilan ishlaydi, ya'ni
+     * yo'lni oldindan berish shart emas.
+     */
+    const val VOICE = "voice"
+
     fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
 
     fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
@@ -73,6 +80,7 @@ fun AppNav() {
                 onSpeed = { navController.navigate(Routes.speed("")) },
                 onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
                 onNoise = { navController.navigate(Routes.noise("")) },
+                onVoice = { navController.navigate(Routes.VOICE) },
             )
         }
 
@@ -147,6 +155,10 @@ fun AppNav() {
                 onBack = { navController.popBackStack() },
                 onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
             )
+        }
+
+        composable(Routes.VOICE) {
+            VoiceScreen(onBack = { navController.popBackStack() })
         }
     }
 }

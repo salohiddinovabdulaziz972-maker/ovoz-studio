@@ -62,6 +62,8 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/dsp/SpeedPitch.kt
     app/src/main/java/uz/ovozstudio/app/media/dsp/Fft.kt
     app/src/main/java/uz/ovozstudio/app/media/dsp/NoiseReducer.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/TextChunker.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -90,6 +92,8 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/dsp/SpeedPitchTest.kt
     app/src/test/java/uz/ovozstudio/app/media/dsp/FftTest.kt
     app/src/test/java/uz/ovozstudio/app/media/dsp/NoiseReducerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/voice/TextChunkerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

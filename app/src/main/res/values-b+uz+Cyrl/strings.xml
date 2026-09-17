@@ -188,6 +188,27 @@
     <string name="noise_error_sample_range">Намуна оралиқ нотўғри: охири бошидан кейин бўлиши керак</string>
     <string name="noise_error_sample_quiet">Намуна олинган оралиқ жим — фақат шовқин эшитиладиган қисмни танланг</string>
 
+    <string name="voice_title">Овоз синови</string>
+    <string name="voice_hint">Бу экран қурилманинг овозини текширади: қандай овозлар бор, ўзбек овози борми, узун матн бўлакларга тўғри бўлиняптими. Матнни ёзинг ёки китобдан парча қўйинг ва «Ўқиш» тугмасини босинг.</string>
+    <string name="voice_text_label">Ўқиладиган матн</string>
+    <string name="voice_text_note">Узун матн автоматик бўлакларга бўлинади ва бўлаклар кетма-кет ўқилади.</string>
+    <string name="voice_rate_label">Ўқиш тезлиги</string>
+    <string name="voice_rate_note">%1$s дан %2$s гача. 1 — нормал тезлик, 2 — икки баробар тез, 0.5 — икки баробар секин.</string>
+    <string name="voice_pitch_label">Овоз баландлиги, ярим тон</string>
+    <string name="voice_pitch_note">Ярим тонлар овоз қанчалик баланд ёки паст чиқишини белгилайди: 12 — бир октава баланд, -12 — бир октава паст. 0 — ўзгаришсиз.</string>
+    <string name="voice_play">Ўқиш</string>
+    <string name="voice_stop">Тўхтатиш</string>
+    <string name="voice_chunk">%1$d / %2$d бўлак</string>
+    <string name="voice_ready">Овоз тайёр.</string>
+    <string name="voice_preparing">Овоз тайёрланмоқда, бироз кутинг…</string>
+    <string name="voice_language">Танланган тил: %1$s</string>
+    <string name="voice_language_missing">Қурилмада бу матнга мос овоз топилмади — матн қурилманинг жорий овози билан ўқилади. Овоз бироз бошқача талаффуз қилиши мумкин.</string>
+    <string name="voice_voices">Қурилмада мавжуд овозлар: %1$d та</string>
+    <string name="voice_done">Ўқиш тугади</string>
+    <string name="voice_error_not_available">Қурилмада овоз синтезатори ишламаяпти — матнни овоз билан ўқиб бўлмайди.</string>
+    <string name="voice_error_empty_text">Аввал ўқиладиган матнни киритинг</string>
+    <string name="voice_error_speak_failed">Ўқиш пайтида хато юз берди</string>
+
     <string name="common_delete">Ўчириш</string>
     <string name="common_cancel">Бекор қилиш</string>
     <string name="common_ok">Яхши</string>

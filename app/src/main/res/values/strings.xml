@@ -188,6 +188,27 @@
     <string name="noise_error_sample_range">Namuna oraliq noto\'g\'ri: oxiri boshidan keyin bo\'lishi kerak</string>
     <string name="noise_error_sample_quiet">Namuna olingan oraliq jim — faqat shovqin eshitiladigan qismni tanlang</string>
 
+    <string name="voice_title">Ovoz sinovi</string>
+    <string name="voice_hint">Bu ekran qurilmaning ovozini tekshiradi: qanday ovozlar bor, o\'zbek ovozi bormi, uzun matn bo\'laklarga to\'g\'ri bo\'linyaptimi. Matnni yozing yoki kitobdan parcha qo\'ying va «O\'qish» tugmasini bosing.</string>
+    <string name="voice_text_label">O\'qiladigan matn</string>
+    <string name="voice_text_note">Uzun matn avtomatik bo\'laklarga bo\'linadi va bo\'laklar ketma-ket o\'qiladi.</string>
+    <string name="voice_rate_label">O\'qish tezligi</string>
+    <string name="voice_rate_note">%1$s dan %2$s gacha. 1 — normal tezlik, 2 — ikki baravar tez, 0.5 — ikki baravar sekin.</string>
+    <string name="voice_pitch_label">Ovoz balandligi, yarim ton</string>
+    <string name="voice_pitch_note">Yarim tonlar ovoz qanchalik baland yoki past chiqishini belgilaydi: 12 — bir oktava baland, -12 — bir oktava past. 0 — o\'zgarishsiz.</string>
+    <string name="voice_play">O\'qish</string>
+    <string name="voice_stop">To\'xtatish</string>
+    <string name="voice_chunk">%1$d / %2$d bo\'lak</string>
+    <string name="voice_ready">Ovoz tayyor.</string>
+    <string name="voice_preparing">Ovoz tayyorlanmoqda, biroz kuting…</string>
+    <string name="voice_language">Tanlangan til: %1$s</string>
+    <string name="voice_language_missing">Qurilmada bu matnga mos ovoz topilmadi — matn qurilmaning joriy ovozi bilan o\'qiladi. Ovoz biroz boshqacha talaffuz qilishi mumkin.</string>
+    <string name="voice_voices">Qurilmada mavjud ovozlar: %1$d ta</string>
+    <string name="voice_done">O\'qish tugadi</string>
+    <string name="voice_error_not_available">Qurilmada ovoz sintezatori ishlamayapti — matnni ovoz bilan o\'qib bo\'lmaydi.</string>
+    <string name="voice_error_empty_text">Avval o\'qiladigan matnni kiriting</string>
+    <string name="voice_error_speak_failed">O\'qish paytida xato yuz berdi</string>
+
     <string name="common_delete">O\'chirish</string>
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">Yaxshi</string>

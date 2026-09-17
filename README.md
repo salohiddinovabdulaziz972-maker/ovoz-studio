@@ -40,6 +40,13 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   ilova o'sha profilni butun fayldan ayiradi. Kuch va qoldiq qo'lda kiritiladi.
   Halol aytilgan cheklov: bu **statistik spektral ayirish**, neyron tarmoq
   emas — batafsil `docs/PROGRESS.md` da.
+- **Ovoz bilan o'qish (TTS)**: `VoiceEngine` abstraksiyasi va uning ustida
+  «Ovoz sinovi» ekrani — qurilmada qanday ovozlar bor, o'zbek ovozi topildimi,
+  uzun matn to'g'ri bo'laklarga bo'linyaptimi. Uzun matn jumla chegarasida
+  bo'linadi (sintezator chegaradan uzun matnni jimgina tashlab ketadi), til
+  esa matnning yozuvidan (lotin/kirill) tanlanadi. Halol cheklov: hozircha
+  bu **qurilmaning o'z ovozi** — o'zbek ovozi o'rnatilmagan bo'lsa, u zaxira
+  tilga o'tadi. Neyron AI ovozi keyin shu interfeys ortiga ulanadi.
 - **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
   tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
 - **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
@@ -48,10 +55,12 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-TTS/STT (o'zbek tilida nutq va matn), hujjatlarni audiolashtirish va
-audio-kitob, ID3 teglar va ulashish, ko'p yo'lli aralashtirish, sozlamalar
-ekrani, vokal/cholg'u ajratish va neyron shovqin tozalash. Hammasi reja
-bo'yicha ketma-ket qo'shiladi — to'liq ro'yxat va tartib `docs/PROGRESS.md` da.
+Nutqni matnga aylantirish (STT), hujjatlarni audiolashtirish va audio-kitob,
+ID3 teglar va ulashish, ko'p yo'lli aralashtirish, sozlamalar ekrani,
+vokal/cholg'u ajratish va neyron shovqin tozalash. Ovoz sintezi (TTS) bor,
+lekin hozircha faqat qurilma ovozi bilan — o'zbekcha neyron AI ovozi shu
+interfeys ortiga keyin ulanadi. Hammasi reja bo'yicha ketma-ket qo'shiladi —
+to'liq ro'yxat va tartib `docs/PROGRESS.md` da.
 
 ## Qurish
 
@@ -81,9 +90,10 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-226 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+257 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
-holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari.
+holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
+matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash.
 Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
 
 **2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
@@ -153,6 +163,7 @@ app/src/main/java/uz/ovozstudio/app/
   media/      WAV yozish/o'qish, kesish, pleyer, fayl saqlash, fon xizmati
   media/dsp/  ekvalayzer, tezlik/ohang (WSOLA), shovqin tozalash, FFT
   media/format/ format aniqlash, kodlovchilar, formatni saqlash
+  media/voice/ ovoz dvigateli interfeysi, qurilma TTS'i, matnni bo'laklash
   ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
   ui/home/    bosh ekran va fayllar ro'yxati
   ui/record/  yozib olish ekrani
@@ -161,6 +172,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/eq/      ekvalayzer ekrani
   ui/speed/   tezlik va ohang ekrani
   ui/noise/   shovqin tozalash ekrani
+  ui/voice/   ovoz sinovi ekrani (qurilmada qanday ovozlar bor)
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash
 bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari

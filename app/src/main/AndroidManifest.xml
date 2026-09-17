@@ -20,6 +20,16 @@
         android:name="android.hardware.microphone"
         android:required="false" />
 
+    <!-- Android 11 (API 30) dan boshlab ilova o'zi ko'rmaydigan xizmatlarni
+         so'ray olmaydi. Ovoz sintezatori — aynan shunday tashqi xizmat:
+         usiz `TextToSpeech` ovozlar ro'yxatini bo'sh qaytaradi va o'zbek
+         ovozi bor-yo'qligini bilib bo'lmaydi. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

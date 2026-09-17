@@ -188,6 +188,27 @@
     <string name="noise_error_sample_range">The sample range is invalid: the end must come after the start</string>
     <string name="noise_error_sample_quiet">The selected sample is silent — choose a part where only noise is heard</string>
 
+    <string name="voice_title">Voice check</string>
+    <string name="voice_hint">This screen checks the device voice: which voices exist, whether an Uzbek one is present, and whether long text is split correctly. Type the text or paste a passage and press “Read”.</string>
+    <string name="voice_text_label">Text to read</string>
+    <string name="voice_text_note">Long text is split into parts automatically, and the parts are read one after another.</string>
+    <string name="voice_rate_label">Reading speed</string>
+    <string name="voice_rate_note">From %1$s to %2$s. 1 — normal speed, 2 — twice as fast, 0.5 — twice as slow.</string>
+    <string name="voice_pitch_label">Pitch, semitones</string>
+    <string name="voice_pitch_note">Semitones set how high or low the voice sounds: 12 — one octave up, -12 — one octave down. 0 — unchanged.</string>
+    <string name="voice_play">Read</string>
+    <string name="voice_stop">Stop</string>
+    <string name="voice_chunk">Part %1$d of %2$d</string>
+    <string name="voice_ready">Voice is ready.</string>
+    <string name="voice_preparing">Preparing the voice, please wait…</string>
+    <string name="voice_language">Selected language: %1$s</string>
+    <string name="voice_language_missing">No matching voice was found on this device — the text is read with the current voice. Pronunciation may differ slightly.</string>
+    <string name="voice_voices">Voices on this device: %1$d</string>
+    <string name="voice_done">Reading finished</string>
+    <string name="voice_error_not_available">The speech synthesiser on this device is not working — the text cannot be read aloud.</string>
+    <string name="voice_error_empty_text">Enter the text to read first</string>
+    <string name="voice_error_speak_failed">Something went wrong while reading</string>
+
     <string name="common_delete">Delete</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>
