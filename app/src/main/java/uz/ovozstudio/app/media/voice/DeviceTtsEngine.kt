@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import java.io.File
 import java.util.Locale
 
 /**
@@ -44,6 +45,18 @@ class DeviceTtsEngine(context: Context) : VoiceEngine {
 
     private var listener: SpeechListener? = null
 
+    /**
+     * Faylga yozish tugaganda chaqiriladigan callback.
+     *
+     * Bittadan ortiq bo'lmaydi: sintezator faylga bitta chaqiruvni navbatga
+     * qo'yadi, kitob yig'uvchi esa keyingisini faqat shu javobdan keyin
+     * beradi. Navbat qurish sintezatorning o'z ishi, biz uni takrorlamaymiz.
+     */
+    private var fileCallback: ((VoiceError?) -> Unit)? = null
+
+    /** Fayl chaqiruvlarining hisoblagichi — ular id bo'yicha ajratiladi. */
+    private var fileCounter = 0
+
     /** Tayyorlash tugaganda chaqiriladigan callback (bir marta). */
     private var pendingInit: ((VoiceError?) -> Unit)? = null
 
@@ -60,6 +73,13 @@ class DeviceTtsEngine(context: Context) : VoiceEngine {
         }
 
         override fun onDone(utteranceId: String?) {
+            // Faylga yozish ham shu yerda tugaydi: sintezator jonli o'qish
+            // bilan fayl yozishni bir xil xabar orqali bildiradi, farqi —
+            // id'ning prefiksida.
+            if (fileUtterance(utteranceId)) {
+                main.post { finishFile(null) }
+                return
+            }
             val i = chunkIndex(utteranceId) ?: return
             main.post {
                 if (i + 1 < chunks.size) {
@@ -74,10 +94,18 @@ class DeviceTtsEngine(context: Context) : VoiceEngine {
 
         @Deprecated("Eski imzo — yangisi pastda", ReplaceWith("onError(utteranceId, errorCode)"))
         override fun onError(utteranceId: String?) {
+            if (fileUtterance(utteranceId)) {
+                main.post { finishFile(VoiceError.SPEAK_FAILED) }
+                return
+            }
             reportFailure()
         }
 
         override fun onError(utteranceId: String?, errorCode: Int) {
+            if (fileUtterance(utteranceId)) {
+                main.post { finishFile(VoiceError.SPEAK_FAILED) }
+                return
+            }
             reportFailure()
         }
     }
@@ -183,11 +211,62 @@ class DeviceTtsEngine(context: Context) : VoiceEngine {
         speakChunk(0)
     }
 
+    override fun synthesizeToFile(
+        request: SpeechRequest,
+        output: File,
+        onResult: (VoiceError?) -> Unit,
+    ) {
+        val tts = engine
+        if (tts == null || !ready) {
+            onResult(VoiceError.NOT_AVAILABLE)
+            return
+        }
+        if (request.text.isBlank()) {
+            onResult(VoiceError.EMPTY_TEXT)
+            return
+        }
+        if (fileCallback != null) {
+            // Oldingi bo'lak hali yozilmoqda. Ikkinchisini navbatga qo'yish
+            // mumkin emas: tugash xabari ikkalasiga bitta callback orqali
+            // kelardi va qaysi fayl tayyor ekani bilinmasdi.
+            onResult(VoiceError.SPEAK_FAILED)
+            return
+        }
+
+        val tag = request.languageTag ?: resolveLanguage(ScriptDetector.detect(request.text))
+        if (tag != null) {
+            tts.language = Locale.forLanguageTag(tag)
+        }
+        tts.setSpeechRate(request.rate.coerceIn(MIN_RATE, MAX_RATE))
+        tts.setPitch(request.pitch.coerceIn(MIN_RATE, MAX_RATE))
+
+        // Callback id'dan **oldin** o'rnatiladi: qisqa matn juda tez yozilib,
+        // xabar shu chaqiruv qaytishidan oldin kelishi mumkin. Keyin
+        // o'rnatilsa, javob kelgan joyda uni kutayotgan hech kim bo'lmasdi
+        // va yig'uvchi abadiy kutib qolardi.
+        val callback = onResult
+        fileCallback = callback
+        val id = "$FILE_UTTERANCE_PREFIX${fileCounter++}"
+        val started = tts.synthesizeToFile(request.text, Bundle(), output, id)
+
+        // Xato bo'lsa xabar beramiz — lekin callback hali bizniki bo'lsa
+        // xolos: juda tez kelgan `onDone` uni allaqachon bo'shatgan bo'lishi
+        // mumkin, va o'shanda ikkinchi marta chaqirish xato bo'lardi.
+        if (started != TextToSpeech.SUCCESS && fileCallback === callback) {
+            fileCallback = null
+            callback(VoiceError.SPEAK_FAILED)
+        }
+    }
+
     override fun stop() {
         engine?.stop()
         listener = null
         chunks = emptyList()
         index = 0
+        // `stop()` faylga yozishni ham to'xtatadi (Android hujjati shunday
+        // deydi), ya'ni kutib turgan bo'lak hech qachon tugamaydi. Xabar
+        // berilmasa, kitob yig'uvchi javob kutib qolib qotardi.
+        cancelFileSynthesis()
     }
 
     override fun release() {
@@ -204,6 +283,22 @@ class DeviceTtsEngine(context: Context) : VoiceEngine {
         this.index = index
         tts.speak(chunk.text, TextToSpeech.QUEUE_FLUSH, Bundle(), utteranceId(index))
     }
+
+    /** Fayl yozilishi tugadi (yoki to'xtatildi). Faqat asosiy oqimdan. */
+    private fun finishFile(error: VoiceError?) {
+        val callback = fileCallback
+        fileCallback = null
+        callback?.invoke(error)
+    }
+
+    /** Kutib turgan fayl callback'iga xabar beradi — javobsiz qolmasin. */
+    private fun cancelFileSynthesis(error: VoiceError = VoiceError.SPEAK_FAILED) {
+        if (fileCallback != null) finishFile(error)
+    }
+
+    /** Bu id faylga yozishniki (jonli o'qishniki emas)mi. */
+    private fun fileUtterance(utteranceId: String?): Boolean =
+        utteranceId != null && utteranceId.startsWith(FILE_UTTERANCE_PREFIX)
 
     private fun reportFailure() {
         main.post {
@@ -222,6 +317,9 @@ class DeviceTtsEngine(context: Context) : VoiceEngine {
 
     private companion object {
         const val UTTERANCE_PREFIX = "ovozstudio:chunk:"
+
+        /** Faylga yozish chaqiruvlari shu prefiks bilan ajratiladi. */
+        const val FILE_UTTERANCE_PREFIX = "ovozstudio:file:"
 
         /** Tezlik va balandlikning ruxsat etilgan chegarasi. */
         const val MIN_RATE = 0.5f

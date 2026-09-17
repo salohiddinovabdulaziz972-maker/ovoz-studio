@@ -71,6 +71,11 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/doc/ZipEntries.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/DocxTextReader.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/EpubTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/BookErrors.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/BookPlan.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/WavJoiner.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/BookMarkers.kt
+    app/src/main/java/uz/ovozstudio/app/media/book/SleepTimer.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -105,6 +110,10 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/doc/PlainTextDecoderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/DocxTextReaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/EpubTextReaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/BookPlannerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/WavJoinerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/BookMarkersTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/SleepTimerTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

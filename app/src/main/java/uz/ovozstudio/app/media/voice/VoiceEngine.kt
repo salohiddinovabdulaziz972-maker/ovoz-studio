@@ -1,5 +1,7 @@
 package uz.ovozstudio.app.media.voice
 
+import java.io.File
+
 /**
  * Ovoz dvigateli xatolari.
  *
@@ -107,6 +109,23 @@ interface VoiceEngine {
 
     /** Matnni o'qishni boshlaydi (yoki davom ettiradi). */
     fun speak(request: SpeechRequest, listener: SpeechListener)
+
+    /**
+     * Matnni **faylga** sintez qiladi — jonli o'qish o'rniga.
+     *
+     * Nega alohida amal: jonli o'qishni to'xtatish mumkin, fayl esa to'liq
+     * yozilishi kerak. Audio-kitob shu yo'l bilan yig'iladi: har bir bo'lak
+     * o'z WAV faylini oladi, keyin ular bitta bob fayliga qo'shiladi.
+     *
+     * **Jonli o'qish bilan bir vaqtda ishlatilmaydi.** Sintezator bitta:
+     * [stop] faylga yozishni ham to'xtatadi, shuning uchun kitob yig'ilayotganda
+     * jonli o'qish chaqirilmasligi kerak.
+     *
+     * Fayl WAV bo'ladi; uni [uz.ovozstudio.app.media.format.WavPcmReader]
+     * o'qiy oladi. Javob [onResult] orqali: tayyor bo'lsa `null`, xato bo'lsa
+     * sabab.
+     */
+    fun synthesizeToFile(request: SpeechRequest, output: File, onResult: (VoiceError?) -> Unit)
 
     /** O'qishni to'xtatadi. Keyingi [speak] boshidan boshlanadi. */
     fun stop()
