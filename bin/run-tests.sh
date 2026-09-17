@@ -33,12 +33,22 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/WavWriter.kt
     app/src/main/java/uz/ovozstudio/app/media/WavFile.kt
     app/src/main/java/uz/ovozstudio/app/media/AudioTrimmer.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/FormatSupport.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AudioEncoder.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/WavPcmReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/FormatPreservingExporter.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/FlacEncoder.kt
 )
 TESTS=(
     app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
     app/src/test/java/uz/ovozstudio/app/util/TimePartsTest.kt
     app/src/test/java/uz/ovozstudio/app/media/WavFileTest.kt
     app/src/test/java/uz/ovozstudio/app/media/AudioTrimmerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/AudioFormatDetectorTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/FormatSupportTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/FormatPreservingExporterTest.kt
 )
 
 rm -rf "$OUT" && mkdir -p "$OUT"
@@ -55,4 +65,7 @@ java -cp "$OUT:$STDLIB:$JARS/junit.jar:$JARS/hamcrest.jar" org.junit.runner.JUni
     uz.ovozstudio.app.util.TimeFormatTest \
     uz.ovozstudio.app.util.TimePartsTest \
     uz.ovozstudio.app.media.WavFileTest \
-    uz.ovozstudio.app.media.AudioTrimmerTest
+    uz.ovozstudio.app.media.AudioTrimmerTest \
+    uz.ovozstudio.app.media.format.AudioFormatDetectorTest \
+    uz.ovozstudio.app.media.format.FormatSupportTest \
+    uz.ovozstudio.app.media.format.FormatPreservingExporterTest

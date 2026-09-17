@@ -17,12 +17,12 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 41 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 85 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   24 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   31 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -34,6 +34,13 @@ Oxirgi yangilanish: 2026-09-17
    har biri alohida olib tashlanadi.
 9. **Fon rejimida yozish** — `media/RecordingService.kt`. Ekran o'chganda
    yoki ilova fonda qolganda jarayon endi o'ldirilmaydi.
+10. **Format qatlami va formatni saqlash** — `media/format/`.
+    `AudioFormatDetector` faylning formatini kengaytmaga emas, sarlavha
+    baytlariga qarab aniqlaydi; `FormatSupport` Android'ning kodek
+    imkoniyatlari jadvalini saqlaydi; `FormatPreservingExporter` tahrirlangan
+    faylni manba formatida qaytaradi. FLAC kodlovchisi noldan yozildi
+    (Android'da FLAC uchun kodlovchi yo'q, faqat dekoder). Batafsil:
+    «Formatni saqlash» bo'limi pastda.
 
 ## Muhim texnik qarorlar
 
@@ -65,6 +72,56 @@ Oxirgi yangilanish: 2026-09-17
   ataylab ishlatilmaydi (`AudioTrimmer.Cut`), chunki uning oxirgi elementi
   kiradimi-yo'qmi ko'rinmaydi va aynan shu noaniqlik bir kadr yo'qolishiga
   olib kelgan edi.
+- **Namunalar kodlovchiga butun son ko'rinishida beriladi**, float emas.
+  Sabab: float32 faqat 24 bitgacha bo'lgan butun sonlarni aniq saqlaydi,
+  24-bit tovush esa ±2^23 chegarasida yuradi — namuna float orqali o'tib
+  qaytsa, chegaradagi qiymatlar bir birlikka surilardi. Formatni saqlash
+  talabi aynan shu aniqlikni talab qiladi.
+
+## Formatni saqlash — egasining talabi
+
+Talab: *«Foydalanuvchi ilovaga qanday audio format yuklasa, tahrirlash
+jarayonida ish yakunlangandan keyin shunday format qaytarilsin, boshqalari
+o'zgartirilmasdan.»*
+
+Qanday bajariladi:
+
+1. Import paytida `AudioFormatDetector` faylning konteyneri va kodekini
+   **sarlavha baytlaridan** aniqlaydi — kengaytmadan emas. `ovoz.mp3` deb
+   nomlangan FLAC fayl noto'g'ri kodek tanlashiga olib kelmasligi kerak.
+2. Aniqlangan `AudioFormat` loyiha bilan birga saqlanadi.
+3. Tahrirlash ichkarida yo'qotishsiz PCM ustida ketadi — kesish, bo'lish,
+   fade va aralashtirish boshqacha bo'lishi mumkin emas.
+4. Saqlashda `FormatPreservingExporter` natijani manbaning konteyneri va
+   kodekiga qayta kodlaydi. Asl fayl hech qachon o'zgartirilmaydi: natija
+   har doim yangi faylga yoziladi.
+5. Boshqa formatga o'tish faqat konvertor ekranida ochiq so'ralganda bo'ladi
+   (`FormatPreservingExporter.export(override = …)`).
+
+**Nima saqlanadi, nima saqlanmaydi.** Konteyner va kodek — saqlanadi.
+Chastota, kanal soni va bit chuqurligi — tahrirlangan fayldan olinadi, ya'ni
+ular ham amalda manbaniki bo'lib qoladi (tahrirlash ularni o'zgartirmaydi).
+Agar kelajakda biror amal ularni o'zgartirsa, sarlavha fayl ichidagi
+haqiqatga mos kelishi kerak — shuning uchun manba emas, fayl ustun turadi.
+
+**Qo'llab-quvvatlash jadvali.** O'qish: WAV, FLAC, MP3, M4A/AAC, OGG
+(Vorbis va Opus) — hammasi ishlaydi; **WMA ishlamaydi**, Android'da u uchun
+dekoder umuman yo'q. Yozish: WAV va FLAC — o'z kodlovchilarimiz; MP3 —
+`jump3r` (sof Java); M4A/AAC — `MediaCodec` + `MediaMuxer`; Opus — API 29+.
+**OGG/Vorbis yozilmaydi**: Android'da Vorbis kodlovchisi yo'q, faqat
+dekoder. Bunday manba import qilinsa, ilova buni import paytida aytadi va
+o'rniga yo'qotishsiz FLAC taklif qiladi — sabab `FallbackReason` kodida
+qaytariladi, matn UI qatlamida tarjima qilinadi.
+
+**FLAC kodlovchisi o'zimizniki.** Android'da FLAC uchun dekoder bor, kodlovchi
+yo'q; mavjud sof Java kutubxonalari (`jflac`) 2012-yildan beri
+yangilanmagan va Android'da bo'lmagan `javax.sound.sampled` ga tayanadi.
+Shuning uchun `FlacEncoder` noldan yozildi: STREAMINFO + MD5, FIXED
+bashoratchilar, Rice qoldiq kodlash, CRC-8 va CRC-16. Tashqi tekshiruv:
+chiqqan fayl `ffmpeg` bilan ochiladi va PCM manba bilan **bayt-bayt**
+solishtiriladi — jim, doimiy, arra, sinus, shovqin, 8/16/24-bit, mono va
+stereo; sakkizalasida ham mos keldi, STREAMINFO ichidagi nazorat summasi
+ham to'g'ri chiqdi.
 
 ## Tuzatilgan xatolar (2026-09-17 tekshiruvi)
 
@@ -123,6 +180,30 @@ haqiqiy kompilyatordan o'tdi. Topilgani:
     generatsiya qiladigan qilib kengaytirildi. Sabab: tekshiruv vositasi
     kod ortidan emas, kod bilan birga o'sishi kerak.
 
+### Uchinchi tekshiruv — ffmpeg bilan (2026-09-17)
+
+FLAC kodlovchisi o'qib tekshirilganda to'g'ri ko'rinardi, lekin chiqqan
+faylni `ffmpeg` ocholmasdi. Sababi faqat haqiqiy dekoder bilan aniqlanadi:
+
+18. **Isrof bitlar bayrog'i har doim `1` yozilardi.** Uchta shoxning
+    uchalasida ham `bw.write(1, 1)` shartsiz turgan edi. Isrof bitlar
+    bo'lmaganda dekoder bayroqni `1` deb o'qib, qoldiq ma'lumotini unar
+    o'lcham sifatida yeydi. `writeSubframeHeader(tur, isrof)` ajratildi:
+    bayroq faqat haqiqatan isrof bit bo'lganda `1`.
+19. **Bo'laklash tartibi blok hajmi bo'yicha hisoblanmasdi.** `n >> po`
+    (blok hajmi) o'rniga qoldiqlar soni bo'yicha bo'linardi va birinchi
+    bo'lak uzunligi boshqacha chiqardi. To'g'ri qoida: har bir bo'lak
+    `n >> po` namuna oladi, faqat birinchisi `order` taga kam.
+20. **Qoldiq kodlash usuli maydoni umuman yozilmasdi.** FLAC'da FIXED
+    pastki freymdan keyin 2 bitlik usul maydoni majburiy. U tushib qolganda
+    dekoder bo'laklash tartibini 2 bitga surib o'qiydi — `ffmpeg`
+    «invalid residual» derdi. `RICE_METHOD_4BIT` qo'shildi.
+
+Uchtasi ham faqat tashqi dekoder bilan topildi. Shu sababli qoida: yangi
+kodlovchi yozilganda u **mustaqil dekoderda** tekshiriladi, o'z-o'zidan
+emas — o'z-o'zini tekshirish «to'g'ri ko'rinadi» degan natijadan nariga
+o'tmaydi.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -142,10 +223,14 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 
 **Keyingi navbat (shu tartibda)**
 
-1. **Format konvertori** — MP3, M4A, FLAC, OGG, OPUS, AAC, WMA. Qaror
-   qilinmagan: `MediaCodec` (APK o'smaydi, lekin WMA/WAV-dan tashqari
-   hammasi API darajasiga bog'liq) yoki ffmpeg (hammasi ishlaydi, APK ~10 MB
-   oshadi). Avval `MediaCodec` bilan boshlanadi — APK hajmi muhim.
+1. **Format konvertori** — qaror qilindi: `MediaCodec`, ffmpeg'siz.
+   Fon qatlami tayyor (`media/format/`): aniqlash, imkoniyatlar jadvali,
+   formatni saqlash, WAV va FLAC kodlovchilari, konvertor oqimi.
+   Qolgani: MP3 kodlovchisini `jump3r` orqali ulash, `MediaCodec`
+   kodlovchilari (M4A/AAC/Opus) va konvertor ekrani. WMA hech qachon
+   ishlamaydi — Android'da dekoderi yo'q, buni foydalanuvchiga import
+   paytida aytamiz. OGG/Vorbis ham yozilmaydi (kodlovchi yo'q) — bunday
+   fayl import qilinsa, o'rniga FLAC taklif qilinadi.
 2. **Parametrik ekvalayzer** — 10 va 31 polosa, biquad filtrlar, float
    domenida. Ekran o'quvchi uchun har bir polosa raqamli maydonda.
 3. **Tezlik va ohang** — ohangni saqlab tezlashtirish (WSOLA), 0.5x–2x.

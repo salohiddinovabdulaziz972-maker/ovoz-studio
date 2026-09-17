@@ -74,6 +74,35 @@ class WavWriter(
         framesWritten += frames
     }
 
+    /**
+     * Butun sonli namunalarni to'g'ridan-to'g'ri yozadi — float orqali
+     * o'tkazmasdan.
+     *
+     * Formatni saqlab qolish uchun bu shart: float32 faqat 24 bitgacha
+     * bo'lgan butun sonlarni aniq saqlaydi, 24-bit tovush esa ±2^23
+     * chegarasida yuradi. Namuna float orqali o'tib qaytsa, chegaradagi
+     * qiymatlar bir birlikka surilib ketardi. Butun sonni butun son
+     * sifatida uzatganda natija manba bilan bayt-bayt bir xil bo'ladi.
+     */
+    fun writeIntegers(samples: IntArray, count: Int) {
+        check(!closed) { "WavWriter allaqachon yopilgan" }
+        require(count >= 0) { "count manfiy bo'lishi mumkin emas" }
+        val frames = minOf(count, samples.size / channels)
+        val sampleCount = frames * channels
+        val buffer = ByteArray(sampleCount * bytesPerSample)
+        var offset = 0
+        val min = -(1 shl (bitDepth.bits - 1))
+        val max = (1 shl (bitDepth.bits - 1)) - 1
+        for (i in 0 until sampleCount) {
+            val value = samples[i].coerceIn(min, max)
+            for (byte in 0 until bytesPerSample) {
+                buffer[offset++] = ((value shr (8 * byte)) and 0xFF).toByte()
+            }
+        }
+        out.write(buffer)
+        framesWritten += frames
+    }
+
     override fun close() {
         if (closed) return
         closed = true
