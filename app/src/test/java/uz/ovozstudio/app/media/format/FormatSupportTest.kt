@@ -165,11 +165,24 @@ class FormatSupportTest {
     }
 
     @Test
-    fun `oz kodlovchilarimiz chastotaga bogliq emas`() {
-        // WAV, FLAC va MP3 o'zimizniki: ular ixtiyoriy chastotani yozadi.
+    fun `wav va flac ixtiyoriy chastotani yozadi`() {
+        // PCM va FLAC — bizning kodlovchilar: chastota ular uchun shunchaki
+        // sarlavhadagi son.
         assertTrue(FormatSupport.canEncode(AudioContainer.WAV, AudioCodec.PCM, 24, 47_000))
         assertTrue(FormatSupport.canEncode(AudioContainer.FLAC, AudioCodec.FLAC, 24, 47_000))
-        assertTrue(FormatSupport.canEncode(AudioContainer.MP3, AudioCodec.MP3, 24, 47_000))
+    }
+
+    @Test
+    fun `mp3 oz chastotalar jadvaliga boyun sunadi`() {
+        // MP3 ham bizniki (jump3r), lekin LAME ixtiyoriy chastotani bilmaydi:
+        // MPEG-1/2/2.5 jadvallaridan tashqarisida kodlovchi umuman ishga
+        // tushmaydi. Ilgari bu yerda «ixtiyoriy chastota» deb hisoblanardi va
+        // eksport paytida kodlovchi yiqilardi.
+        assertTrue(FormatSupport.canEncode(AudioContainer.MP3, AudioCodec.MP3, 24, 44_100))
+        // Sintezator beradigan past chastotalar ham jadvalda bor.
+        assertTrue(FormatSupport.canEncode(AudioContainer.MP3, AudioCodec.MP3, 24, 8_000))
+        assertTrue(FormatSupport.canEncode(AudioContainer.MP3, AudioCodec.MP3, 24, 22_050))
+        assertFalse(FormatSupport.canEncode(AudioContainer.MP3, AudioCodec.MP3, 24, 47_000))
     }
 
     @Test

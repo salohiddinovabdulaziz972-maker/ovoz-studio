@@ -18,10 +18,22 @@ import sys
 import wave
 
 WORK = os.environ.get("WORK", "/tmp/superlisa/mp3-verify")
-CASES = ["stereo_192k", "mono_96k", "stereo_vbr", "mono_24bit_192k", "mono_24bit_vbr"]
+CASES = [
+    "stereo_192k", "mono_96k", "stereo_vbr", "mono_24bit_192k", "mono_24bit_vbr",
+    # Audio-kitob: sintezator beradigan past chastotalar.
+    "mono_8k_64k", "mono_22k_128k",
+]
 
 # Kutilgan umumiy kechikish: 576 (kodlovchi) + 529 (dekoder) + 1152 (kadr).
 EXPECTED_DELAY = 2257
+
+# Kechikish qat'iy tekshiriladigan holatlar. MPEG-2/2.5 da kadr kichikroq
+# (576 namuna), shuning uchun kechikish boshqa — u LAME ichki xususiyati,
+# spetsifikatsiya soni emas. Past chastotali holatlarda to'lqinning mos
+# kelishi (RMS) tekshiriladi, siljish esa faqat musbat bo'lishi talab
+# qilinadi: o'zimiz o'lchagan sonni «kutilgan» deb yozish o'z-o'zini
+# tasdiqlash bo'lardi.
+STRICT_DELAY = {"stereo_192k", "mono_96k", "stereo_vbr", "mono_24bit_192k", "mono_24bit_vbr"}
 
 # RMS xato to'liq shkalaga nisbatan shu foizdan oshmasligi kerak.
 MAX_RMS_PERCENT = 5.0
@@ -101,9 +113,11 @@ def main():
             name, offset // channels, rms, rms_percent, peak)
 
         status = "OK"
-        if offset // channels != EXPECTED_DELAY:
+        if name in STRICT_DELAY and offset // channels != EXPECTED_DELAY:
             status = "YIQILDI: siljish %d, kutilgan %d" % (
                 offset // channels, EXPECTED_DELAY)
+        elif offset <= 0:
+            status = "YIQILDI: siljish topilmadi"
         elif rms_percent > MAX_RMS_PERCENT:
             status = "YIQILDI: RMS xato %.2f%% > %.2f%%" % (rms_percent, MAX_RMS_PERCENT)
 

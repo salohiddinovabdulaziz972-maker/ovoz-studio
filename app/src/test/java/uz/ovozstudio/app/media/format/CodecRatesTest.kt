@@ -30,10 +30,50 @@ class CodecRatesTest {
     }
 
     @Test
-    fun `oz kodlovchilarimiz har qanday chastotada ishlaydi`() {
+    fun `pcm va flac har qanday chastotada ishlaydi`() {
         assertTrue(CodecRates.supports(AudioCodec.PCM, 47_000))
         assertTrue(CodecRates.supports(AudioCodec.FLAC, 47_000))
-        assertTrue(CodecRates.supports(AudioCodec.MP3, 47_000))
+    }
+
+    @Test
+    fun `mp3 faqat oz jadvalidagi chastotalarda ishlaydi`() {
+        for (rate in CodecRates.MP3) {
+            assertTrue("$rate", CodecRates.supports(AudioCodec.MP3, rate))
+        }
+        // Sintezator beradigan past chastotalar jadvalda bor...
+        assertTrue(CodecRates.supports(AudioCodec.MP3, 8_000))
+        assertTrue(CodecRates.supports(AudioCodec.MP3, 16_000))
+        // ...jadvaldan tashqarisi esa yo'q: LAME uni qabul qilmaydi.
+        assertFalse(CodecRates.supports(AudioCodec.MP3, 47_000))
+        assertFalse(CodecRates.supports(AudioCodec.MP3, 96_000))
+    }
+
+    @Test
+    fun `mp3 bit tezligi chastota chegarasidan oshmaydi`() {
+        // 8–12 kHz — MPEG-2.5: chegarasi 64 kbit/s.
+        assertEquals(64_000, CodecRates.mp3Bitrate(8_000, 128_000))
+        assertEquals(64_000, CodecRates.mp3Bitrate(12_000, 320_000))
+        // 16–24 kHz — MPEG-2: chegarasi 160.
+        assertEquals(160_000, CodecRates.mp3Bitrate(22_050, 320_000))
+        assertEquals(128_000, CodecRates.mp3Bitrate(22_050, 128_000))
+        // MPEG-1: to'liq zinapoya.
+        assertEquals(128_000, CodecRates.mp3Bitrate(44_100, 128_000))
+        assertEquals(320_000, CodecRates.mp3Bitrate(48_000, 500_000))
+    }
+
+    @Test
+    fun `mp3 bit tezligi zinapoyadagi qiymatga tushadi`() {
+        // LAME oradagi sonni bilmaydi — 100 kbit/s so'ralsa, 96 bo'ladi.
+        assertEquals(96_000, CodecRates.mp3Bitrate(44_100, 100_000))
+        // Judayam kichik so'rov ham zinapoyaning eng pastidan pastga tushmaydi.
+        assertEquals(8_000, CodecRates.mp3Bitrate(44_100, 1_000))
+    }
+
+    @Test
+    fun `mp3 bit tezligi chegaralari chastotaga qarab ozgaradi`() {
+        assertEquals(64_000, CodecRates.mp3MaxBitrate(8_000))
+        assertEquals(160_000, CodecRates.mp3MaxBitrate(16_000))
+        assertEquals(320_000, CodecRates.mp3MaxBitrate(44_100))
     }
 
     @Test

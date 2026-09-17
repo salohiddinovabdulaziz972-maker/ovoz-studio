@@ -16,8 +16,10 @@ import java.io.File
  * Sinovning o'zi JVM ichida bo'lsa, u o'z-o'zini tekshirishga aylanadi va
  * "to'g'ri ko'rinadi" da to'xtaydi.
  *
- * Argumentlar: <wav> <mp3> <kadrlar> <kanal> <bit chuqurligi> <kbps|0>
+ * Argumentlar: <wav> <mp3> <kadrlar> <kanal> <bit chuqurligi> <kbps|0> [chastota]
  * `kbps = 0` — o'zgaruvchan bit tezligi (VBR).
+ * Chastota berilmasa — 44100. Kitob esa sintezator bergan chastotada
+ * yoziladi, u ko'pincha past bo'ladi: shuning uchun bu yerda u sozlanadi.
  */
 fun main(args: Array<String>) {
     val wav = File(args[0])
@@ -26,22 +28,23 @@ fun main(args: Array<String>) {
     val channels = args[3].toInt()
     val depth = args[4].toInt()
     val kbps = args[5].toInt()
+    val rate = args.getOrNull(6)?.toIntOrNull() ?: 44_100
     wav.delete()
     mp3.delete()
 
     val samples = IntArray(frames * channels)
     val amplitude = (1 shl (depth - 1)) - 1
     for (t in 0 until frames) {
-        val value = (Math.sin(2.0 * Math.PI * 440 * t / 44_100.0) * amplitude / 3).toInt()
+        val value = (Math.sin(2.0 * Math.PI * 440 * t / rate.toDouble()) * amplitude / 3).toInt()
         for (c in 0 until channels) samples[t * channels + c] = if (c == 1) value / 3 else value
     }
-    WavWriter(wav, 44_100, channels, if (depth == 24) BitDepth.BIT_24 else BitDepth.BIT_16)
+    WavWriter(wav, rate, channels, if (depth == 24) BitDepth.BIT_24 else BitDepth.BIT_16)
         .use { it.writeIntegers(samples, frames) }
 
     val source = AudioFormat(
         container = AudioContainer.MP3,
         codec = AudioCodec.MP3,
-        sampleRate = 44_100,
+        sampleRate = rate,
         channels = channels,
         bitDepth = depth,
         bitrate = if (kbps > 0) kbps * 1000 else null,

@@ -44,6 +44,7 @@ rm -rf "$WORK" && mkdir -p "$OUT" "$WORK/cases"
     app/src/main/java/uz/ovozstudio/app/media/RecorderConfig.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt \
+    app/src/main/java/uz/ovozstudio/app/media/format/CodecRates.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/FormatSupport.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/AudioEncoder.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/WavPcmReader.kt \
@@ -57,27 +58,34 @@ rm -rf "$WORK" && mkdir -p "$OUT" "$WORK/cases"
     }
 
 CP="$OUT:$STDLIB:$JUMP3R"
+# Maydonlar: nom:kanal:bit chuqurligi:kbps[:chastota]
+# Past chastotali holat — audio-kitob: sintezator ko'pincha 8–22 kHz beradi,
+# ya'ni eng ko'p ishlatiladigan yo'l aynan shu.
 CASES=(
     "stereo_192k:2:16:192"
     "mono_96k:1:16:96"
     "stereo_vbr:2:16:0"
     "mono_24bit_192k:1:24:192"
     "mono_24bit_vbr:1:24:0"
+    "mono_8k_64k:1:16:64:8000"
+    "mono_22k_128k:1:16:128:22050"
 )
 
 for case in "${CASES[@]}"; do
-    IFS=: read -r name channels depth kbps <<< "$case"
+    IFS=: read -r name channels depth kbps rate <<< "$case"
+    rate="${rate:-44100}"
     java -cp "$CP" Mp3VerifyKt \
-        "$WORK/cases/$name.wav" "$WORK/cases/$name.mp3" 12288 "$channels" "$depth" "$kbps"
+        "$WORK/cases/$name.wav" "$WORK/cases/$name.mp3" 12288 "$channels" "$depth" "$kbps" "$rate"
     ffmpeg -v error -y -i "$WORK/cases/$name.mp3" \
         -f s16le -acodec pcm_s16le "$WORK/cases/$name.raw"
     # Nazorat: xuddi shu manbani native LAME bilan kodlaymiz.
     if [ "$kbps" = "0" ]; then
         ffmpeg -v error -y -i "$WORK/cases/$name.wav" -c:a libmp3lame \
-            -compression_level 2 -q:a 4 "$WORK/cases/ref_$name.mp3"
+            -compression_level 2 -ar "$rate" -q:a 4 "$WORK/cases/ref_$name.mp3"
     else
         ffmpeg -v error -y -i "$WORK/cases/$name.wav" -c:a libmp3lame \
-            -compression_level 2 -b:a "${kbps}k" -ac "$channels" "$WORK/cases/ref_$name.mp3"
+            -compression_level 2 -b:a "${kbps}k" -ar "$rate" -ac "$channels" \
+            "$WORK/cases/ref_$name.mp3"
     fi
     ffmpeg -v error -y -i "$WORK/cases/ref_$name.mp3" \
         -f s16le -acodec pcm_s16le "$WORK/cases/ref_$name.raw"
