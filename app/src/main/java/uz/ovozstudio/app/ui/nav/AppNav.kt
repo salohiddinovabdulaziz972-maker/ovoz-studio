@@ -11,6 +11,7 @@ import uz.ovozstudio.app.ui.convert.ConvertScreen
 import uz.ovozstudio.app.ui.eq.EqScreen
 import uz.ovozstudio.app.ui.home.HomeScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
+import uz.ovozstudio.app.ui.speed.SpeedScreen
 import uz.ovozstudio.app.ui.trim.TrimScreen
 
 object Routes {
@@ -30,11 +31,19 @@ object Routes {
      */
     const val EQ = "eq?path={path}"
 
+    /**
+     * Tezlik va ohang ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun u
+     * beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
+     */
+    const val SPEED = "speed?path={path}"
+
     fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
 
     fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
 
     fun eq(path: String): String = "eq?path=${Uri.encode(path)}"
+
+    fun speed(path: String): String = "speed?path=${Uri.encode(path)}"
 }
 
 @Composable
@@ -51,6 +60,8 @@ fun AppNav() {
                 onConvert = { navController.navigate(Routes.convert("")) },
                 onEqFile = { path -> navController.navigate(Routes.eq(path)) },
                 onEq = { navController.navigate(Routes.eq("")) },
+                onSpeedFile = { path -> navController.navigate(Routes.speed(path)) },
+                onSpeed = { navController.navigate(Routes.speed("")) },
             )
         }
 
@@ -99,6 +110,18 @@ fun AppNav() {
                 onBack = { navController.popBackStack() },
                 // Natija kutubxonaga tushadi; uni darhol kesish ekranida
                 // ochish mumkin — foydalanuvchi ro'yxatdan qidirmasin.
+                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
+            )
+        }
+
+        composable(
+            route = Routes.SPEED,
+            arguments = listOf(navArgument("path") { type = NavType.StringType }),
+        ) { entry ->
+            val path = entry.arguments?.getString("path").orEmpty()
+            SpeedScreen(
+                initialPath = Uri.decode(path),
+                onBack = { navController.popBackStack() },
                 onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
             )
         }

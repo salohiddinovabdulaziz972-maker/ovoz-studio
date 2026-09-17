@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
@@ -48,6 +49,8 @@ fun HomeScreen(
     onConvert: () -> Unit,
     onEqFile: (String) -> Unit,
     onEq: () -> Unit,
+    onSpeedFile: (String) -> Unit,
+    onSpeed: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -94,6 +97,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        A11yOutlinedButton(
+            label = stringResource(R.string.speed_title),
+            onClick = onSpeed,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         Text(
             text = stringResource(R.string.home_recent_title),
             style = MaterialTheme.typography.titleLarge,
@@ -113,6 +122,7 @@ fun HomeScreen(
                         onOpen = { onOpenFile(recording.file.absolutePath) },
                         onConvert = { onConvertFile(recording.file.absolutePath) },
                         onEq = { onEqFile(recording.file.absolutePath) },
+                        onSpeed = { onSpeedFile(recording.file.absolutePath) },
                         onDeleteRequest = { pendingDelete = recording },
                     )
                     HorizontalDivider()
@@ -151,6 +161,7 @@ private fun RecordingRow(
     onOpen: () -> Unit,
     onConvert: () -> Unit,
     onEq: () -> Unit,
+    onSpeed: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     val duration = TimeFormat.format(recording.durationMs)
@@ -190,6 +201,15 @@ private fun RecordingRow(
             Icon(
                 imageVector = Icons.Filled.Build,
                 contentDescription = stringResource(R.string.eq_title) + ": " + title,
+            )
+        }
+
+        // «FastForward» ikonkasi material-icons-core da yo'q; «Create» —
+        // tahrirlash amalini bildiradi va mavjud to'plamdan olinadi.
+        IconButton(onClick = onSpeed) {
+            Icon(
+                imageVector = Icons.Filled.Create,
+                contentDescription = stringResource(R.string.speed_title) + ": " + title,
             )
         }
 

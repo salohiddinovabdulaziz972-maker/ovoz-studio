@@ -56,13 +56,20 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/dsp/Biquad.kt
     app/src/main/java/uz/ovozstudio/app/media/dsp/EqBands.kt
     app/src/main/java/uz/ovozstudio/app/media/dsp/Equalizer.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/PcmWindow.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/Wsola.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/Resampler.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/SpeedPitch.kt
+    app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
+    app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
     app/src/main/java/uz/ovozstudio/app/util/LocalizedNumber.kt
 )
 TESTS=(
     app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
     app/src/test/java/uz/ovozstudio/app/util/TimePartsTest.kt
     app/src/test/java/uz/ovozstudio/app/util/GainTextTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/SpeedTextTest.kt
     app/src/test/java/uz/ovozstudio/app/util/LocalizedNumberTest.kt
     app/src/test/java/uz/ovozstudio/app/media/WavFileTest.kt
     app/src/test/java/uz/ovozstudio/app/media/AudioTrimmerTest.kt
@@ -76,6 +83,9 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/dsp/BiquadTest.kt
     app/src/test/java/uz/ovozstudio/app/media/dsp/EqBandsTest.kt
     app/src/test/java/uz/ovozstudio/app/media/dsp/EqualizerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/WsolaTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/ResamplerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/SpeedPitchTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

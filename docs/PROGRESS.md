@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 157 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 171 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 171 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 210 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   48 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   58 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -62,6 +62,19 @@ Oxirgi yangilanish: 2026-09-17
     ikki marta o'tadi — birinchisi cho'qqini o'lchaydi, kerak bo'lsa
     ikkinchisi butun faylni bir xil koeffitsientga tushiradi (pastda).
     Mustaqil tekshiruv: `bin/verify-eq.sh` (ffmpeg bilan, pastda).
+13. **Tezlik va ohang** — `media/dsp/` (`Wsola.kt`, `Resampler.kt`,
+    `SpeedPitch.kt`) va `ui/speed/` ekrani. Tezlik ohangni buzmasdan
+    o'zgaradi: WSOLA kanallar bo'ylab bir xil siljish bilan ishlaydi, ya'ni
+    kanallararo faza saqlanadi. Ohang esa namunalar sonini o'zgartirmaydi —
+    shuning uchun tezlik va ohang bir-biriga tegmaydi va ikkalasini bir
+    vaqtda qo'llash mumkin. Ekranda ikkala qiymat ham **qo'lda kiritiladi**
+    (ilova bo'ylab yagona qoida), natijadagi uzunlik esa darhol ko'rsatiladi.
+    Mustaqil tekshiruv: `bin/verify-speed.sh` (ffmpeg bilan, pastda).
+14. **Umumiy UI bo'laklari** — `ui/common/NumericRow.kt` (yorliqli raqamli
+    maydon va ± tugmalari), `ui/common/FileSummary.kt` (kanal/chastota/uzunlik
+    qatori), `util/DecimalText.kt` (kiritish qoidalari). Ekvalayzer, tezlik va
+    konvertor ekranlari shularni ishlatadi: bir xil sozlama uch xil ko'rinishda
+    bo'lmasligi uchun mantiq bir joyda turadi.
 
 ## Muhim texnik qarorlar
 
@@ -365,6 +378,50 @@ filtrlash matematikasi emas, jadval va matn mantiqi.
 
 **Nima qoladi.** Ekranning o'zi — TalkBack bilan qo'lda sinaladi (pastda).
 
+### Oltinchi tekshiruv — tezlik va ohang (2026-09-17)
+
+Bu yerda namuna-ba-namuna qiyoslash **mumkin emas**: tezlikni o'zgartirish
+algoritmi bir xil kirishga bir xil chiqishni bermaydi — WSOLA ham, ffmpeg'ning
+`atempo` si ham yangi tovush to'qiydi, faqat natijaning xossalari bir xil
+bo'lishi shart. Shuning uchun o'lchanadigan ikki xossa olinadi:
+
+- **uzunlik** = kirish uzunligi / tezlik (ohang unga tegmaydi);
+- **asosiy chastota** = kirish chastotasi × 2^(yarim ton / 12).
+
+Ikkalasi ham spetsifikatsiyadan olinadi, ilovadan emas.
+
+**A. Analitik tekshiruv** — `bin/verify-speed.sh`, 7 holat (tezlik 2, 0.5, 1.5,
+ohang ±12, +7 yarim ton, ikkalasi birga). Har biri formula bo'yicha
+tekshiriladi. Chastota **1 %**, uzunlik **0.5 %** aniqlikda mos keldi.
+Chastotani ffmpeg emas, `bin/verify-speed-measure.py` o'lchadi: u RIFF
+sarlavhasini o'zi o'qib, nol kesishmalarini hisoblaydi — ya'ni o'lchov
+ilovaning kodi orqali emas, mustaqil amalga oshirish orqali bajariladi.
+
+| holat | uzunlik | chastota |
+|---|---|---|
+| tezlik 2.0 | 1.000000 s | 440.000 Hz |
+| tezlik 0.5 | 4.000000 s | 440.000 Hz |
+| tezlik 1.5 | 1.333333 s | 440.000 Hz |
+| ohang +12 | 2.000000 s | 880.000 Hz |
+| ohang −12 | 2.000000 s | 220.000 Hz |
+| ohang +7 | 2.000000 s | 659.255 Hz |
+| tezlik 2.0 + ohang +12 | 1.000000 s | 880.000 Hz |
+
+**B. Boshqa kod bazasi bilan qiyoslash** — xuddi shu sozlama ffmpeg'ning
+`atempo` / `asetrate + aresample + atempo` zanjiri bilan ham qo'llanadi va
+ikki natijaning uzunligi hamda chastotasi solishtiriladi (6 holat).
+
+**Yo'l-yo'lakay topilgani:** ffmpeg `atempo` oxirgi tugallanmagan tahlil
+oynasini tashlab ketadi — chiqishi ~30 ms qisqa. Bu bizning xato emas:
+bizning chiqish kadr aniqligida, ya'ni uzunlik matematik jihatdan to'g'ri.
+Shuning uchun B qismida uzunlik chegarasi 1.5 % qilib qo'yildi va sabab
+skript ichida yozib qo'yildi; chastota chegarasi 1 % ligicha qoldi
+(u yerda ikkala tomon ham 0.01 % aniqlikda mos keldi).
+
+**Nima tekshirilmaydi.** Tovushning silliqligi — bo'laklar birikkan joyda
+shitirlash bor-yo'qligi — bu quloq bilan baholanadigan narsa, raqam emas.
+Uni faqat egasi qurilmada eshitib aytadi.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -384,6 +441,8 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 - Format konvertori: import, formatni saqlash, 8 ta maqsad format.
 - Ekvalayzer: 10/31 polosa, 6 tayyor profil, past chastota kesish,
   kesish himoyasi.
+- Tezlik va ohang: 0.5x–2x, ohang ±12 yarim ton, ikkalasi birga; natijadagi
+  uzunlik darhol ko'rsatiladi.
 
 **Keyingi navbat (shu tartibda)**
 
@@ -403,7 +462,11 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    Mustaqil tekshiruv ffmpeg bilan o'tdi (beshinchi tekshiruv, yuqorida).
    **Qolgani (faqat qurilmada tekshiriladi):** ekranning o'zi — TalkBack
    bilan har bir polosani kiritib, natijani eshitish.
-3. **Tezlik va ohang** — ohangni saqlab tezlashtirish (WSOLA), 0.5x–2x.
+3. ~~**Tezlik va ohang**~~ — **tayyor**. WSOLA (ohangni saqlab tezlashtirish)
+   va Kayzer sarlavhali ko'p fazali interpolator (ohangni surish), 0.5x–2x va
+   ±12 yarim ton, ikkalasi birga ham. Mustaqil tekshiruv ffmpeg bilan o'tdi
+   (oltinchi tekshiruv, yuqorida). **Qolgani (faqat qurilmada tekshiriladi):**
+   ekranning o'zi va tovush silliqligi — pastda.
 4. **Shovqin tozalash** — spektral ayirish; avval shovqin namunasi olinadi.
 5. **Ovoz dvigateli abstraksiyasi** (`VoiceEngine` + `DeviceTtsEngine`) —
    qurilma TTS'i, keyin bulut AI ovozini shu interfeys ortiga ulash.
@@ -426,6 +489,10 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   uni faqat qurilma ko'rsata oladi.
 - Ekvalayzer ekranini TalkBack bilan sinash: polosa maydonlari qanday
   o'qiladi, klaviatura bilan kiritish qulaymi, natija eshitiladimi.
+- Tezlik va ohang ekranini sinash: 2x tezlikda tovush silliqmi (bo'laklar
+  birikkan joyda shitirlash yo'qmi), ohang surilganda tabiiy eshitiladimi,
+  0.5x da uzunlik to'g'ri chiqadimi. Bu — quloq bilan baholanadigan narsa,
+  skript uni o'lchay olmaydi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 

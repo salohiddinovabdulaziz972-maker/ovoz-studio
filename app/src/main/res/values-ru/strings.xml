@@ -153,6 +153,21 @@
     <string name="eq_error_save_failed">Не удалось сохранить файл результата</string>
     <string name="eq_error_nothing_to_apply">Ничего не изменено — все полосы на 0 дБ</string>
 
+    <string name="speed_title">Скорость и тон</string>
+    <string name="speed_hint">Файл не выбран. Чтобы изменить скорость и тон, сначала откройте аудиофайл.</string>
+    <string name="speed_label">Скорость</string>
+    <string name="speed_note">Значение больше 1 ускоряет звук, меньше 1 — замедляет: 2 — вдвое быстрее, 0.5 — вдвое медленнее. Высота тона не меняется. Значение — от 0.5 до 2.0.</string>
+    <string name="speed_pitch_label">Тон, полутоны</string>
+    <string name="speed_pitch_note">Полутоны меняют высоту звука и не трогают его длину: 12 — на октаву выше, -12 — на октаву ниже.</string>
+    <string name="speed_result">Длина результата: %1$s</string>
+    <string name="speed_action">Применить и сохранить</string>
+    <string name="speed_busy">Применяется, подождите…</string>
+    <string name="speed_done">Сохранено: %1$s</string>
+    <string name="speed_open_saved">Открыть на экране обрезки</string>
+    <string name="speed_error_file_not_found">Файл не найден</string>
+    <string name="speed_error_edit_failed">Не удалось применить скорость или тон</string>
+    <string name="speed_error_nothing_to_apply">Ни скорость, ни тон не изменились</string>
+
     <string name="common_delete">Удалить</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">Хорошо</string>

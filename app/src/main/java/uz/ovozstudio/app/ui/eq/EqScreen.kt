@@ -4,35 +4,24 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
@@ -42,10 +31,11 @@ import uz.ovozstudio.app.media.format.ImportFailure
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.ChoiceRow
+import uz.ovozstudio.app.ui.common.NumericRow
 import uz.ovozstudio.app.ui.common.a11yHeading
+import uz.ovozstudio.app.ui.common.fileSummary
 import uz.ovozstudio.app.ui.common.rememberAnnouncer
 import uz.ovozstudio.app.util.LocalizedNumber
-import uz.ovozstudio.app.util.TimeFormat
 import java.util.Locale
 
 /**
@@ -101,14 +91,18 @@ fun EqScreen(
             modifier = Modifier.a11yHeading(),
         )
 
-        if (state.info == null) {
+        val info = state.info
+        if (info == null) {
             Text(
                 text = stringResource(R.string.eq_hint),
                 style = MaterialTheme.typography.bodyLarge,
             )
         } else {
             Text(text = state.fileName, style = MaterialTheme.typography.bodyLarge)
-            Text(text = sourceSummary(state, locale), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = fileSummary(info, state.durationMs),
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
 
         // Ilovaning o'z papkasidagi fayllar tizim tanlagichida ko'rinmaydi,
@@ -206,11 +200,12 @@ fun EqScreen(
             val increase = stringResource(R.string.eq_gain_increase)
 
             for (index in state.centers.indices) {
-                BandRow(
-                    bandLabel = bandLabels[index],
+                NumericRow(
+                    label = bandLabels[index],
                     value = state.gains.getOrNull(index).orEmpty(),
                     onValueChange = { viewModel.setGain(index, it) },
                     onNudge = { delta -> viewModel.nudgeGain(index, delta) },
+                    step = STEP,
                     decreaseDescription = "$decrease: ${bandLabels[index]}",
                     increaseDescription = "$increase: ${bandLabels[index]}",
                     enabled = !state.busy,
@@ -258,71 +253,6 @@ fun EqScreen(
             )
         }
     }
-}
-
-/**
- * Bitta polosa: chastota yorlig'i bilan maydon va ± tugmalari.
- *
- * Maydonning yorlig'i — polosaning o'zi («62 Gerts»). Shu tufayli ekran
- * o'quvchi maydonga o'tganda qaysi polosada turganini eshitadi, oldingi
- * matnni eslab qolishi shart emas. ± tugmalari kerak, chunki raqamli
- * klaviaturada minus yo'q — ularsiz pasaytirish umuman kiritilmasdi.
- */
-@Composable
-private fun BandRow(
-    bandLabel: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    onNudge: (Double) -> Unit,
-    decreaseDescription: String,
-    increaseDescription: String,
-    enabled: Boolean,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(bandLabel) },
-            singleLine = true,
-            enabled = enabled,
-            keyboardOptions = KeyboardOptions(
-                // Kasrli klaviatura: o'nlik ajratgichi bor, ya'ni «3,5» ni
-                // to'g'ridan-to'g'ri kiritish mumkin.
-                keyboardType = KeyboardType.Decimal,
-                imeAction = ImeAction.Next,
-            ),
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = { onNudge(-STEP) }, enabled = enabled) {
-            Icon(
-                // material-icons-core da «minus» ikonkasi yo'q; pastga
-                // strelka pasaytirishni bildiradi.
-                imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = decreaseDescription,
-            )
-        }
-        IconButton(onClick = { onNudge(STEP) }, enabled = enabled) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = increaseDescription,
-            )
-        }
-    }
-}
-
-/** Fayl haqidagi bir qatorlik ma'lumot. */
-@Composable
-private fun sourceSummary(state: EqUiState, locale: Locale): String {
-    val info = state.info ?: return ""
-    val channels = stringResource(
-        if (info.channels == 1) R.string.convert_channels_mono else R.string.convert_channels_stereo
-    )
-    val rate = LocalizedNumber.format(info.sampleRate / 1000.0, locale, fractionDigits = 1)
-    return "$channels, $rate kHz, ${TimeFormat.format(state.durationMs)}"
 }
 
 @Composable

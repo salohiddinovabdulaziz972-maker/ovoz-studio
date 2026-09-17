@@ -153,6 +153,21 @@
     <string name="eq_error_save_failed">Could not save the result file</string>
     <string name="eq_error_nothing_to_apply">Nothing was changed — every band is at 0 dB</string>
 
+    <string name="speed_title">Speed and pitch</string>
+    <string name="speed_hint">No file selected. Open an audio file first to change its speed and pitch.</string>
+    <string name="speed_label">Speed</string>
+    <string name="speed_note">A value above 1 speeds the audio up, below 1 slows it down: 2 — twice as fast, 0.5 — twice as slow. The pitch does not change. The value ranges from 0.5 to 2.0.</string>
+    <string name="speed_pitch_label">Pitch, semitones</string>
+    <string name="speed_pitch_note">Semitones change how high the sound is and leave its length untouched: 12 — one octave up, -12 — one octave down.</string>
+    <string name="speed_result">Resulting length: %1$s</string>
+    <string name="speed_action">Apply and save</string>
+    <string name="speed_busy">Applying, please wait…</string>
+    <string name="speed_done">Saved: %1$s</string>
+    <string name="speed_open_saved">Open in the trim screen</string>
+    <string name="speed_error_file_not_found">File not found</string>
+    <string name="speed_error_edit_failed">Could not apply the speed or pitch</string>
+    <string name="speed_error_nothing_to_apply">Neither speed nor pitch has changed</string>
+
     <string name="common_delete">Delete</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>

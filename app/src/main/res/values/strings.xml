@@ -153,6 +153,21 @@
     <string name="eq_error_save_failed">Natija faylini saqlab bo\'lmadi</string>
     <string name="eq_error_nothing_to_apply">Hech narsa o\'zgartirilmagan — barcha polosalar 0 dB</string>
 
+    <string name="speed_title">Tezlik va ohang</string>
+    <string name="speed_hint">Fayl tanlanmagan. Tezlik va ohangni o\'zgartirish uchun avval audio faylni oching.</string>
+    <string name="speed_label">Tezlik</string>
+    <string name="speed_note">1 dan katta qiymat tezlashtiradi, 1 dan kichigi sekinlashtiradi: 2 — ikki marta tez, 0.5 — ikki marta sekin. Tovushning ohangi o\'zgarmaydi. Qiymat 0.5 dan 2.0 gacha.</string>
+    <string name="speed_pitch_label">Ohang, yarim ton</string>
+    <string name="speed_pitch_note">Yarim tonlar tovush balandligini o\'zgartiradi, uzunligiga tegilmaydi: 12 — bir oktava yuqori, -12 — bir oktava past.</string>
+    <string name="speed_result">Natijadagi uzunlik: %1$s</string>
+    <string name="speed_action">Qo\'llash va saqlash</string>
+    <string name="speed_busy">Qo\'llanmoqda, biroz kuting…</string>
+    <string name="speed_done">Saqlandi: %1$s</string>
+    <string name="speed_open_saved">Kesish ekranida ochish</string>
+    <string name="speed_error_file_not_found">Fayl topilmadi</string>
+    <string name="speed_error_edit_failed">Tezlik yoki ohangni qo\'llab bo\'lmadi</string>
+    <string name="speed_error_nothing_to_apply">Tezlik ham, ohang ham o\'zgarmagan</string>
+
     <string name="common_delete">O\'chirish</string>
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">Yaxshi</string>
