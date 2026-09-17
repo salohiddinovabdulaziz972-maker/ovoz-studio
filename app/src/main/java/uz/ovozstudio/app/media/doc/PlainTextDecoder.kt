@@ -29,9 +29,6 @@ data class DecodedText(
     val bomFound: Boolean,
 )
 
-class DocumentTooLargeException(limitBytes: Long) :
-    Exception("Hujjat juda katta: $limitBytes baytdan oshdi")
-
 /**
  * Matn faylini o'qish: jadvalni aniqlash va satr oxirlarini bir xillashtirish.
  *

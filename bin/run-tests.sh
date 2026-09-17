@@ -66,6 +66,11 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/ChapterSplitter.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/PlainTextDecoder.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/DocumentErrors.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/MarkupBlocks.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/ZipEntries.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/DocxTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/EpubTextReader.kt
     app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
     app/src/main/java/uz/ovozstudio/app/util/GainText.kt
     app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
@@ -98,6 +103,8 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/ChapterSplitterTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/PlainTextDecoderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/DocxTextReaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/EpubTextReaderTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan
