@@ -7,7 +7,7 @@ Oxirgi yangilanish: 2026-09-17
 1. **Loyiha skeleti** — Kotlin 2.0.21, Compose BOM 2024.12.01, AGP 8.7.3,
    minSdk 24, targetSdk 35. Gradle version catalog, manifest, launcher ikonkalari
    (barcha zichliklar uchun generatsiya qilingan), 4 til: uz (lotin),
-   uz-Cyrl, ru, en — 128 ta satr, hammasi to'liq tarjima qilingan.
+   uz-Cyrl, ru, en — 157 ta satr, hammasi to'liq tarjima qilingan.
 2. **Accessibility qatlami** — `ui/common/A11y.kt` va `ChoiceRow.kt`:
    yorliqsiz tugma bo'lishi mumkin emas (yorliq majburiy parametr), minimal
    tegish maydoni 48 dp, radio guruhlar `selectableGroup()` bilan, kalitlar
@@ -17,12 +17,16 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 119 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 171 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
+   Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
+   `kotlinc` bilan yig'ilavermaydi — Android'ga bog'liqlari bor), lekin
+   ro'yxatga tushmay qolgan test endi **jimgina o'tib ketmaydi**: skript
+   har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   41 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   48 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -50,6 +54,14 @@ Oxirgi yangilanish: 2026-09-17
     Konvertor ekrani: fayl tanlanadi, maqsad format ro'yxati esa **shu fayl
     uchun** mos variantlardan tuziladi — ya'ni "tanladingiz, lekin yozib
     bo'lmadi" holati bo'lmaydi. Tanlov dastlab manba formatida turadi.
+12. **Parametrik ekvalayzer** — `media/dsp/` (`Biquad.kt`, `EqBands.kt`,
+    `Equalizer.kt`) va `ui/eq/` ekrani (`EqScreen.kt`, `EqViewModel.kt`). 10 va 31 polosali to'r,
+    6 tayyor profil (tekis, ovoz, bass, baland, rok, podkast), qo'lda
+    past chastota kesish. Har bir polosa ekranda **alohida raqamli
+    maydon**: ekran o'quvchi uchun siljish emas, kiritish. Filtrlash
+    ikki marta o'tadi — birinchisi cho'qqini o'lchaydi, kerak bo'lsa
+    ikkinchisi butun faylni bir xil koeffitsientga tushiradi (pastda).
+    Mustaqil tekshiruv: `bin/verify-eq.sh` (ffmpeg bilan, pastda).
 
 ## Muhim texnik qarorlar
 
@@ -86,6 +98,31 @@ Oxirgi yangilanish: 2026-09-17
   24-bit tovush esa ±2^23 chegarasida yuradi — namuna float orqali o'tib
   qaytsa, chegaradagi qiymatlar bir birlikka surilardi. Formatni saqlash
   talabi aynan shu aniqlikni talab qiladi.
+- **Ekvalayzer polosalari — bitta qo'ng'iroq filtr** (RBJ formulasi,
+  `Biquad.kt`), qo'shnilari bilan qo'shilib silliq egri chiziq beradi.
+  Kenglik polosa soniga bog'lanadi: 10 polosada Q = 1.41, 31 polosada
+  Q = 4.32 — ya'ni bir oktava, ikki tomondan yarim oktava.
+- **Hisob ikki aniqlikda (`Double`) va har bir (filtr, kanal) uchun alohida
+  holat bilan.** Sabab ikkita: `Float` da 31 polosali kaskad past
+  chastotalarda eshitiladigan xato yig'ardi; umumiy holat esa kanallarni
+  bir-biriga aralashtirib, stereoni mono tomonga surardi.
+- **Kesish himoyasi ikki o'tishli.** Birinchi o'tish natijani vaqtinchalik
+  faylga yozadi va faqat **cho'qqini** o'lchaydi; cho'qqi 0.999 dan oshsa,
+  ikkinchi o'tish butun faylni **bitta** koeffitsientga tushiradi. Sabab:
+  kuchaytirish fayl davomida bir xil, ya'ni cho'qqini bilgan holda butun
+  faylni oldindan tushirish mumkin — natijada har bir namuna o'z chegarasiga
+  urilib buzilish (limiter) o'rniga fayl butunlay toza qoladi.
+- **Chastota va desibel sonlari tilga mos yoziladi** (`util/LocalizedNumber.kt`):
+  o'zbek va rus tillarida o'nlik kasr vergul bilan («31,5 Gerts»), ingliz
+  tilida nuqta bilan. `toString()` har doim nuqta beradi — ekran o'quvchi
+  uni «o'ttiz bir nuqta besh» deb o'qib, sonni buzardi. Mingliklar
+  ajratgichi ataylab qo'yilmaydi: guruhlash o'zbek tilida bo'sh joy bilan
+  yoziladi va u ikkita son bo'lib eshitilishi mumkin.
+- **Kuchaytirish matni alohida qatlamda tozalanadi** (`util/GainText.kt`):
+  maydonga faqat raqam va bitta ajratgich o'tadi, kiritish paytida
+  chegaralanadi (±12 dB). Sabab: ekran o'quvchi bilan ishlaganda
+  foydalanuvchi kiritgan matnni «keyin tuzatamiz» deb qoldirib bo'lmaydi —
+  u qaysi sonni kiritganini eshitmaydi.
 
 ## Formatni saqlash — egasining talabi
 
@@ -262,6 +299,72 @@ bit tezligi, kadr o'lchami) — ovozni ular ichida tekshirish o'z-o'zini
 tekshirish bo'lardi. Shuning uchun ffmpeg tekshiruvi alohida skriptda:
 `bin/verify-mp3.sh` + `bin/verify-mp3-compare.py`.
 
+### Beshinchi tekshiruv — ekvalayzer (2026-09-17)
+
+Ekvalayzer filtrning matematikasini o'z koeffitsientlari orqali tekshirsa,
+bu o'z-o'zini tekshirish bo'lardi (uchinchi tekshiruvdagi qoida). Shuning
+uchun o'lchovni **ffmpeg** bajaradi, kutilgan qiymatlar esa ilovadan emas,
+spetsifikatsiyadan olinadi: desibel ta'rifi va Buterworth javobi
+`|H| = w²/√(1+w⁴)`.
+
+**A. Ohang bilan o'lchov** (`bin/verify-eq.sh`) — bitta sinus, ilova
+filtrlaydi, ffmpeg RMS darajasini o'lchaydi:
+
+| holat | o'lchangan | kutilgan |
+|---|---|---|
+| 1000 Hz +6 dB | 6.000 dB | 6.0 ±0.2 |
+| 1000 Hz −12 dB | −12.000 dB | −12.0 ±0.2 |
+| 8000 Hz +12 dB | 12.000 dB | 12.0 ±0.2 |
+| 100 Hz, 8000 Hz polosa | 0.001 dB | 0.0 ±0.2 |
+| past kesish 120 Hz, 30 Hz ohang | −24.100 dB | −24.10 ±0.5 |
+| past kesish 120 Hz, 1 kHz ohang | −0.001 dB | 0.0 ±0.5 |
+
+Oltisi ham **0.001 dB** aniqlikda mos keldi. Chetlanish yo'q, ya'ni
+koeffitsientlar ham, filtr turi ham (qo'ng'iroq va yuqori o'tkazgich)
+spetsifikatsiyaga to'g'ri keladi.
+
+**B. Boshqa kod bazasi bilan qiyoslash** — xuddi shu sozlama ffmpeg'ning
+o'z `equalizer` filtri bilan ham qo'llanadi (bir xil RBJ formulasi, boshqa
+amalga oshirish) va ikki natija **namuna-ba-namuna** solishtiriladi.
+RMS taqqoslash yetarli emas: u fazadagi xatoni ko'rmaydi, ya'ni noto'g'ri
+kaskad ham «o'xshash» spektr berishi mumkin. Namuna darajasidagi farq esa
+butun yo'lni tekshiradi — kanal holati to'g'ri ajratilganmi, polosalar
+tartibi to'g'rimi, aniqlik yetarlimi.
+
+| holat | cho'qqi farqi | RMS farqi |
+|---|---|---|
+| bitta polosa (1000 Hz +6 dB) | 0.0031% | 0.0071% |
+| to'qqiz polosali «ovoz» profili | 0.0031% | 0.0076% |
+
+Farq bir necha namuna qadamidan iborat — ikkala tomon ham chiqishni 16 bitga
+yozadi, ya'ni har bir namunada yaxlitlash bor. Bu filtr mantiqidagi xato
+emas, yaxlitlash darajasi. Chegaralar shundan kelib chiqib qo'yilgan
+(0.5% va 0.1%) — filtr mantiqidagi xato ulardan yuz marta katta farq beradi.
+
+**Yo'l-yo'lakay topilgani:**
+
+23. **Ko'rsatkich yarim yo'lda qotib qolardi.** Kesish himoyasi ishga
+    tushmagan yo'lda (eng ko'p uchraydigan holat) progress faqat 0.5 gacha
+    borardi: birinchi o'tish butun ish bo'lsa-da, kod uni «yarmi» deb
+    hisoblardi. Ekranda tugallangan ish «yarim yo'lda» ko'rinardi. Test
+    yozilganda topildi — `Equalizer.apply` endi o'sha shoxda 1.0 beradi.
+24. **`bin/run-tests.sh` yashil natija bilan yangi testlarni o'tkazib
+    yuborardi.** Fayl ro'yxatlari qo'lda yuritilgani uchun beshta yangi test
+    fayli va beshta yangi manba fayli ro'yxatga tushmagan edi: skript
+    «OK (119 tests)» deb ko'rsatib, ularni umuman ishga tushirmagan edi.
+    Endi ro'yxatga tushmagan `*Test.kt` — qattiq xato (`exit 2`), sinf
+    nomlari esa yo'llardan hosil qilinadi (ikkinchi ro'yxat eskirishi
+    mumkin emas). Tekshiruv ataylab vaqtinchalik test fayli bilan
+    sinab ko'rildi: skript kutilganidek to'xtadi.
+
+**Qamrov.** Bu tekshiruv filtrlash **dvigatelini** o'lchaydi: biquad
+koeffitsientlari, kaskad tartibi, kanal holati, aniqlik, kesish himoyasi.
+Tayyor profil jadvalidagi sonlar (`EqBands`) va kuchaytirish matni
+(`GainText`, `LocalizedNumber`) sof JVM sinovlarida tekshiriladi — ular
+filtrlash matematikasi emas, jadval va matn mantiqi.
+
+**Nima qoladi.** Ekranning o'zi — TalkBack bilan qo'lda sinaladi (pastda).
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -278,6 +381,9 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 - Yozib olish: WAV 16/24-bit, 44.1/48/96 kHz, pauza/davom, belgilar,
   shovqin bostirish va exo yo'qotish; endi fon rejimida ham.
 - Fayl kutubxonasi: ro'yxat, o'chirish, kesishga o'tish.
+- Format konvertori: import, formatni saqlash, 8 ta maqsad format.
+- Ekvalayzer: 10/31 polosa, 6 tayyor profil, past chastota kesish,
+  kesish himoyasi.
 
 **Keyingi navbat (shu tartibda)**
 
@@ -291,8 +397,12 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    **Qolgani (faqat qurilmada tekshiriladi):** M4A/AAC/Opus kodlovchilari
    `MediaCodec` orqali ishlaydi-yu, JVM'da sinalmaydi — ularni telefonda
    ochib ko'rish kerak.
-2. **Parametrik ekvalayzer** — 10 va 31 polosa, biquad filtrlar, float
-   domenida. Ekran o'quvchi uchun har bir polosa raqamli maydonda.
+2. ~~**Parametrik ekvalayzer**~~ — **tayyor**. 10 va 31 polosa, biquad
+   filtrlar, ikki aniqlikdagi hisob, 6 tayyor profil, past chastota kesish,
+   kesish himoyasi; ekran o'quvchi uchun har bir polosa raqamli maydonda.
+   Mustaqil tekshiruv ffmpeg bilan o'tdi (beshinchi tekshiruv, yuqorida).
+   **Qolgani (faqat qurilmada tekshiriladi):** ekranning o'zi — TalkBack
+   bilan har bir polosani kiritib, natijani eshitish.
 3. **Tezlik va ohang** — ohangni saqlab tezlashtirish (WSOLA), 0.5x–2x.
 4. **Shovqin tozalash** — spektral ayirish; avval shovqin namunasi olinadi.
 5. **Ovoz dvigateli abstraksiyasi** (`VoiceEngine` + `DeviceTtsEngine`) —
@@ -314,6 +424,8 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 - Konvertorni qurilmada sinash: telefondagi MP3 ni import qilib M4A/Opus ga
   o'girish, WAV ni MP3 ga o'girish. Bu yo'l `MediaCodec` ga tayanadi, ya'ni
   uni faqat qurilma ko'rsata oladi.
+- Ekvalayzer ekranini TalkBack bilan sinash: polosa maydonlari qanday
+  o'qiladi, klaviatura bilan kiritish qulaymi, natija eshitiladimi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 

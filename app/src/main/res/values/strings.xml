@@ -123,6 +123,36 @@
     <string name="convert_error_write_failed">Natija faylini saqlab bo\'lmadi</string>
     <string name="convert_error_file_not_found">Fayl topilmadi</string>
 
+    <string name="eq_title">Ekvalayzer</string>
+    <string name="eq_hint">Fayl tanlanmagan. Ekvalayzer uchun avval audio faylni oching.</string>
+    <string name="eq_band_count_title">Polosalar soni</string>
+    <string name="eq_band_count_ten">10 polosa — keng</string>
+    <string name="eq_band_count_thirty_one">31 polosa — aniq</string>
+    <string name="eq_preset_title">Ovoz profili</string>
+    <string name="eq_preset_flat">Tekis (o\'zgarishsiz)</string>
+    <string name="eq_preset_voice">Ovoz — podkast va nutq uchun</string>
+    <string name="eq_preset_bass">Kuchli bas</string>
+    <string name="eq_preset_treble">Yorqin — yuqori chastotalar</string>
+    <string name="eq_preset_loudness">Baland — V shaklidagi</string>
+    <string name="eq_lowcut_title">Past chastotani kesish</string>
+    <string name="eq_lowcut_off">O\'chiq</string>
+    <string name="eq_lowcut_note">Mikrofon gumburlashi, shamol va stol tebranishini olib tashlaydi — ovozga tegilmaydi.</string>
+    <string name="eq_bands_heading">Polosalar, dB</string>
+    <string name="eq_band_unit_hz">gerts</string>
+    <string name="eq_band_unit_khz">kilogerts</string>
+    <string name="eq_gain_decrease">Pasaytirish</string>
+    <string name="eq_gain_increase">Ko\'tarish</string>
+    <string name="eq_gain_note">Har bir polosaga qiymat qo\'lda kiritiladi: -12 dan +12 dB gacha. Pasaytirish va ko\'tarish tugmalari yarim desibelga suradi.</string>
+    <string name="eq_action">Qo\'llash va saqlash</string>
+    <string name="eq_busy">Qo\'llanmoqda, biroz kuting…</string>
+    <string name="eq_done">Saqlandi: %1$s</string>
+    <string name="eq_headroom_note">Chiqish cho\'qqisi %1$s ga pasaytirildi — aks holda ovoz kesilib buzilardi.</string>
+    <string name="eq_open_saved">Kesish ekranida ochish</string>
+    <string name="eq_error_file_not_found">Fayl topilmadi</string>
+    <string name="eq_error_edit_failed">Ekvalayzerni qo\'llab bo\'lmadi</string>
+    <string name="eq_error_save_failed">Natija faylini saqlab bo\'lmadi</string>
+    <string name="eq_error_nothing_to_apply">Hech narsa o\'zgartirilmagan — barcha polosalar 0 dB</string>
+
     <string name="common_delete">O\'chirish</string>
     <string name="common_cancel">Bekor qilish</string>
     <string name="common_ok">Yaxshi</string>

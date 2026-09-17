@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
@@ -45,6 +46,8 @@ fun HomeScreen(
     onOpenFile: (String) -> Unit,
     onConvertFile: (String) -> Unit,
     onConvert: () -> Unit,
+    onEqFile: (String) -> Unit,
+    onEq: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val recordings by viewModel.recordings.collectAsState()
@@ -85,6 +88,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        A11yOutlinedButton(
+            label = stringResource(R.string.eq_title),
+            onClick = onEq,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         Text(
             text = stringResource(R.string.home_recent_title),
             style = MaterialTheme.typography.titleLarge,
@@ -103,6 +112,7 @@ fun HomeScreen(
                         recording = recording,
                         onOpen = { onOpenFile(recording.file.absolutePath) },
                         onConvert = { onConvertFile(recording.file.absolutePath) },
+                        onEq = { onEqFile(recording.file.absolutePath) },
                         onDeleteRequest = { pendingDelete = recording },
                     )
                     HorizontalDivider()
@@ -140,6 +150,7 @@ private fun RecordingRow(
     recording: Recording,
     onOpen: () -> Unit,
     onConvert: () -> Unit,
+    onEq: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     val duration = TimeFormat.format(recording.durationMs)
@@ -172,6 +183,13 @@ private fun RecordingRow(
             Icon(
                 imageVector = Icons.Filled.Refresh,
                 contentDescription = stringResource(R.string.home_action_convert) + ": " + title,
+            )
+        }
+
+        IconButton(onClick = onEq) {
+            Icon(
+                imageVector = Icons.Filled.Build,
+                contentDescription = stringResource(R.string.eq_title) + ": " + title,
             )
         }
 

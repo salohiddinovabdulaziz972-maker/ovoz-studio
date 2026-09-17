@@ -53,10 +53,17 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/format/AdtsHeader.kt
     app/src/main/java/uz/ovozstudio/app/media/format/CodecRates.kt
     app/src/main/java/uz/ovozstudio/app/media/format/PcmBytes.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/Biquad.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/EqBands.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/Equalizer.kt
+    app/src/main/java/uz/ovozstudio/app/util/GainText.kt
+    app/src/main/java/uz/ovozstudio/app/util/LocalizedNumber.kt
 )
 TESTS=(
     app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
     app/src/test/java/uz/ovozstudio/app/util/TimePartsTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/GainTextTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/LocalizedNumberTest.kt
     app/src/test/java/uz/ovozstudio/app/media/WavFileTest.kt
     app/src/test/java/uz/ovozstudio/app/media/AudioTrimmerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/AudioFormatDetectorTest.kt
@@ -66,7 +73,34 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/format/AdtsHeaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/CodecRatesTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/PcmBytesTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/BiquadTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/EqBandsTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/EqualizerTest.kt
 )
+
+# Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan
+# yig'ilavermaydi — Android'ga bog'liqlari bor), lekin unutishning jazosi
+# jim bo'lmasligi kerak: yangi test fayli ro'yxatga qo'shilmasa, to'plam
+# «OK» deb ko'rsatib, o'sha testlarni umuman ishga tushirmasdan o'tib
+# ketardi. Shu tekshiruv buni to'xtatadi.
+while IFS= read -r file; do
+    case " ${TESTS[*]} " in
+        *" $file "*) ;;
+        *)
+            echo "Xato: $file TEST ro'yxatiga qo'shilmagan" >&2
+            exit 2
+            ;;
+    esac
+done < <(find app/src/test -name '*Test.kt' | sort)
+
+# JUnit'ga sinf nomlari yo'llardan hosil qilinadi — ikkinchi ro'yxat
+# yuritilsa, u ham eskirib qolardi.
+CLASSES=()
+for file in "${TESTS[@]}"; do
+    name="${file#app/src/test/java/}"
+    name="${name%.kt}"
+    CLASSES+=("${name//\//.}")
+done
 
 rm -rf "$OUT" && mkdir -p "$OUT"
 
@@ -79,14 +113,4 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 }
 
 java -cp "$OUT:$STDLIB:$JARS/junit.jar:$JARS/hamcrest.jar:$JUMP3R" org.junit.runner.JUnitCore \
-    uz.ovozstudio.app.util.TimeFormatTest \
-    uz.ovozstudio.app.util.TimePartsTest \
-    uz.ovozstudio.app.media.WavFileTest \
-    uz.ovozstudio.app.media.AudioTrimmerTest \
-    uz.ovozstudio.app.media.format.AudioFormatDetectorTest \
-    uz.ovozstudio.app.media.format.FormatSupportTest \
-    uz.ovozstudio.app.media.format.FormatPreservingExporterTest \
-    uz.ovozstudio.app.media.format.Mp3EncoderTest \
-    uz.ovozstudio.app.media.format.AdtsHeaderTest \
-    uz.ovozstudio.app.media.format.CodecRatesTest \
-    uz.ovozstudio.app.media.format.PcmBytesTest
+    "${CLASSES[@]}"

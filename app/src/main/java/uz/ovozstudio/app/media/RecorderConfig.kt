@@ -4,7 +4,17 @@ package uz.ovozstudio.app.media
  *  yozish doim float ko'rinishida bo'ladi va faylga yozishda kerakli chuqurlikka o'giriladi. */
 enum class BitDepth(val bits: Int) {
     BIT_16(16),
-    BIT_24(24),
+    BIT_24(24);
+
+    companion object {
+        /**
+         * Bit chuqurligini raqam bo'yicha topadi; noma'lum qiymat uchun `null`.
+         *
+         * `null` qaytariladi, xato tashlanmaydi: chaqiruvchi qaysi xatoni
+         * ko'rsatishni o'zi hal qiladi (masalan fayl o'qishda bu — `IOException`).
+         */
+        fun of(bits: Int): BitDepth? = entries.firstOrNull { it.bits == bits }
+    }
 }
 
 /** Yozib olish sozlamalari — hujjatning 2-V bo'limidagi talablar. */

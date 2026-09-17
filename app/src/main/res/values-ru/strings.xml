@@ -123,6 +123,36 @@
     <string name="convert_error_write_failed">Не удалось сохранить итоговый файл</string>
     <string name="convert_error_file_not_found">Файл не найден</string>
 
+    <string name="eq_title">Эквалайзер</string>
+    <string name="eq_hint">Файл не выбран. Сначала откройте аудиофайл.</string>
+    <string name="eq_band_count_title">Количество полос</string>
+    <string name="eq_band_count_ten">10 полос — широкие</string>
+    <string name="eq_band_count_thirty_one">31 полоса — точные</string>
+    <string name="eq_preset_title">Профиль звука</string>
+    <string name="eq_preset_flat">Ровно (без изменений)</string>
+    <string name="eq_preset_voice">Голос — для подкастов и речи</string>
+    <string name="eq_preset_bass">Сильный бас</string>
+    <string name="eq_preset_treble">Ярко — высокие частоты</string>
+    <string name="eq_preset_loudness">Громко — V-образный</string>
+    <string name="eq_lowcut_title">Срез низких частот</string>
+    <string name="eq_lowcut_off">Выключено</string>
+    <string name="eq_lowcut_note">Убирает гул микрофона, ветер и вибрацию стола, не трогая голос.</string>
+    <string name="eq_bands_heading">Полосы, дБ</string>
+    <string name="eq_band_unit_hz">Гц</string>
+    <string name="eq_band_unit_khz">кГц</string>
+    <string name="eq_gain_decrease">Понизить</string>
+    <string name="eq_gain_increase">Повысить</string>
+    <string name="eq_gain_note">Значение каждой полосы вводится вручную: от -12 до +12 дБ. Кнопки понижения и повышения сдвигают на полдецибела.</string>
+    <string name="eq_action">Применить и сохранить</string>
+    <string name="eq_busy">Применяется, подождите…</string>
+    <string name="eq_done">Сохранено: %1$s</string>
+    <string name="eq_headroom_note">Пик сигнала понижен на %1$s — иначе звук обрезался бы и искажался.</string>
+    <string name="eq_open_saved">Открыть на экране обрезки</string>
+    <string name="eq_error_file_not_found">Файл не найден</string>
+    <string name="eq_error_edit_failed">Не удалось применить эквалайзер</string>
+    <string name="eq_error_save_failed">Не удалось сохранить файл результата</string>
+    <string name="eq_error_nothing_to_apply">Ничего не изменено — все полосы на 0 дБ</string>
+
     <string name="common_delete">Удалить</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_ok">Хорошо</string>

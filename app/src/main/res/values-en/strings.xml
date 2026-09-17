@@ -123,6 +123,36 @@
     <string name="convert_error_write_failed">Could not save the result file</string>
     <string name="convert_error_file_not_found">File not found</string>
 
+    <string name="eq_title">Equalizer</string>
+    <string name="eq_hint">No file selected. Open an audio file first.</string>
+    <string name="eq_band_count_title">Number of bands</string>
+    <string name="eq_band_count_ten">10 bands — wide</string>
+    <string name="eq_band_count_thirty_one">31 bands — precise</string>
+    <string name="eq_preset_title">Voice profile</string>
+    <string name="eq_preset_flat">Flat (no change)</string>
+    <string name="eq_preset_voice">Voice — for podcasts and speech</string>
+    <string name="eq_preset_bass">Bass boost</string>
+    <string name="eq_preset_treble">Bright — high frequencies</string>
+    <string name="eq_preset_loudness">Loudness — V-shaped</string>
+    <string name="eq_lowcut_title">Low-cut</string>
+    <string name="eq_lowcut_off">Off</string>
+    <string name="eq_lowcut_note">Removes microphone rumble, wind and desk vibration without touching the voice.</string>
+    <string name="eq_bands_heading">Bands, dB</string>
+    <string name="eq_band_unit_hz">Hz</string>
+    <string name="eq_band_unit_khz">kHz</string>
+    <string name="eq_gain_decrease">Decrease</string>
+    <string name="eq_gain_increase">Increase</string>
+    <string name="eq_gain_note">Type each band value by hand: from -12 to +12 dB. The decrease and increase buttons step by half a decibel.</string>
+    <string name="eq_action">Apply and save</string>
+    <string name="eq_busy">Applying, please wait…</string>
+    <string name="eq_done">Saved: %1$s</string>
+    <string name="eq_headroom_note">Output peak lowered by %1$s — otherwise the audio would clip and distort.</string>
+    <string name="eq_open_saved">Open in the trim screen</string>
+    <string name="eq_error_file_not_found">File not found</string>
+    <string name="eq_error_edit_failed">Could not apply the equalizer</string>
+    <string name="eq_error_save_failed">Could not save the result file</string>
+    <string name="eq_error_nothing_to_apply">Nothing was changed — every band is at 0 dB</string>
+
     <string name="common_delete">Delete</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>
