@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -55,6 +56,8 @@ fun HomeScreen(
     onSpeed: () -> Unit,
     onNoiseFile: (String) -> Unit,
     onNoise: () -> Unit,
+    onStemFile: (String) -> Unit,
+    onStem: () -> Unit,
     onVoice: () -> Unit,
     onBook: () -> Unit,
     onTag: () -> Unit,
@@ -128,6 +131,12 @@ fun HomeScreen(
             A11yOutlinedButton(
                 label = stringResource(R.string.noise_title),
                 onClick = onNoise,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            A11yOutlinedButton(
+                label = stringResource(R.string.stem_title),
+                onClick = onStem,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -206,6 +215,7 @@ fun HomeScreen(
                         onEq = { onEqFile(recording.file.absolutePath) },
                         onSpeed = { onSpeedFile(recording.file.absolutePath) },
                         onNoise = { onNoiseFile(recording.file.absolutePath) },
+                        onStem = { onStemFile(recording.file.absolutePath) },
                         onDeleteRequest = { pendingDelete = recording },
                     )
                     HorizontalDivider()
@@ -255,6 +265,7 @@ private fun RecordingRow(
     onEq: () -> Unit,
     onSpeed: () -> Unit,
     onNoise: () -> Unit,
+    onStem: () -> Unit,
     onDeleteRequest: () -> Unit,
 ) {
     val duration = TimeFormat.format(recording.durationMs)
@@ -314,6 +325,17 @@ private fun RecordingRow(
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = stringResource(R.string.noise_title) + ": " + title,
+                )
+            }
+
+            // Asosiy to'plamda «ajratish» ikonkasi yo'q; «List» — ajratish
+            // natijasi ro'yxat bo'lib chiqadi (vokal va cholg'u alohida
+            // fayllar), shuning uchun shu belgi tanlandi. Ekran o'quvchi
+            // uchun muhimi — `contentDescription`, u amalni nomlaydi.
+            IconButton(onClick = onStem) {
+                Icon(
+                    imageVector = Icons.Filled.List,
+                    contentDescription = stringResource(R.string.stem_title) + ": " + title,
                 )
             }
         }

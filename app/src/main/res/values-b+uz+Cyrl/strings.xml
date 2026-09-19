@@ -180,7 +180,32 @@
     <string name="noise_error_sample_range">Намуна оралиқ нотўғри: охири бошидан кейин бўлиши керак</string>
     <string name="noise_error_sample_quiet">Намуна олинган оралиқ жим — фақат шовқин эшитиладиган қисмни танланг</string>
 
-    <string name="voice_title">Овоз синови</string>
+    <string name="stem_title">Вокал ва чолғуни ажратиш</string>
+    <string name="stem_hint">Файл танланг: стерео ёзувдаги вокал марказдан, чолғу ёнлардан олинади.</string>
+    <string name="stem_stereo_only">Усул канал усули: вокал одатда марказда, чолғу ёнларда туради. Шу сабабли фақат стерео файл яроқли — моно ёзувда ажратадиган нарса йўқ ва илова буни очиқ айтади.</string>
+    <string name="stem_mode_label">Режим</string>
+    <string name="stem_mode_split">Ажратиш (қисмий)</string>
+    <string name="stem_mode_remove">Вокални ўчириш (аниқ айириш)</string>
+    <string name="stem_mode_note_split">Ҳар бир полоса марказга қанчалик хос эканига қараб олинади: марказда турган вокал ўчади, кенг ёзилган чолғу сақланади.</string>
+    <string name="stem_mode_note_remove">Марказ бутунлай айирилади: вокал бутунлай ўчади ва натижада сунъий товуш бўлмайди.</string>
+    <string name="stem_strength_label">Ажратиш кучи</string>
+    <string name="stem_strength_note">Катта қийматда чолғу кўпроқ сақланади, кичигида вокал тўлиқроқ ўчади.</string>
+    <string name="stem_strength_unused">Бу режимда куч ишлатилмайди: марказ бутунлай олинади.</string>
+    <string name="stem_action">Ажратиш</string>
+    <string name="stem_busy">Ажратилмоқда, бироз кутинг…</string>
+    <string name="stem_done">Тайёр: вокал ва чолғу алоҳида файл бўлиб сақланди</string>
+    <string name="stem_saved_vocal">Вокал: %1$s</string>
+    <string name="stem_saved_instrumental">Чолғу: %1$s</string>
+    <string name="stem_side_ratio">Ён қисм марказга нисбатан: %1$s дБ</string>
+    <string name="stem_nearly_mono">Диққат: манбада ён қисм жуда кучсиз, яъни вокал ва чолғу деярли бир жойда. Ажратиш бажарилди, лекин фарқ сезилмаслиги мумкин.</string>
+    <string name="stem_open_vocal">Вокални очиш</string>
+    <string name="stem_open_instrumental">Чолғуни очиш</string>
+    <string name="stem_error_file_not_found">Файл топилмади ёки ўқилмади</string>
+    <string name="stem_error_not_stereo">Бу файл стерео эмас. Битта каналда марказ ва ён қисм ажралмайди, шунинг учун ажратиш фақат стерео ёзувда ишлайди.</string>
+    <string name="stem_error_mono_content">Файлнинг иккала канали бир хил, яъни мазмуни моно. Бундай ёзувда ажратадиган нарса йўқ.</string>
+    <string name="stem_error_edit_failed">Ажратиб бўлмади: файлни ўқиш ёки ёзишда хатолик</string>
+
+        <string name="voice_title">Овоз синови</string>
     <string name="voice_hint">Бу экран қурилманинг овозини текширади: қандай овозлар бор, ўзбек овози борми, узун матн бўлакларга тўғри бўлиняптими. Матнни ёзинг ёки китобдан парча қўйинг ва «Ўқиш» тугмасини босинг.</string>
     <string name="voice_text_label">Ўқиладиган матн</string>
     <string name="voice_text_note">Узун матн автоматик бўлакларга бўлинади ва бўлаклар кетма-кет ўқилади.</string>

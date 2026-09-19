@@ -9,21 +9,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-/** Import nega bajarilmadi — matn emas, kod. Matnni UI tanlaydi. */
-enum class ImportFailure {
-    /** Fayl audio emas yoki formati umuman noma'lum. */
-    UNKNOWN_FORMAT,
-
-    /** Format tanildi, lekin bu qurilmada ochadigan dekoder yo'q (WMA). */
-    NO_DECODER,
-
-    /** Fayl o'qilmadi: nusxalash yoki dekodlash paytida xato. */
-    READ_FAILED,
-
-    /** Fayl ochildi, lekin ichida birorta ham namuna yo'q. */
-    EMPTY,
-}
-
 /**
  * Import natijasi.
  *

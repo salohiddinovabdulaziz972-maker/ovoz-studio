@@ -85,6 +85,18 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   manbalar **WAV** bo'lishi kerak (boshqa format konvertorda o'tkaziladi),
   yo'llarning chastotasi teng bo'lishi shart — har xil chastota jimgina
   qayta namunalanmaydi, ochiq xato beriladi. Sakkiz yo'lgacha.
+- **Vokal va cholg'uni ajratish**: stereo yozuv ikkita faylga bo'linadi —
+  vokal va cholg'u. Ikki rejim bor: «aniq ayirish» markazni butunlay olib
+  tashlaydi (vokal butunlay o'chadi, sun'iy tovush qo'shilmaydi), «qismiy
+  ajratish» esa har bir polosani markazga qanchalik xos ekaniga qarab
+  oladi — kuch maydoni shuni boshqaradi (0.5–4.0). Natija **ikkita yangi
+  fayl**, manba o'zgarmaydi, va ularning yig'indisi aynan manbani beradi:
+  hech narsa yo'qolmaydi, bu usulning tuzilish xossasi. Halol aytilgan
+  cheklov: bu **kanal usuli**, neyron model emas — markazda turgan cholg'u
+  (bas, baraban) ham o'chadi, mono yozuvda esa ajratadigan narsa yo'q.
+  Shuning uchun ilova mono faylni ochiq rad etadi, natija yonida esa
+  **o'lchangan** «yon/markaz» nisbati ko'rsatiladi va u juda kichik bo'lsa
+  («deyarli mono») ogohlantiradi. Batafsil `docs/PROGRESS.md` da.
 - **Ulashish**: tayyor faylni tizim oynasi orqali boshqa ilovaga yuborish
   (Telegram, pochta, bulut). Fayl `content://` havola bilan, faqat o'qish
   uchun va bir marta beriladi.
@@ -113,9 +125,10 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
 
 ## Nima hali yo'q
 
-Nutqni matnga aylantirish (STT),
-vokal/cholg'u ajratish va neyron shovqin
-tozalash. Aralashtirishda manbalar hozircha faqat WAV (boshqa format
+Nutqni matnga aylantirish (STT) va neyron shovqin
+tozalash. Vokal/cholg'u ajratish bor, lekin **kanal usuli** bilan — neyron
+model bilan emas; bu farq yuqorida va `docs/PROGRESS.md` da ochiq yozilgan.
+Aralashtirishda manbalar hozircha faqat WAV (boshqa format
 konvertorda o'tkaziladi) va ularning chastotasi teng bo'lishi shart.
 ID3 teg faqat MP3 faylga yoziladi (M4A/FLAC teglari keyingi
 qadamda). Kitob pleyeri faqat shu seansda yasalgan kitobni tinglaydi:
@@ -153,7 +166,7 @@ Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
 bash bin/run-tests.sh
 ```
 
-568 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
+593 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
 kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
 holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
 matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
@@ -165,6 +178,10 @@ yozilishi va **o'qilishi** (kirill, UTF-8, UTF-16, v2.4 ramka o'lchami,
 buzilgan teg ilovani yiqitmasligi), aralashtirish ekranining hisoblari (aralashma
 uzunligi, tugma yoqilganmi) va yo'l sozlamalari matnining chegaralari
 (-60 dB maydonga sig'adimi, matn va son orasidagi aylanish aynanmi).
+Vokal/cholg'u ajratish ham shu yerda: ikki faylning yig'indisi manbani
+namuna-darajada beradimi, markaz ohangi vokal faylda qolib, cholg'u
+fayldan ketdimi, «aniq ayirish» markazni butunlay o'chiradimi, noto'g'ri
+manba (mono, kanallari bir xil, bo'sh) rad etiladimi.
 Sozlamalar mantig'i ham shu yerda: qurilma tilidan ilova tilini aniqlash
 (kirill yozuvi `uz-Cyrl` tegidan ajraladi, tartib saqlanadi, notanish til —
 o'zbekchaga tushadi), sozlama faylining har bir holati (yo'q, bo'sh, buzuq,
@@ -200,6 +217,10 @@ bash bin/verify-tag.sh      # ID3 teglarini ffprobe o'qiydi, tegni ilova
 bash bin/verify-mix.sh      # aralashmani ffmpeg o'qiydi: balandlik va
                             # panorama analitik javobga mosmi, kesish
                             # himoyasi ishlayaptimi
+bash bin/verify-stem.sh     # ajratilgan vokal/cholg'u: yig'indi manbani
+                            # beradimi (ffmpeg), «aniq ayirish» ffmpeg'ning
+                            # pan filtri bilan bir xilmi, o'lchangan ohang
+                            # balandliklari formulaga mosmi
 bash bin/verify-locales.sh  # to'rt til fayli: kalitlar to'plami, o'rin
                             # egallovchilar, qochirilmagan apostrof, yozuv
                             # aralashuvi
@@ -211,6 +232,17 @@ yig'ilmaydi (`aapt2` faqat x86_64 uchun), ya'ni til fayllaridagi xatoni
 ushlaydigan aapt2 ham yo'q. Xatolar esa jim: ruscha faylda kalit yetishmasa,
 foydalanuvchi buni «xato» deb hisoblamaydi — shunchaki o'zbekcha satrni
 ko'radi. Shuning uchun har bir qoida sun'iy xato kiritib tekshirildi.
+
+```
+python3 bin/falsify-stem.py  # tekshiruvning o'zini sinaydi
+```
+
+Bu skript `StemSeparator.kt` ga beshta **haqiqiy nuqson** kiritadi — maskani
+teskari qo'llash, kuchni e'tiborsiz qoldirish, xato matnini boshqa so'z bilan
+aytish — va `verify-stem.sh` har birini o'sha qoidaning nomi bilan ushlashini
+talab qiladi. Nuqson kiritilgach ham «o'tdi» deb turaveradigan tekshiruv
+foydasiz: u ishlamayotganini hech qachon aytmaydi. Shuning uchun qoidaning
+«o'tdi» deyishi uning haqiqiy nuqsonni tutgani bilan tasdiqlanadi.
 
 Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
 mustaqil o'lchaydi (`ffmpeg`, `python3`). Batafsil natijalar va topilgan
@@ -252,7 +284,8 @@ yoki kirill yozuvi avtomatik tanlanadi.
 ```
 app/src/main/java/uz/ovozstudio/app/
   media/      WAV yozish/o'qish, kesish, pleyer, fayl saqlash, fon xizmati
-  media/dsp/  ekvalayzer, tezlik/ohang (WSOLA), shovqin tozalash, FFT
+  media/dsp/  ekvalayzer, tezlik/ohang (WSOLA), shovqin tozalash, FFT,
+              vokal/cholg'u ajratish (kanal usuli)
   media/format/ format aniqlash, kodlovchilar, formatni saqlash
   media/voice/ ovoz dvigateli interfeysi, qurilma TTS'i, matnni bo'laklash
   media/doc/  hujjat o'qish: TXT, DOCX, EPUB, PDF (o'zimizning o'quvchi)
@@ -274,6 +307,7 @@ app/src/main/java/uz/ovozstudio/app/
   ui/book/    hujjatdan audio-kitob ekrani va pleyer
   ui/tag/     ID3 teg muharriri va ulashish ekrani
   ui/mix/     ko'p yo'lli aralashtirish ekrani
+  ui/stem/    vokal/cholg'u ajratish ekrani
   ui/settings/ sozlamalar ekrani: til, soddalashtirilgan rejim, ilova haqida
   ui/nav/     ekranlar orasidagi yo'l
   util/       vaqt va raqam formatlash

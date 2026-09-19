@@ -43,6 +43,7 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/WavFile.kt
     app/src/main/java/uz/ovozstudio/app/media/AudioTrimmer.kt
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/ImportFailure.kt
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt
     app/src/main/java/uz/ovozstudio/app/media/format/FormatSupport.kt
     app/src/main/java/uz/ovozstudio/app/media/format/AudioEncoder.kt
@@ -62,6 +63,7 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/dsp/SpeedPitch.kt
     app/src/main/java/uz/ovozstudio/app/media/dsp/Fft.kt
     app/src/main/java/uz/ovozstudio/app/media/dsp/NoiseReducer.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/StemSeparator.kt
     app/src/main/java/uz/ovozstudio/app/media/voice/TextChunker.kt
     app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
     app/src/main/java/uz/ovozstudio/app/media/voice/VoiceEngine.kt
@@ -96,6 +98,7 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/tag/TagDraft.kt
     app/src/main/java/uz/ovozstudio/app/ui/mix/MixUiState.kt
     app/src/main/java/uz/ovozstudio/app/ui/settings/SettingsUiState.kt
+    app/src/main/java/uz/ovozstudio/app/ui/stem/StemUiState.kt
     app/src/main/java/uz/ovozstudio/app/settings/AppLanguage.kt
     app/src/main/java/uz/ovozstudio/app/settings/AppSettings.kt
     app/src/main/java/uz/ovozstudio/app/settings/AppSettingsStore.kt
@@ -127,6 +130,7 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/dsp/SpeedPitchTest.kt
     app/src/test/java/uz/ovozstudio/app/media/dsp/FftTest.kt
     app/src/test/java/uz/ovozstudio/app/media/dsp/NoiseReducerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/StemSeparatorTest.kt
     app/src/test/java/uz/ovozstudio/app/media/voice/TextChunkerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/ChapterSplitterTest.kt
@@ -155,6 +159,7 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/settings/LanguageMatchTest.kt
     app/src/test/java/uz/ovozstudio/app/settings/AppSettingsStoreTest.kt
     app/src/test/java/uz/ovozstudio/app/ui/settings/SettingsUiStateTest.kt
+    app/src/test/java/uz/ovozstudio/app/ui/stem/StemUiStateTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

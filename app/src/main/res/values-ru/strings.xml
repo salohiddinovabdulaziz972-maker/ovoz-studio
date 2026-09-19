@@ -180,7 +180,32 @@
     <string name="noise_error_sample_range">Участок образца задан неверно: конец должен быть позже начала</string>
     <string name="noise_error_sample_quiet">Выбранный участок тихий — выберите место, где слышен только шум</string>
 
-    <string name="voice_title">Проверка голоса</string>
+    <string name="stem_title">Разделение вокала и инструментала</string>
+    <string name="stem_hint">Выберите файл: в стереозаписи вокал берётся из центра, инструментал — с боков.</string>
+    <string name="stem_stereo_only">Это канальный метод: вокал обычно в центре, инструментал — по сторонам. Поэтому подходит только стерео — в моно записи разделять нечего, и приложение говорит об этом прямо.</string>
+    <string name="stem_mode_label">Режим</string>
+    <string name="stem_mode_split">Разделение (частичное)</string>
+    <string name="stem_mode_remove">Убрать вокал (точное вычитание)</string>
+    <string name="stem_mode_note_split">Каждая полоса вычитается по тому, насколько она принадлежит центру: вокал в центре убирается, широко записанный инструментал сохраняется.</string>
+    <string name="stem_mode_note_remove">Центр вычитается полностью: вокал исчезает, и никаких искусственных звуков не добавляется.</string>
+    <string name="stem_strength_label">Сила разделения</string>
+    <string name="stem_strength_note">При большем значении инструментал сохраняется лучше, при меньшем вокал убирается полнее.</string>
+    <string name="stem_strength_unused">В этом режиме сила не используется: центр вычитается полностью.</string>
+    <string name="stem_action">Разделить</string>
+    <string name="stem_busy">Разделяю, подождите…</string>
+    <string name="stem_done">Готово: вокал и инструментал сохранены отдельными файлами</string>
+    <string name="stem_saved_vocal">Вокал: %1$s</string>
+    <string name="stem_saved_instrumental">Инструментал: %1$s</string>
+    <string name="stem_side_ratio">Боковая часть относительно центра: %1$s дБ</string>
+    <string name="stem_nearly_mono">Внимание: боковая часть в источнике очень слабая, то есть вокал и инструментал почти в одном месте. Разделение выполнено, но разница может быть незаметна.</string>
+    <string name="stem_open_vocal">Открыть вокал</string>
+    <string name="stem_open_instrumental">Открыть инструментал</string>
+    <string name="stem_error_file_not_found">Файл не найден или не читается</string>
+    <string name="stem_error_not_stereo">Этот файл не стерео. В одном канале центр и бока не разделяются, поэтому метод работает только со стереозаписью.</string>
+    <string name="stem_error_mono_content">Оба канала файла одинаковы, то есть содержимое моно. В такой записи разделять нечего.</string>
+    <string name="stem_error_edit_failed">Не удалось разделить: ошибка чтения или записи файла</string>
+
+        <string name="voice_title">Проверка голоса</string>
     <string name="voice_hint">Этот экран проверяет голос устройства: какие голоса есть, есть ли узбекский, правильно ли длинный текст делится на части. Введите текст или вставьте отрывок из книги и нажмите «Читать».</string>
     <string name="voice_text_label">Текст для чтения</string>
     <string name="voice_text_note">Длинный текст автоматически делится на части, которые читаются по очереди.</string>

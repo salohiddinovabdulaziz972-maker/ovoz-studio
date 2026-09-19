@@ -16,6 +16,7 @@ import uz.ovozstudio.app.ui.noise.NoiseScreen
 import uz.ovozstudio.app.ui.record.RecordScreen
 import uz.ovozstudio.app.ui.settings.SettingsScreen
 import uz.ovozstudio.app.ui.speed.SpeedScreen
+import uz.ovozstudio.app.ui.stem.StemScreen
 import uz.ovozstudio.app.ui.tag.TagScreen
 import uz.ovozstudio.app.ui.trim.TrimScreen
 import uz.ovozstudio.app.ui.voice.VoiceScreen
@@ -48,6 +49,12 @@ object Routes {
      * beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
      */
     const val NOISE = "noise?path={path}"
+
+    /**
+     * Vokal/cholg'u ajratish ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl
+     * uchun u beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
+     */
+    const val STEM = "stem?path={path}"
 
     /**
      * Ovoz sinovi ekrani. Fayl talab qilmaydi: u matn bilan ishlaydi, ya'ni
@@ -90,6 +97,8 @@ object Routes {
 
     fun noise(path: String): String = "noise?path=${Uri.encode(path)}"
 
+    fun stem(path: String): String = "stem?path=${Uri.encode(path)}"
+
     fun tag(path: String): String = "tag?path=${Uri.encode(path)}"
 }
 
@@ -111,6 +120,8 @@ fun AppNav() {
                 onSpeed = { navController.navigate(Routes.speed("")) },
                 onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
                 onNoise = { navController.navigate(Routes.noise("")) },
+                onStemFile = { path -> navController.navigate(Routes.stem(path)) },
+                onStem = { navController.navigate(Routes.stem("")) },
                 onTag = { navController.navigate(Routes.tag("")) },
                 onMix = { navController.navigate(Routes.MIX) },
                 onVoice = { navController.navigate(Routes.VOICE) },
@@ -212,6 +223,20 @@ fun AppNav() {
                 // Manbalar WAV bo'lishi kerak — boshqa format shu ilovaning
                 // o'zida o'tkaziladi.
                 onConvert = { navController.navigate(Routes.convert("")) },
+                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
+            )
+        }
+
+        composable(
+            route = Routes.STEM,
+            arguments = listOf(navArgument("path") { type = NavType.StringType }),
+        ) { entry ->
+            val path = entry.arguments?.getString("path").orEmpty()
+            StemScreen(
+                initialPath = Uri.decode(path),
+                onBack = { navController.popBackStack() },
+                // Natijaning ikkala fayli ham kutubxonaga tushadi; ularni
+                // darhol kesish ekranida ochish mumkin.
                 onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
             )
         }

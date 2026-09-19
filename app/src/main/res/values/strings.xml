@@ -180,7 +180,32 @@
     <string name="noise_error_sample_range">Namuna oraliq noto\'g\'ri: oxiri boshidan keyin bo\'lishi kerak</string>
     <string name="noise_error_sample_quiet">Namuna olingan oraliq jim — faqat shovqin eshitiladigan qismni tanlang</string>
 
-    <string name="voice_title">Ovoz sinovi</string>
+    <string name="stem_title">Vokal va cholg\'uni ajratish</string>
+    <string name="stem_hint">Fayl tanlang: stereo yozuvdagi vokal markazdan, cholg\'u yonlardan olinadi.</string>
+    <string name="stem_stereo_only">Usul kanal usuli: vokal odatda markazda, cholg\'u yonlarda turadi. Shu sababli faqat stereo fayl yaroqli — mono yozuvda ajratadigan narsa yo\'q va ilova buni ochiq aytadi.</string>
+    <string name="stem_mode_label">Rejim</string>
+    <string name="stem_mode_split">Ajratish (qismiy)</string>
+    <string name="stem_mode_remove">Vokalni o\'chirish (aniq ayirish)</string>
+    <string name="stem_mode_note_split">Har bir polosa markazga qanchalik xos ekaniga qarab olinadi: markazda turgan vokal o\'chadi, keng yozilgan cholg\'u saqlanadi.</string>
+    <string name="stem_mode_note_remove">Markaz butunlay ayiriladi: vokal butunlay o\'chadi va natijada sun\'iy tovush bo\'lmaydi.</string>
+    <string name="stem_strength_label">Ajratish kuchi</string>
+    <string name="stem_strength_note">Katta qiymatda cholg\'u ko\'proq saqlanadi, kichigida vokal to\'liqroq o\'chadi.</string>
+    <string name="stem_strength_unused">Bu rejimda kuch ishlatilmaydi: markaz butunlay olinadi.</string>
+    <string name="stem_action">Ajratish</string>
+    <string name="stem_busy">Ajratilmoqda, biroz kuting…</string>
+    <string name="stem_done">Tayyor: vokal va cholg\'u alohida fayl bo\'lib saqlandi</string>
+    <string name="stem_saved_vocal">Vokal: %1$s</string>
+    <string name="stem_saved_instrumental">Cholg\'u: %1$s</string>
+    <string name="stem_side_ratio">Yon qism markazga nisbatan: %1$s dB</string>
+    <string name="stem_nearly_mono">Diqqat: manbada yon qism juda kuchsiz, ya\'ni vokal va cholg\'u deyarli bir joyda. Ajratish bajarildi, lekin farq sezilmasligi mumkin.</string>
+    <string name="stem_open_vocal">Vokalni ochish</string>
+    <string name="stem_open_instrumental">Cholg\'uni ochish</string>
+    <string name="stem_error_file_not_found">Fayl topilmadi yoki o\'qilmadi</string>
+    <string name="stem_error_not_stereo">Bu fayl stereo emas. Bitta kanalda markaz va yon qism ajralmaydi, shuning uchun ajratish faqat stereo yozuvda ishlaydi.</string>
+    <string name="stem_error_mono_content">Faylning ikkala kanali bir xil, ya\'ni mazmuni mono. Bunday yozuvda ajratadigan narsa yo\'q.</string>
+    <string name="stem_error_edit_failed">Ajratib bo\'lmadi: faylni o\'qish yoki yozishda xatolik</string>
+
+        <string name="voice_title">Ovoz sinovi</string>
     <string name="voice_hint">Bu ekran qurilmaning ovozini tekshiradi: qanday ovozlar bor, o\'zbek ovozi bormi, uzun matn bo\'laklarga to\'g\'ri bo\'linyaptimi. Matnni yozing yoki kitobdan parcha qo\'ying va «O\'qish» tugmasini bosing.</string>
     <string name="voice_text_label">O\'qiladigan matn</string>
     <string name="voice_text_note">Uzun matn avtomatik bo\'laklarga bo\'linadi va bo\'laklar ketma-ket o\'qiladi.</string>

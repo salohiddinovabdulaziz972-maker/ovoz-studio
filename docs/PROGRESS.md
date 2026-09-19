@@ -1,6 +1,6 @@
 # Holat va reja
 
-Oxirgi yangilanish: 2026-09-17
+Oxirgi yangilanish: 2026-09-19
 
 ## Bajarildi
 
@@ -17,7 +17,7 @@ Oxirgi yangilanish: 2026-09-17
 4. **Kesish yadrosi** — `media/AudioTrimmer.kt`, `media/AudioPlayer.kt`,
    `media/RecordingStore.kt`.
 5. **Ekranlar** — bosh, yozib olish, kesish (+ uch ViewModel).
-6. **Testlar** — 568 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
+6. **Testlar** — 593 ta sof JVM testi (`app/src/test/…`), hammasi o'tadi.
    Yurgizish: `bash bin/run-tests.sh` (Android SDK kerak emas).
    CI'da ham ishlaydi: `.github/workflows/android.yml` → `testDebugUnitTest`.
    Fayl ro'yxati skriptda qo'lda yuritiladi (hamma manba fayl oddiy
@@ -26,7 +26,7 @@ Oxirgi yangilanish: 2026-09-17
    har bir `*Test.kt` ni ro'yxatda qidiradi va topmasa `exit 2` beradi.
 7. **Android qatlamining kompilyatsiyasi** — `bin/typecheck-android.sh`:
    android.jar + AndroidX/Compose + Compose kompilyator plagini bilan barcha
-   115 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
+   120 manba fayl kompilyatsiya qilinadi. Ilgari ekranlar va ViewModel'lar
    umuman kompilyatordan o'tmagan edi — xatolar faqat CI'da ko'rinardi.
    APK bermaydi (aapt2 faqat x86_64 uchun), lekin Kotlin xatolarini
    darhol topadi. `R` sinfi resurslardan generatsiya qilinadi (`R.string`,
@@ -265,6 +265,44 @@ Oxirgi yangilanish: 2026-09-17
     haqiqiy qurilmada ishlashi (Activity qayta ochilishi, matn kirill
     yozuviga o'tishi) va soddalashtirilgan rejimning TalkBack bilan
     yengillashishi.
+22. **Vokal va cholg'uni ajratish** — `media/dsp/StemSeparator.kt` va
+    `ui/stem/` ekrani. Stereo yozuv ikkita faylga bo'linadi: **vokal** va
+    **cholg'u**. Usul — **kanal usuli** (neyron model emas): har bir
+    kadrda (1024 namuna, 75% qoplama, Hann oynasi) chap va o'ng kanal FFT
+    orqali markaz (`M = (L+R)/2`) va yon (`S = (L−R)/2`) qismlarga
+    ajratiladi, keyin har bir polosa uchun markazning ustunlik darajasi
+    `d = |M| / (|M| + |S|)` o'lchanadi.
+    **Ikki rejim**:
+    «aniq ayirish» (`REMOVE_VOCALS`) markazni `1.0` koeffitsient bilan
+    oladi — vokal butunlay o'chadi, spektral teshik qolmáydi;
+    «qismiy ajratish» (`SPLIT`) esa `d^kuch` koeffitsientini qo'llaydi,
+    ya'ni markaz butunlay ustun bo'lgan polosa deyarli o'chadi, markaz va
+    yon teng bo'lgan polosa esa yarmidan ko'pi qoladi — keng yozilgan
+    cholg'u saqlanadi.
+    **Tuzilish xossasi:** vokal + cholg'u = manba, **namuna-darajada**.
+    Ayirish simmetrik (`vokal = M·m`, `cholg'u = L − M·m` va `R − M·m`),
+    shuning uchun hech narsa yo'qolmaydi va o'lchov ham aynan shuni
+    tasdiqlaydi (1 LSB farq — 16-bitda yaxlitlash).
+    **Manba o'zgarmaydi:** natija ikkita yangi fayl. Ikkalasi bir joyda
+    yoziladi va xato bo'lsa **ikkalasi ham** o'chiriladi — aks holda
+    foydalanuvchi «ajratdim» deb bitta fayl olardi.
+    **Halol cheklovlar ekranda aytiladi**, chunki bu usulning chegarasi
+    jimgina o'tkazib yuborilsa, foydalanuvchi natijani «buzuq» deb
+    hisoblaydi: (1) **markazda turgan cholg'u ham o'chadi** — bas yoki
+    baraban ham ko'pincha markazda turadi, bu usulning emas, **kanal
+    usulining** chegarasi; (2) **mono yozuvda ajratadigan narsa yo'q** —
+    ilova bitta kanalli faylni ham, kanallari bir xil bo'lgan faylni ham
+    ochiq rad etadi (xato matni bilan, jimgina «natija» bermaydi);
+    (3) yon qism juda kuchsiz bo'lsa (o'lchangan «yon/markaz» nisbati
+    −20 dB dan past) natija yonida ogohlantirish chiqadi.
+    **Shu sababdan ekran o'lchangan sonni ko'rsatadi** — «yon qism
+    markazga nisbatan: X dB» — ya'ni foydalanuvchi natijani baholash uchun
+    taxmin qilmaydi.
+    **Kuch maydoni** faqat `SPLIT` rejimida ishlaydi (0.5–4.0, standart
+    1.5); `REMOVE_VOCALS` da maydon o'chiriladi va **sababi yozib
+    qo'yiladi** — sababsiz o'chiq maydon ekran o'quvchi uchun tuzoq.
+    **Mustaqil tekshiruv:** `bin/verify-stem.sh` (o'ninchi tekshiruv,
+    pastda) va `bin/falsify-stem.py`.
 
 ## Muhim texnik qarorlar
 
@@ -842,6 +880,79 @@ fayllarning to'g'riligini kafolatlaydi; ekranda til haqiqatan o'zgarganini
 faqat qurilma ko'rsatadi. Shuningdek tarjima **sifatini** (ma'nosi to'g'rimi,
 tabiiy o'qiladimi) skript baholay olmaydi — u faqat shaklni tekshiradi.
 
+### O'ninchi tekshiruv — vokal/cholg'u ajratish (2026-09-19)
+
+Ajratishning eng oson yo'li — «ishlayotganga o'xshaydi» degan xulosaga
+kelish: ikkita fayl chiqadi, biri balandroq, ikkinchisi pastroq. Shuning
+uchun tekshiruv uchta **o'lchanadigan** da'voga bo'lindi va har biri
+tashqi asbob bilan olchandi (`ffmpeg`, `ffprobe`, `python3`).
+
+**A. Yig'indi manbani beradi.** Vokal va cholg'u fayllari namuna-ba-namuna
+qo'shilib, manba bilan solishtiriladi. Ikkala rejim uchun ham farq
+**1 LSB** (16-bitda yaxlitlash; chegaradan 30 baravar kam). Nazorat:
+«vokal» fayli manbaning o'zi emas — farq 0.1 dan katta.
+
+**B. «Aniq ayirish» ffmpeg bilan bir xil.** `REMOVE_VOCALS` natijasi
+ffmpeg'ning `pan=mono|c0=0.5*c0-0.5*c1` va `pan=mono|c0=0.5*c0+0.5*c1`
+filtrlari bilan solishtiriladi: farq **1 LSB** (chegara 5e-4). Ya'ni
+«markazni ayirish» atamasi shu yerda taxmin emas — mustaqil dastur
+aynan shu sonlarni beradi.
+
+**C. Spektral tozalik.** 440 Hz markazda, 1200 Hz yonga qo'yilgan sinov
+signalida Goertzel o'lchovi: vokal faylida 440 Hz bor (≥ 0.36), 1200 Hz
+yo'q (≤ 0.1); cholg'u faylida 1200 Hz bor (≥ 0.36), 440 Hz deyarli yo'q
+(≤ 0.063). «Yon/markaz» nisbati ham ±0.5 dB aniqlikda tasdiqlandi.
+
+**D. Koeffitsient formulasi.** Eng nozik qism — `d^kuch` ko'rinishi.
+Butunlay chapga surilgan ohang uchun `M = S = L/2`, ya'ni `d = 1/2` va
+`mask = 0.353553`. Ilova o'lchagan `L` va `R` asosida bash bu sonni
+**mustaqil hisoblaydi** va o'lchangan natija bilan solishtiradi (farq
+7e-6, chegara 0.003). Faqat `|qiymat|` solishtiriladi: Goertzel ishorani
+bermaydi — bu cheklov skriptda yozib qo'yilgan, ishora esa A bo'limida
+allaqachon isbotlangan.
+
+**E. Rad etish.** Bitta kanalli fayl ham, kanallari bir xil (mazmunan
+mono) fayl ham **ochiq xato** bilan rad etilishi tekshiriladi — «jimgina
+natija berish» yo'q.
+
+**Topilgan xato (hujjatda).** D bo'limining o'lchovi `StemSeparator`
+KDoc'idagi da'voni **rad etdi**: «qismiy ajratish markazda turgan
+cholg'uni saqlaydi» deb yozilgan edi, o'lchov esa buning aksini
+ko'rsatdi — butunlay chapga surilgan ohangda ham markazning `d^kuch`
+qismigina olinadi, ya'ni markazda turgan baraban yoki bas **ham**
+o'chadi. KDoc tuzatildi va ekran matnlariga ham shu cheklov yozildi:
+noto'g'ri da'vo qolsa, foydalanuvchi natijani «buzuq» deb hisoblardi.
+
+**Falsifikatsiya — tekshiruvning o'zini sinash.** `bin/falsify-stem.py`
+`StemSeparator.kt` ga beshta haqiqiy nuqson kiritadi va
+`bin/verify-stem.sh` har birini **o'sha qoidaning nomi bilan** ushlashini
+talab qiladi (fayl `finally` da qaytariladi):
+
+| kiritilgan nuqson | qaysi qoida ushladi |
+|---|---|
+| `REMOVE_VOCALS` maskasi 1.0 → 0.0 | B — «cholg'u (chap) = (L−R)/2» |
+| maska teskari qo'llanadi (`1.0 − …`) | C — «vokalda markaz ohangi bor» |
+| `d^kuch` → `d^1` (kuch e'tiborsiz) | D — «vokal (chap) = formula bo'yicha» |
+| `ERROR_NOT_STEREO` boshqa so'z bilan | E — «bitta kanalli fayl» |
+| `ERROR_MONO_CONTENT` boshqa so'z bilan | E — «kanallari bir xil fayl» |
+
+Ikki nuqson bilan urinish muvaffaqiyatsiz bo'ldi va bu **o'zi foydali
+natija**: `info.channels != 2` tekshiruvi olib tashlanganda dastur
+assertgacha yetib bormasdan yiqilardi, ya'ni «shu qoida ishlayapti»
+degan xulosani o'sha nuqson bilan olish mumkin emas edi. Shuning uchun
+o'rniga xato **matnini** o'zgartiruvchi nuqsonlar olindi — ular
+`expect_error` qoidasini to'g'ridan-to'g'ri falsifikatsiya qiladi.
+Shuningdek `expect_error` xato satrini **stderr** ga yozishi aniqlanib,
+skript endi ikki oqimni birga o'qiydi.
+
+**Nima tekshirilmaydi.** Ajratish **sifatining** musiqiy bahosi — quloq
+bilan tinglash. Skript sonlarni tekshiradi: yig'indi manbani beradimi,
+markaz ohangi qayerda qoldi, koeffitsient to'g'rimi. «Bu qo'shiqda vokal
+yaxshi ajraldimi» degan savolga faqat egasi qurilmada javob bera oladi.
+Shuningdek bu **kanal usuli**, ya'ni cholg'u tembr bo'yicha
+ajratilmaydi — markazda turgan cholg'u vokal bilan birga o'chadi (D
+bo'limida o'lchandi).
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -868,6 +979,9 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
 - Ko'p yo'lli aralashtirish: balandlik, chap/o'ng joylashuv, siljish,
   mute/solo, umumiy balandlik, orqaga qaytarish, avtomatik saqlanadigan
   loyiha; natija stereo va kesishdan himoyalangan.
+- Vokal/cholg'u ajratish: stereo yozuv ikki faylga bo'linadi (kanal usuli),
+  ikki rejim va kuch maydoni, natija manbani namuna-darajada qoplaydi;
+  mono manba ochiq rad etiladi.
 
 **Keyingi navbat (shu tartibda)**
 
@@ -946,8 +1060,18 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
    (ruxsat oynasi kabi) qurilma tilida qolaveradi. Soddalashtirilgan rejim
    ikkinchi darajali tugmalarni yashiradi, funksiyani o'chirmaydi.
    **Qolgani (faqat qurilmada tekshiriladi):** pastda.
-10. **Vokal/cholg'u ajratish** — qurilmada ishlaydigan model (ONNX/TFLite);
-    eng og'ir band, shuning uchun oxirida.
+10. ~~**Vokal/cholg'u ajratish**~~ — **tayyor** (22-band), lekin **kanal
+    usuli** bilan, neyron model bilan emas. Mustaqil tekshiruv o'tdi
+    (o'ninchi tekshiruv, yuqorida), falsifikatsiya bilan birga. Ya'ni tavsifdagi imkoniyat bor:
+    stereo yozuv vokal va cholg'u fayllariga bo'linadi, natija manbani
+    namuna-darajada qoplaydi. Farq shundaki, usul *markazda turgan hamma
+    narsani* oladi — markazda turgan bas yoki baraban ham vokal bilan birga
+    o'chadi. **Qolgani — neyron model** (ONNX/TFLite, qurilmada ishlaydigan):
+    u cholg'uni tembr bo'yicha ajratadi, ya'ni markazda turgan barabanni
+    saqlab qoladi. Eng og'ir band: model fayli bir necha o'nlab MB bo'ladi va
+    litsenziyasi GPL-3.0 bilan mos bo'lishi shart. Shu sababdan u alohida
+    qadam sifatida qoldirildi — ekran va DSP qatlami tayyor, model shu
+    interfeys ortiga ulanadi (xuddi TTS'dagi kabi).
 11. **Neyron shovqin tozalash** — 4-band statistik usul bilan bajarildi, ya'ni
     shovqin namunasi kerak va nutq shovqindan *ajratilmaydi*, faqat pol
     ayiriladi. Neyron model (RNNoise yoki shunga o'xshash, ONNX/TFLite orqali
@@ -1016,6 +1140,14 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   qatoridagi to'xtash nuqtalari kamayganini ko'rish. Til fayllarining
   shaklini skript tekshiradi, lekin ekranda til haqiqatan almashganini va
   soddalashtirilgan rejim **yengilroq** bo'lganini faqat qurilma ko'rsatadi.
+- Vokal/cholg'u ajratish ekranini sinash: **vokali markazda yozilgan** haqiqiy
+  stereo qo'shiqni tanlab, ikki rejimni solishtirish — «aniq ayirish» da
+  vokal butunlay yo'qoladimi va cholg'u sun'iy eshitilmaydimi, «qismiy
+  ajratish» da kuch maydonini 0.5 va 4.0 ga qo'yib farq seziladimi.
+  Natijadagi ikkita faylni tinglab, «yon/markaz» nisbati ekranda yozgan
+  songa mos kelishini ko'rish. **Mono yozuvni tanlab**, ilova uni ochiq rad
+  etishini tekshirish. Skript sonlarni o'lchaydi, lekin **qaysi rejim qulog'ga
+  yaxshi eshitilishini** va vokalning ajralish sifatini faqat quloq aytadi.
 
 **Ma'lum cheklovlar (keyingi ishlar)**
 

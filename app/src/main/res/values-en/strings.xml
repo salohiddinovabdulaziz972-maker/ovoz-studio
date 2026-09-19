@@ -180,7 +180,32 @@
     <string name="noise_error_sample_range">The sample range is invalid: the end must come after the start</string>
     <string name="noise_error_sample_quiet">The selected sample is silent — choose a part where only noise is heard</string>
 
-    <string name="voice_title">Voice check</string>
+    <string name="stem_title">Separate vocals and instruments</string>
+    <string name="stem_hint">Pick a file: in a stereo recording the vocals are taken from the centre and the instruments from the sides.</string>
+    <string name="stem_stereo_only">This is a channel method: vocals usually sit in the centre and instruments at the sides. So only stereo works — a mono recording has nothing to separate, and the app says so plainly.</string>
+    <string name="stem_mode_label">Mode</string>
+    <string name="stem_mode_split">Separate (partial)</string>
+    <string name="stem_mode_remove">Remove vocals (exact subtraction)</string>
+    <string name="stem_mode_note_split">Each band is subtracted according to how much it belongs to the centre: vocals in the centre are removed, a wide instrument is kept.</string>
+    <string name="stem_mode_note_remove">The centre is subtracted completely: the vocals disappear and no artificial sound is added.</string>
+    <string name="stem_strength_label">Separation strength</string>
+    <string name="stem_strength_note">A higher value keeps more of the instrument, a lower one removes the vocals more fully.</string>
+    <string name="stem_strength_unused">Strength is not used in this mode: the centre is subtracted completely.</string>
+    <string name="stem_action">Separate</string>
+    <string name="stem_busy">Separating, one moment…</string>
+    <string name="stem_done">Done: vocals and instrumental saved as separate files</string>
+    <string name="stem_saved_vocal">Vocals: %1$s</string>
+    <string name="stem_saved_instrumental">Instrumental: %1$s</string>
+    <string name="stem_side_ratio">Side part relative to the centre: %1$s dB</string>
+    <string name="stem_nearly_mono">Careful: the side part of the source is very weak, so the vocals and the instrument sit almost in the same place. The separation ran, but the difference may be inaudible.</string>
+    <string name="stem_open_vocal">Open the vocals</string>
+    <string name="stem_open_instrumental">Open the instrumental</string>
+    <string name="stem_error_file_not_found">File not found or unreadable</string>
+    <string name="stem_error_not_stereo">This file is not stereo. In a single channel the centre and the sides cannot be told apart, so the method needs a stereo recording.</string>
+    <string name="stem_error_mono_content">Both channels of the file are identical, so the content is mono. There is nothing to separate in such a recording.</string>
+    <string name="stem_error_edit_failed">Could not separate: error reading or writing the file</string>
+
+        <string name="voice_title">Voice check</string>
     <string name="voice_hint">This screen checks the device voice: which voices exist, whether an Uzbek one is present, and whether long text is split correctly. Type the text or paste a passage and press “Read”.</string>
     <string name="voice_text_label">Text to read</string>
     <string name="voice_text_note">Long text is split into parts automatically, and the parts are read one after another.</string>
