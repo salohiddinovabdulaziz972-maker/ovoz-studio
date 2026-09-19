@@ -303,6 +303,8 @@ Oxirgi yangilanish: 2026-09-19
     qo'yiladi** — sababsiz o'chiq maydon ekran o'quvchi uchun tuzoq.
     **Mustaqil tekshiruv:** `bin/verify-stem.sh` (o'ninchi tekshiruv,
     pastda) va `bin/falsify-stem.py`.
+    Kodni ko'rib chiqish uchun `bin/dump-source.py` — butun loyihani
+    mundarijali bitta matn faylga yig'adi.
 
 ## Muhim texnik qarorlar
 

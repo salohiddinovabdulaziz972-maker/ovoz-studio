@@ -248,6 +248,20 @@ Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
 mustaqil o'lchaydi (`ffmpeg`, `python3`). Batafsil natijalar va topilgan
 xatolar `docs/PROGRESS.md` da.
 
+**Butun kodni bitta faylga yig'ish** — kodni ko'rib chiqish yoki boshqa
+asbobga berish uchun:
+
+```
+python3 bin/dump-source.py [chiqish-fayli]
+```
+
+Fayl tartibi: yig'ish fayllari → ilova kodi → resurslar → testlar →
+asboblar → hujjatlar. Har bir fayl oldiga `===== yo'l =====` sarlavhasi
+qo'yiladi, boshida esa satr raqamlari bilan mundarija turadi — ya'ni
+parcha bo'lib o'qilsa ham, u qaysi fayldan va qayerdan olingani ko'rinib
+turadi. Ikonkalar (PNG) va boshqa binary fayllar tushirib qoldiriladi:
+ular matn ichida ma'nosiz.
+
 Bu qatlamlar shunchaki nazorat emas. Ular ustida ishlash davomida bir necha
 jiddiy xato topildi: biri ilovani umuman yig'ib bo'lmas holga keltirgan,
 biri har bir o'chirishda bir kadrni jimgina yo'qotardi, biri ekran
