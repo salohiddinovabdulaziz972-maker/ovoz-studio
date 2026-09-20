@@ -136,6 +136,7 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/voice/TextChunkerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/ChapterSplitterTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/PdfFixtures.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/PlainTextDecoderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/DocxTextReaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/EpubTextReaderTest.kt
@@ -182,9 +183,12 @@ while IFS= read -r file; do
 done < <(find app/src/test -name '*Test.kt' | sort)
 
 # JUnit'ga sinf nomlari yo'llardan hosil qilinadi — ikkinchi ro'yxat
-# yuritilsa, u ham eskirib qolardi.
+# yuritilsa, u ham eskirib qolardi. Ro'yxatda test bo'lmagan yordamchi
+# fayl ham bo'lishi mumkin (masalan PdfFixtures.kt) — u faqat yig'iladi,
+# JUnit'ga berilmaydi, aks holda «No runnable methods» bilan yiqilardi.
 CLASSES=()
 for file in "${TESTS[@]}"; do
+    [[ "$file" == *Test.kt ]] || continue
     name="${file#app/src/test/java/}"
     name="${name%.kt}"
     CLASSES+=("${name//\//.}")

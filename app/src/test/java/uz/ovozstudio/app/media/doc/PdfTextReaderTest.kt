@@ -1,7 +1,6 @@
 package uz.ovozstudio.app.media.doc
 
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.zip.Deflater
 import java.util.zip.DeflaterOutputStream
 import org.junit.Assert.assertEquals
@@ -22,18 +21,12 @@ import org.junit.Test
  */
 class PdfTextReaderTest {
 
-    private fun fixture(name: String): File {
-        val file = File("app/src/test/fixtures/$name")
-        assertTrue("namuna topilmadi: ${file.absolutePath}", file.exists())
-        return file
-    }
-
     @Test
     fun `oddiy shriftli pdf oqiladi`() {
         // Matn to'liq solishtiriladi: namuna ma'lum ro'yxatdan yasalgan,
         // shuning uchun «bor» deb tekshirish yetarli emas — ortiqcha yoki
         // takrorlangan qator ham o'tib ketardi.
-        val text = PdfTextReader.read(fixture("kitob-lotin.pdf"))
+        val text = PdfTextReader.read(pdfFixture("kitob-lotin.pdf"))
 
         assertEquals(
             """
@@ -50,7 +43,7 @@ class PdfTextReaderTest {
     @Test
     fun `sahifadagi tartib saqlanadi`() {
         // Matn obyekt tartibida emas, sahifa mazmuni tartibida yig'iladi.
-        val text = PdfTextReader.read(fixture("kitob-lotin.pdf"))
+        val text = PdfTextReader.read(pdfFixture("kitob-lotin.pdf"))
 
         assertTrue("boblar tartibi buzildi", text.indexOf("BIRINCHI") < text.indexOf("IKKINCHI"))
         assertTrue(
@@ -63,7 +56,7 @@ class PdfTextReaderTest {
     fun `qatorlar alohida qoladi`() {
         // PDF'da qator tushunchasi yo'q — u koordinatalardan tiklanadi.
         // Yopishib qolsa kitob bitta uzun qator bo'lib o'qilardi.
-        val text = PdfTextReader.read(fixture("kitob-lotin.pdf"))
+        val text = PdfTextReader.read(pdfFixture("kitob-lotin.pdf"))
         val lines = text.lines().filter { it.isNotBlank() }
 
         assertTrue(lines.toString(), lines.contains("BIRINCHI BOB"))
@@ -74,7 +67,7 @@ class PdfTextReaderTest {
     fun `tounicode jadvali orqali kirill oqiladi`() {
         // Type0 shriftida bayt kodi ixtiyoriy: matn faqat ToUnicode
         // jadvali orqali ochiladi.
-        val text = PdfTextReader.read(fixture("kitob-kirill.pdf"))
+        val text = PdfTextReader.read(pdfFixture("kitob-kirill.pdf"))
 
         assertEquals(
             """
@@ -88,7 +81,7 @@ class PdfTextReaderTest {
 
     @Test
     fun `ozbek apostrofi saqlanadi`() {
-        val text = PdfTextReader.read(fixture("kitob-kirill.pdf"))
+        val text = PdfTextReader.read(pdfFixture("kitob-kirill.pdf"))
 
         // U+02BB — o'zbek lotin yozuvining o'ziga xos belgisi. U
         // yo'qolsa matn «Ozbekiston» bo'lib qolardi.

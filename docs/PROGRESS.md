@@ -1045,6 +1045,35 @@ qoidalari qurilmada sinalishi shart. WSOLA `bestShift` va FFT tezlashtirish
 mumkin (siljuvchi energiya, haqiqiy-kirish FFT), lekin natijani biroz
 o'zgartiradi — avval qurilmada o'lchab, keyin qaror qilish kerak.
 
+### O'n ikkinchi tekshiruv — CI (Gradle) muhiti (2026-09-20)
+
+Birinchi marta push qilindi (18 commit, `cdc676d`) va GitHub Actions
+ishga tushdi. `build` job'i yiqildi: **610 testdan 6 tasi** — beshta PDF
+sinovi va `DocumentLoaderTest` ning PDF ishi. JVM to'plamida (o'sha 610
+test) ular yashil edi, ya'ni farq muhitda edi.
+
+**Sabab.** Namunalar `File("app/src/test/fixtures/...")` — ishchi
+katalogga nisbatan — ochilardi. `bin/run-tests.sh` ildizdan ishga
+tushiradi, Gradle esa test JVM'ini `app/` da ochadi: yo'l
+`app/app/src/test/fixtures/...` bo'lib qolib, fayl topilmaydi. Yiqilgan
+sinovlar ro'yxati buni aniq ko'rsatdi — qolgan hamma sinov namunasiz
+(`File.createTempFile` yoki `TemporaryFolder`) ishlaydi.
+
+**Tuzatish.** `PdfFixtures.kt` — yo'l ishchi katalogdan **yuqoriga qarab**
+izlanadi, shuning uchun ikkala muhitda ham topiladi. Nusxa ko'chirmaslik
+uchun yagona joyda (`PdfFixtures.kt`), `run-tests.sh` esa endi ro'yxatdagi
+test bo'lmagan faylni ham yig'adi-yu, JUnit'ga bermaydi (aks holda
+«No runnable methods»).
+
+**Tekshirildi.** Ildizdan — 610 test OK; Gradle sharti
+(`-Duser.dir=<loyiha>/app`) qo'lda takrorlanib — o'sha 20 sinov OK;
+eski yo'l o'sha shartda mavjud emasligi ko'rsatildi. `typecheck-android.sh`
+— 122 fayl.
+
+**Saboq.** «Sinovlar yashil» degani «CI yashil» degani emas: ishchi
+katalog, standart charset va resurs yo'li ikkala muhitda bir xil
+tekshirilishi kerak.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud

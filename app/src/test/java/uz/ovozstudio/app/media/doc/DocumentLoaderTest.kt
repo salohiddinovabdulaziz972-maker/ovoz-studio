@@ -105,8 +105,7 @@ class DocumentLoaderTest {
 
     @Test
     fun `pdf hujjat ham boblarga bolinadi`() {
-        val file = File("app/src/test/fixtures/kitob-kirill.pdf")
-        assertTrue("namuna topilmadi", file.exists())
+        val file = pdfFixture("kitob-kirill.pdf")
 
         val document = DocumentLoader.load(file, DocumentFormat.PDF, "Kitob", "Muqaddima")
 
