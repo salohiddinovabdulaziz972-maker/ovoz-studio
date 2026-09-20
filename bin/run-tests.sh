@@ -38,6 +38,7 @@ done
 MAIN=(
     app/src/main/java/uz/ovozstudio/app/util/TimeFormat.kt
     app/src/main/java/uz/ovozstudio/app/util/TimeParts.kt
+    app/src/main/java/uz/ovozstudio/app/util/AtomicFileWriter.kt
     app/src/main/java/uz/ovozstudio/app/media/RecorderConfig.kt
     app/src/main/java/uz/ovozstudio/app/media/WavWriter.kt
     app/src/main/java/uz/ovozstudio/app/media/WavFile.kt
@@ -110,6 +111,7 @@ MAIN=(
 TESTS=(
     app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
     app/src/test/java/uz/ovozstudio/app/util/TimePartsTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/AtomicFileWriterTest.kt
     app/src/test/java/uz/ovozstudio/app/util/GainTextTest.kt
     app/src/test/java/uz/ovozstudio/app/util/SpeedTextTest.kt
     app/src/test/java/uz/ovozstudio/app/util/LocalizedNumberTest.kt
@@ -145,11 +147,13 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/book/SleepTimerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/ChapterAssemblerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderPipelineTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookPlaylistTest.kt
     app/src/test/java/uz/ovozstudio/app/media/book/BookPlaybackStoreTest.kt
     app/src/test/java/uz/ovozstudio/app/media/mix/AudioMixerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/mix/MixEditorTest.kt
     app/src/test/java/uz/ovozstudio/app/media/mix/MixProjectStoreTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/mix/MixProjectStoreSafetyTest.kt
     app/src/test/java/uz/ovozstudio/app/media/mix/MixTrackTextTest.kt
     app/src/test/java/uz/ovozstudio/app/media/tag/Id3v2ReaderTest.kt
     app/src/test/java/uz/ovozstudio/app/ui/mix/MixUiStateTest.kt

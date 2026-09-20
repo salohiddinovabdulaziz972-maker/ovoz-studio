@@ -35,6 +35,16 @@ object EpubTextReader {
     const val MAX_ENTRY_BYTES = 64L * 1024 * 1024
 
     /**
+     * Barcha o'qilgan hujjatlarning yig'indi hajmi chegarasi.
+     *
+     * Har bir fayl [MAX_ENTRY_BYTES] dan kichik bo'lsa ham, 2000 ta fayl
+     * ([MAX_DOCUMENTS]) yuzlab gigabayt beradi — zip-bomba shunday
+     * yig'iladi. Oddiy kitobning barcha XHTML fayllari birgalikda bir necha
+     * megabayt.
+     */
+    const val MAX_TOTAL_BYTES = 64L * 1024 * 1024
+
+    /**
      * O'qiladigan hujjatlar soni chegarasi. Minglab fayldan iborat arxiv
      * oddiy kitob emas — bu cheksiz kutishdan saqlaydi.
      */
@@ -54,7 +64,7 @@ object EpubTextReader {
 
     fun read(file: File): String = ZipEntries.open(file).use { zip -> read(zip) }
 
-    fun read(zip: ZipFile): String {
+    fun read(zip: ZipFile, maxTotalBytes: Long = MAX_TOTAL_BYTES): String {
         val container = ZipEntries.read(zip, CONTAINER_ENTRY, MAX_META_BYTES)
             ?: throw DocumentFormatException("EPUB ichida $CONTAINER_ENTRY topilmadi")
 
@@ -70,12 +80,15 @@ object EpubTextReader {
         val base = opfPath.substringBeforeLast('/', "")
         val out = StringBuilder()
         var documents = 0
+        var totalBytes = 0L
 
         for (id in packageHandler.spine) {
             if (documents >= MAX_DOCUMENTS) break
             val href = packageHandler.items[id] ?: continue
             val bytes = ZipEntries.read(zip, resolvePath(base, href), MAX_ENTRY_BYTES) ?: continue
             documents++
+            totalBytes += bytes.size
+            if (totalBytes > maxTotalBytes) throw DocumentTooLargeException(maxTotalBytes)
 
             val text = MarkupBlocks.parse(bytes, XHTML_RULES)
             if (text.isBlank()) continue

@@ -1,6 +1,9 @@
 package uz.ovozstudio.app.media.doc
 
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.zip.Deflater
+import java.util.zip.DeflaterOutputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -128,6 +131,44 @@ class PdfTextReaderTest {
         assertEquals("Salom", PdfTextReader.read(bytes))
     }
 
+    // --- dekompressiya bombasi ---
+
+    @Test
+    fun `dekompressiya bombasi xato beradi va ilovani yiqitmaydi`() {
+        // Kichik siqilgan oqim, ochilganda chegaradan katta — haqiqiy
+        // bombaning shakli. Ilgari chegara yo'q edi: 32 MB'lik PDF o'nlab
+        // gigabaytga ochilib, `OutOfMemoryError` berardi (u `Exception`
+        // emas, shuning uchun ilova yiqilardi).
+        val packed = deflatedZeros((PdfTextReader.MAX_STREAM_BYTES + 1).toInt())
+        assertTrue("namuna kichik bo'lishi kerak: ${packed.size}", packed.size < 1_000_000)
+
+        assertThrows(DocumentTooLargeException::class.java) {
+            PdfTextReader.read(pdfWithStreams(listOf(packed)))
+        }
+    }
+
+    @Test
+    fun `barcha oqimlar yigindisi chegaradan oshsa xato beradi`() {
+        // Har bir oqim kichik (600 bayt), lekin uchtasi birga 1000 baytlik
+        // chegaradan katta: minglab kichik oqimdan iborat bomba shunday
+        // yig'iladi.
+        val stream = deflatedZeros(600)
+        val bytes = pdfWithStreams(List(3) { stream })
+
+        assertThrows(DocumentTooLargeException::class.java) {
+            PdfTextReader.read(bytes, maxInflatedBytes = 1_000L)
+        }
+    }
+
+    @Test
+    fun `chegara ichidagi siqilgan oqim odatdagidek ochiladi`() {
+        // Chegara oddiy hujjatga tegmasligi kerak.
+        val content = "BT /F1 12 Tf (Salom) Tj ET"
+        val packed = deflate(content.toByteArray(Charsets.ISO_8859_1))
+
+        assertEquals("Salom", PdfTextReader.read(pdfWithStreams(listOf(packed))))
+    }
+
     // --- qo'lda yasalgan eng kichik PDF'lar ---
     // Ular faqat xato yo'llarini sinash uchun: matn to'g'riligi haqida
     // hech qanday da'vo yo'q (u fpdf2 namunalarida tekshiriladi).
@@ -175,5 +216,50 @@ class PdfTextReaderTest {
                 "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
             )
         )
+    }
+
+    /** [data] ni Flate bilan siqadi. */
+    private fun deflate(data: ByteArray): ByteArray {
+        val out = ByteArrayOutputStream()
+        DeflaterOutputStream(out).use { it.write(data) }
+        return out.toByteArray()
+    }
+
+    /** [size] bayt nolni siqadi: natija ~1000 marta kichik bo'ladi. */
+    private fun deflatedZeros(size: Int): ByteArray {
+        val out = ByteArrayOutputStream()
+        DeflaterOutputStream(out, Deflater(Deflater.BEST_COMPRESSION)).use { stream ->
+            val chunk = ByteArray(64 * 1024)
+            var left = size
+            while (left > 0) {
+                val count = minOf(left, chunk.size)
+                stream.write(chunk, 0, count)
+                left -= count
+            }
+        }
+        return out.toByteArray()
+    }
+
+    /**
+     * Har bir sahifasi bittadan Flate oqimli PDF: 1 — katalog, 2 — sahifalar
+     * daraxti, keyin (sahifa, oqim) juftlari, oxirida shrift.
+     */
+    private fun pdfWithStreams(streams: List<ByteArray>): ByteArray {
+        val pageCount = streams.size
+        val fontNumber = 2 + pageCount * 2 + 1
+        val kids = (0 until pageCount).joinToString(" ") { "${3 + it * 2} 0 R" }
+
+        val objects = ArrayList<String>()
+        objects += "<< /Type /Catalog /Pages 2 0 R >>"
+        objects += "<< /Type /Pages /Kids [$kids] /Count $pageCount >>"
+        for ((i, packed) in streams.withIndex()) {
+            val streamNumber = 4 + i * 2
+            objects += "<< /Type /Page /Parent 2 0 R /Contents $streamNumber 0 R " +
+                "/Resources << /Font << /F1 $fontNumber 0 R >> >> >>"
+            objects += "<< /Filter /FlateDecode /Length ${packed.size} >>\nstream\n" +
+                String(packed, Charsets.ISO_8859_1) + "\nendstream"
+        }
+        objects += "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+        return pdf(objects).toByteArray(Charsets.ISO_8859_1)
     }
 }

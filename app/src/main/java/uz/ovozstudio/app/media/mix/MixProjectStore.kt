@@ -1,5 +1,6 @@
 package uz.ovozstudio.app.media.mix
 
+import uz.ovozstudio.app.util.AtomicFileWriter
 import java.io.File
 import java.util.Properties
 
@@ -32,8 +33,13 @@ class MixProjectStore(private val file: File) {
             properties.setProperty("$index.$KEY_MUTED", track.muted.toString())
             properties.setProperty("$index.$KEY_SOLO", track.solo.toString())
         }
-        file.parentFile?.mkdirs()
-        file.outputStream().use { properties.store(it, "OvozStudio aralashma loyihasi") }
+        // Har o'zgarishda darhol saqlanadi, ya'ni yozish paytida uzilish
+        // ehtimoli kichik emas. Vaqtinchalik fayl + `rename`: uzilsa yoki
+        // disk to'lsa, avvalgi loyiha butun qoladi (oddiy `outputStream()`
+        // faylni avval bo'shatardi va butun loyiha yo'qolardi).
+        AtomicFileWriter.write(file) { output ->
+            properties.store(output, "OvozStudio aralashma loyihasi")
+        }
     }
 
     /** Fayl bo'lmasa yoki o'qilmasa — bo'sh loyiha. */
@@ -43,7 +49,11 @@ class MixProjectStore(private val file: File) {
         val loaded = runCatching { file.inputStream().use { properties.load(it) } }.isSuccess
         if (!loaded) return MixProject()
 
-        val count = properties.getProperty(KEY_COUNT)?.toIntOrNull() ?: return MixProject()
+        // `tracks=2000000000` yozilgan buzuq fayl millionlab bo'sh qidiruv
+        // bilan ochilishni osib qo'yardi. Haqiqiy loyihada MAX_TRACKS tadan
+        // ortiq yo'l bo'lmaydi; zaxira chegara bo'shliqlar uchun.
+        val count = (properties.getProperty(KEY_COUNT)?.toIntOrNull() ?: return MixProject())
+            .coerceIn(0, MAX_SCANNED_INDEXES)
         val tracks = (0 until count).mapNotNull { index -> readTrack(properties, index) }
         val master = properties.getProperty(KEY_MASTER)?.toFloatOrNull() ?: 0f
         return MixProject(
@@ -75,6 +85,8 @@ class MixProjectStore(private val file: File) {
     }
 
     private companion object {
+        /** `tracks=` qiymati shundan katta bo'lsa, shuncha indeksgina ko'riladi. */
+        const val MAX_SCANNED_INDEXES = 256
         const val KEY_MASTER = "master"
         const val KEY_COUNT = "tracks"
         const val KEY_NAME = "name"

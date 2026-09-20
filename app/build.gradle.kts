@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Tez reliz (R8 bilan siqilgan): faqat so'ralganda — `-Povoz.fastRelease=true`.
+// Bayroqsiz hamma narsa avvalgidek: debug va sinovlar o'zgarmaydi.
+val fastRelease = providers.gradleProperty("ovoz.fastRelease").orNull == "true"
+
 android {
     namespace = "uz.ovozstudio.app"
     compileSdk = 35
@@ -28,8 +32,22 @@ android {
         }
         release {
             // V1 hali imzolanmagan debug build sifatida tarqatiladi,
-            // shuning uchun minify o'chirilgan — xatolarni topish osonroq.
-            isMinifyEnabled = false
+            // shuning uchun standart holda minify o'chirilgan — xatolarni
+            // topish osonroq.
+            //
+            // `-Povoz.fastRelease=true` bilan esa R8 yoqiladi: kod
+            // optimallashtiriladi va ishlatilmagan qismlar tashlanadi. Debug
+            // build ishlaydigan Compose ilovasi uchun eng sezilarli sekinlik
+            // manbai — aynan optimallashtirilmagan kod, shuning uchun tez
+            // reliz debug'dan sezilarli tez ishlaydi.
+            isMinifyEnabled = fastRelease
+            isShrinkResources = fastRelease
+            if (fastRelease) {
+                // SINOV uchun: debug kaliti bilan imzolanadi, ya'ni APK o'rnatiladi,
+                // lekin do'kon yoki keyingi yangilash uchun yaroqsiz. Haqiqiy
+                // reliz uchun o'zingizning kalitingiz kerak.
+                signingConfig = signingConfigs.getByName("debug")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

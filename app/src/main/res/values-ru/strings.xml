@@ -34,6 +34,10 @@
     <string name="record_notification_channel_desc">Показывается, пока идёт запись. Не издаёт звука.</string>
     <string name="record_notification_title">Идёт запись</string>
     <string name="record_notification_text">Запись продолжается, когда приложение свёрнуто. Чтобы остановить, откройте приложение.</string>
+    <string name="work_notification_channel">Создание книги</string>
+    <string name="work_notification_channel_desc">Показывается, пока создаётся книга. Не издаёт звука.</string>
+    <string name="work_notification_title">Книга создаётся</string>
+    <string name="work_notification_text">Работа продолжается, даже если приложение свёрнуто или экран выключен. Чтобы остановить, откройте приложение.</string>
     <string name="record_background_failed">Не удалось включить фоновый режим — при выключении экрана запись может прерваться.</string>
     <string name="record_permission_title">Нужен доступ к микрофону</string>
     <string name="record_permission_message">Чтобы записывать аудио, разрешите доступ к микрофону.</string>

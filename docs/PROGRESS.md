@@ -955,6 +955,96 @@ Shuningdek bu **kanal usuli**, ya'ni cholg'u tembr bo'yicha
 ajratilmaydi — markazda turgan cholg'u vokal bilan birga o'chadi (D
 bo'limida o'lchandi).
 
+### O'n birinchi tekshiruv — xavfsizlik, chidamlilik va tezlik (2026-09-20)
+
+**Muhim ogohlantirish.** Bu tekshiruv kodni **o'qib chiqish** bilan bajarildi,
+kompilyator va Android SDK yo'q muhitda: o'zgarishlar **yig'ilmadi**, sinovlar
+**ishga tushirilmadi**. Birinchi ish — `bash bin/run-tests.sh`,
+`bash bin/typecheck-android.sh` va CI. Yig'ishdan chiqadigan har qanday xato
+shu bo'limdagi o'zgarishlardan biri bo'lishi mumkin — avval shularni
+tekshiring. Tezlik haqidagi raqamlar **qurilmada o'lchanmagan**: ular
+tuzilishdan chiqarilgan taxmin.
+
+**Xavfsizlik**
+
+25. **`FileProvider` ichki papkaning butun ildizini ochib qo'ygan edi**
+    (`<files-path path="." />`). U yerda sozlamalar, aralashma loyihasi va
+    tinglash joyi turadi. Ulashiladigan fayllar esa faqat `OvozStudio/` ichida.
+    Endi yo'l `OvozStudio/` bilan cheklangan.
+26. **`allowBackup="true"` edi.** Avto-zaxira tashqi papkadagi fayllarni ham
+    oladi, ya'ni mikrofon yozuvlari va yuklangan hujjatlar bulutga yoki
+    `adb backup` orqali kompyuterga chiqib ketishi mumkin edi. Endi
+    `false`. (Kerak bo'lsa, faqat sozlama faylini qaytarib yoqish mumkin —
+    `dataExtractionRules` bilan; hozircha keraksiz deb topildi.)
+27. **PDF dekompressiya bombasi.** `PdfTextReader.inflate` ochilgan hajmni
+    cheklamasdi: 32 MB'lik PDF o'nlab gigabaytga ochilib, `OutOfMemoryError`
+    berardi. U `Exception` emas, `BookViewModel` esa faqat `Exception` ushlardi —
+    ilova yiqilardi. Endi bitta oqim uchun 32 MB va butun hujjat uchun 256 MB
+    chegara bor, oshsa `DocumentTooLargeException`. `Inflater.end()` endi xato
+    bo'lganda ham chaqiriladi.
+28. **EPUB'da umumiy hajm chegarasi yo'q edi.** Har bir fayl uchun 64 MB va
+    2000 tagacha fayl — yig'indisi cheksiz. Endi umumiy chegara 64 MB.
+29. **`OutOfMemoryError` import paytida ushlanmasdi.** Endi u «hujjat juda
+    katta» xatosiga aylanadi.
+
+**Chidamlilik**
+
+30. **Yozish dvigateli xatodan keyin qotib qolardi.** Yozuvchi oqim xato
+    bilan tugasa, `running` `true` qolardi, `AudioRecord` va fayl ochiq
+    turardi, keyingi «Yozish» esa «allaqachon ketmoqda» deb rad etilardi.
+    Endi oqim mikrofonni darrov to'xtatadi, `RecordViewModel` dvigatelni
+    bo'shatadi va xatogacha yozilgan qismni saqlaydi.
+31. **`AudioRecord.read` xato kodi qaytarsa (masalan, `ERROR_DEAD_OBJECT`),
+    sikl protsessorni to'liq band qilib aylanardi** va foydalanuvchiga hech
+    narsa aytilmasdi. Endi `ERROR_DEAD_OBJECT` yoki ketma-ket 50 ta xato
+    yozishni to'xtatib, xabar beradi.
+32. **`start()` va `stop()` xatoda resurs oqizardi.** Fayl ochilmasa
+    (`WavWriter` istisno bersa) `AudioRecord` bo'shatilmasdi; disk to'lganda
+    `stop()` ichida `writer.close()` istisno berib, ilovani yiqitardi va
+    mikrofonni bo'shatmasdi. `WavWriter.close()` ham xatoda oqimni yopmasdi.
+    Belgilar ro'yxati (`markers`) ikki oqimdan ishlatilardi — endi
+    `CopyOnWriteArrayList`.
+33. **Rad etilgan hujjat nusxasi `manba/` da qolib ketardi**
+    (`BookViewModel.Imported.of`). `AndroidAudioImporter` buni to'g'ri
+    o'chirardi — endi naqsh bir xil.
+34. **`MixProjectStore.save` va `AppSettingsStore.save` faylni avval bo'shatib,
+    keyin yozardi.** Uzilish yoki disk to'lishi butun loyiha yoki sozlamani
+    yo'qotardi (va «yozib bo'lmasa o'zgarish qo'llanmaydi» qoidasini
+    buzardi). Endi vaqtinchalik fayl + `fsync` + `rename`
+    (`util/AtomicFileWriter.kt`).
+35. **`tracks=2000000000` yozilgan buzuq loyiha fayli ochilishni osib qo'yardi**
+    — endi qidiruv 256 indeks bilan cheklangan.
+
+**Tezlik** (qurilmada o'lchanmagan)
+
+36. **Bob kodlash sintez bilan bir vaqtda ketadi** (`BookBuilder`). Ilgari
+    ikkalasi navbat bilan ishlardi: umumiy vaqt = sintez + kodlash. Endi bob
+    kodlash alohida oqimda, keyingi bobning sintezi paytida bajariladi:
+    umumiy vaqt ~ ulardan kattasi. Bir vaqtda bitta bob kodlanadi (navbat
+    o'sib, diskni to'ldirmasligi uchun). Kodlash to'xtatishga javob beradi.
+37. **Kitob MP3'i LAME sifat darajasi 2 → 5** (`ChapterAssembler.MP3_QUALITY`).
+    Nutq uchun 128 kbit/s da farq eshitilmaydi, kodlash esa sezilarli tez.
+    Musiqa eksporti va konvertor 2 da qoldi.
+38. **Kitob yig'ish ekran o'chganda ham davom etadi** (`media/WorkService.kt`).
+    Ilgari faqat yozish fon xizmatiga ega edi: kitob yig'ishda ekran
+    o'chsa protsessor uxlab, ish to'xtab qolardi, jarayon esa o'ldirilishi
+    mumkin edi. Endi `dataSync` turidagi foreground xizmat va
+    `PARTIAL_WAKE_LOCK` (5,5 soat chegara bilan). Yangi ruxsatlar:
+    `WAKE_LOCK`, `FOREGROUND_SERVICE_DATA_SYNC` (ikkalasi oddiy: so'ralmaydi).
+39. **Bob bo'laklari bob tugashi bilanoq o'chadi.** Ilgari butun kitob
+    tugagunga qadar keshda turardi (10 soatlik kitobda ~1,6 GB).
+40. **Nusxalash buferi 8 KB → 64 KB** (import).
+41. **`-Povoz.fastRelease=true` bayrog'i** (Gradle) va CI'da sinov job'i
+    `release`: R8 bilan siqilgan reliz. `continue-on-error` — yiqilsa ham
+    debug yig'ish buzilmaydi. Standart yig'ishlar o'zgarmagan.
+
+**Tavsiya (qilinmadi).** Debug APK har CI yurishida yangi kalit bilan
+imzolanadi — yangilash uchun oldingisini o'chirish kerak va yozuvlar ham
+o'chadi: barqaror imzo (kalit GitHub Secrets'da) kerak. Reliz uchun R8
+qoidalari qurilmada sinalishi shart. WSOLA `bestShift` va FFT tezlashtirish
+mumkin (siljuvchi energiya, haqiqiy-kirish FFT), lekin natijani biroz
+o'zgartiradi — avval qurilmada o'lchab, keyin qaror qilish kerak.
+
 ## Yo'l xaritasi — egasining tavsifidagi imkoniyatlar
 
 Har bir band — egasi bergan tavsifning bo'limi. Tartib: avval mavjud
@@ -1188,6 +1278,31 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   qo'llanmaydi va ekran buni aytadi — lekin sababini aniqlash imkoni yo'q
   (joy yo'qmi, ruxsatmi). Xato matni ikkalasini ham qamrab oladi.
 
+## Server (kelajak) — qaror va reja
+
+**Hozir: kod ham, `INTERNET` ruxsati ham yo'q — ataylab.** Server bo'lmaguncha
+foydasi yo'q, ruxsat esa ilovaga ishonchni kamaytiradi va hujum yuzasini
+oshiradi.
+
+Server nimani tezlashtiradi: **matn → audio** (neyron ovoz) va og'ir neyron
+DSP. Nimani **emas**: kesish, ekvalayzer, tezlik — ularni mahalliy bajarish
+faylni yuklab-tushirishdan tezroq.
+
+Qo'shilganda kerak bo'ladigan ish (ortiqcha qadamsiz):
+- `VoiceEngine` interfeysi ortiga `RemoteVoiceEngine` (interfeys tayyor);
+- faqat HTTPS (`network_security_config`: cleartext yo'q), token
+  Android Keystore'da shifrlangan; ilova o'z-o'zidan hech narsa yubormaydi;
+- so'rov: **matn ketadi, siqilgan audio (MP3/Opus) qaytadi** — yuklash kichik;
+  natija oqim bilan (birinchi bo'lak darrov), bo'laklar parallel, natija
+  keshlanadi;
+- oflayn yoki sekin bo'lsa — qurilmaning o'z ovoziga qaytish;
+- yoqish — bitta tugma (sozlamada), manzil `BuildConfig` da.
+
+Ochiq kod xavfsizligi: sirlar (token, kalit) repoga tushmaydi; klientga
+ishonib bo'lmaydi (uni istagan kishi o'zgartirib yig'adi), shuning uchun
+autentifikatsiya, limit va hajm tekshiruvi **serverda**. Server kodi ochiq
+bo'lsa, tarmoq orqali ishlatishni ham qamrab oladigan **AGPL-3.0** mos.
+
 ## Ochiq savollar
 
 - Ilovaning yakuniy nomi va paket nomi (`uz.ovozstudio.app` — vaqtinchalik).
@@ -1195,6 +1310,11 @@ imkoniyatni mustahkamlash, keyin yangisini qo'shish.
   talabi «hech kim reklama joylolmasin». GPL yopiq kodli forkni taqiqlaydi,
   ya'ni reklamali yopiq nusxa paydo bo'lishi huquqiy jihatdan mumkin emas.
   MIT bu talabni bajarmasdi.
+  **Aniqlik (2026-09-20):** GPL faqat *yopiq kodli* forkni taqiqlaydi. U
+  reklamali, lekin **ochiq kodli** forkni taqiqlamaydi — reklama qo'shish
+  GPL bo'yicha ruxsat etilgan. «Hech kim reklama joylolmasin» talabi
+  litsenziya bilan to'liq bajarilmaydi; nom va logotipni (товарный знак)
+  himoyalash alohida yo'l. Muhim bo'lsa, yurist bilan maslahatlashing.
 - Ovozlar: qurilma TTS'i bilan boshlanadi; bulut AI ovoziga o'tish qarori
   ovoz sifati sinovidan keyin.
 - Fayllarni «Musiqa» papkasiga chiqarish (MediaStore) kerakmi — hozir

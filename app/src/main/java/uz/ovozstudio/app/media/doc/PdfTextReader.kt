@@ -44,6 +44,27 @@ object PdfTextReader {
     /** Bitta oqimdan chiqishi mumkin bo'lgan eng katta matn. */
     private const val MAX_STREAM_CHARS = 4 * 1024 * 1024
 
+    /**
+     * Bitta oqim ochilgandan keyingi eng katta hajm.
+     *
+     * Nega kerak: Flate siqishi ~1000 martagacha boradi, ya'ni ichki
+     * hajmi 32 MB bo'lgan PDF (`MAX_BYTES`) ochilganda o'nlab gigabayt
+     * bo'lishi mumkin («dekompressiya bombasi»). Chegarasiz ochish
+     * `OutOfMemoryError` beradi — u `Exception` emas, shuning uchun
+     * ilova yiqilardi. Oddiy sahifa mazmuni bir necha yuz kilobayt.
+     */
+    const val MAX_STREAM_BYTES = 32L * 1024 * 1024
+
+    /**
+     * Butun hujjat bo'yicha ochilgan oqimlarning yig'indi chegarasi.
+     * Har bir oqim [MAX_STREAM_BYTES] dan kichik bo'lsa ham, ularning
+     * minglabi birga bomba bo'la oladi.
+     */
+    const val MAX_INFLATED_TOTAL_BYTES = 256L * 1024 * 1024
+
+    /** Ochilgan oqim uchun boshlang'ich sig'im: o'sishi kerak bo'lsa, o'zi o'sadi. */
+    private const val INITIAL_STREAM_CAPACITY = 1L shl 20
+
     private val PDF_HEADER = "%PDF-".toByteArray(Charsets.US_ASCII)
 
     fun read(file: File): String {
@@ -51,11 +72,16 @@ object PdfTextReader {
         return read(file.readBytes())
     }
 
-    fun read(bytes: ByteArray): String {
+    /**
+     * [maxInflatedBytes] — barcha oqimlar ochilgandan keyingi umumiy hajm
+     * chegarasi ([MAX_INFLATED_TOTAL_BYTES]). Parametr sinov uchun: haqiqiy
+     * chegarani tekshirish yuzlab megabayt ishlatardi.
+     */
+    fun read(bytes: ByteArray, maxInflatedBytes: Long = MAX_INFLATED_TOTAL_BYTES): String {
         if (!startsWith(bytes, PDF_HEADER)) {
             throw DocumentFormatException("Bu fayl PDF emas: sarlavhasi topilmadi")
         }
-        val text = Parser(String(bytes, Charsets.ISO_8859_1)).extractText()
+        val text = Parser(String(bytes, Charsets.ISO_8859_1), maxInflatedBytes).extractText()
         if (text.isBlank()) {
             throw DocumentTextMissingException(
                 "PDF ichida matn topilmadi — u skaner qilingan rasm bo'lishi mumkin"
@@ -92,10 +118,16 @@ object PdfTextReader {
      * Holat sinf ichida saqlanadi, chunki obyektlar bir-biriga havola
      * qiladi (`/ToUnicode 12 0 R`) — har bir qadam oldingisiga tayanadi.
      */
-    private class Parser(private val text: String) {
+    private class Parser(
+        private val text: String,
+        private val maxInflatedBytes: Long = MAX_INFLATED_TOTAL_BYTES,
+    ) {
 
         private val objects = LinkedHashMap<Int, Obj>()
         private val fontNames = HashMap<String, Font>()
+
+        /** Shu hujjat bo'yicha hozirgacha ochilgan baytlar (barcha oqimlar yig'indisi). */
+        private var inflatedTotal = 0L
 
         fun extractText(): String {
             scanObjects()
@@ -181,23 +213,39 @@ object PdfTextReader {
             }
         }
 
-        private fun inflate(raw: ByteArray): ByteArray? = try {
+        private fun inflate(raw: ByteArray): ByteArray? {
             val inflater = Inflater()
-            inflater.setInput(raw)
-            val out = ByteArrayOutputStream(raw.size * 4 + 64)
-            val buffer = ByteArray(16 * 1024)
-            while (!inflater.finished()) {
-                val got = inflater.inflate(buffer)
-                if (got == 0) {
-                    if (inflater.needsInput() || inflater.needsDictionary()) break
-                } else {
-                    out.write(buffer, 0, got)
+            return try {
+                inflater.setInput(raw)
+                // Boshlang'ich sig'im ataylab kichik: `raw.size * 4` kabi
+                // taxmin 32 MB'lik oqim uchun darrov 128 MB ajratardi.
+                val capacity = minOf(raw.size * 4L + 64L, INITIAL_STREAM_CAPACITY).toInt()
+                val out = ByteArrayOutputStream(capacity)
+                val buffer = ByteArray(16 * 1024)
+                var streamTotal = 0L
+                while (!inflater.finished()) {
+                    val got = inflater.inflate(buffer)
+                    if (got == 0) {
+                        if (inflater.needsInput() || inflater.needsDictionary()) break
+                    } else {
+                        streamTotal += got
+                        inflatedTotal += got
+                        // Chegara yozishdan OLDIN tekshiriladi: bomba xotiraga
+                        // tushib ulgurmaydi.
+                        if (streamTotal > MAX_STREAM_BYTES) throw DocumentTooLargeException(MAX_STREAM_BYTES)
+                        if (inflatedTotal > maxInflatedBytes) {
+                            throw DocumentTooLargeException(maxInflatedBytes)
+                        }
+                        out.write(buffer, 0, got)
+                    }
                 }
+                if (out.size() == 0) null else out.toByteArray()
+            } catch (error: DataFormatException) {
+                null
+            } finally {
+                // Xato bo'lganda ham bo'shatiladi: `Inflater` native xotira ushlaydi.
+                inflater.end()
             }
-            inflater.end()
-            if (out.size() == 0) null else out.toByteArray()
-        } catch (error: DataFormatException) {
-            null
         }
 
         /** `ASCIIHexDecode`: baytlar o'n oltilik yozuvda, oxirida `>`. */

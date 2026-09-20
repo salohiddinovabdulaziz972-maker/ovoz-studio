@@ -64,3 +64,35 @@ jobs:
           name: ovozstudio-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+  # TAJRIBA: R8 bilan siqilgan reliz. U debug'dan tezroq ishlaydi (kod
+  # optimallashtiriladi), lekin hali sinalmagan — shuning uchun
+  # `continue-on-error`: yiqilsa ham asosiy yig'ish (debug) buzilmaydi.
+  # APK debug kaliti bilan imzolanadi: faqat tezlikni solishtirish uchun.
+  release:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.11.1"
+
+      - name: Build fast release APK (R8)
+        run: gradle assembleRelease -Povoz.fastRelease=true --no-daemon --stacktrace
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: ovozstudio-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

@@ -34,6 +34,10 @@
     <string name="record_notification_channel_desc">Shown while recording continues. It makes no sound.</string>
     <string name="record_notification_title">Recording in progress</string>
     <string name="record_notification_text">Recording continues while the app is in the background. Open the app to stop it.</string>
+    <string name="work_notification_channel">Building audiobook</string>
+    <string name="work_notification_channel_desc">Shown while an audiobook is being built. It makes no sound.</string>
+    <string name="work_notification_title">Building audiobook</string>
+    <string name="work_notification_text">Work continues while the app is in the background or the screen is off. Open the app to stop it.</string>
     <string name="record_background_failed">Could not enable background mode — recording may stop if the screen turns off.</string>
     <string name="record_permission_title">Microphone access needed</string>
     <string name="record_permission_message">To record audio, allow microphone access.</string>

@@ -60,7 +60,7 @@ class AndroidAudioImporter(private val store: RecordingStore) {
 
         try {
             context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(copy).use { output -> input.copyTo(output) }
+                FileOutputStream(copy).use { output -> input.copyTo(output, 64 * 1024) }
             } ?: run {
                 copy.delete()
                 return ImportOutcome.Rejected(ImportFailure.READ_FAILED)

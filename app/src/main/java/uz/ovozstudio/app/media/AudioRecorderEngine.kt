@@ -8,6 +8,8 @@ import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.NoiseSuppressor
 import android.util.Log
 import java.io.File
+import java.io.IOException
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.max
@@ -44,7 +46,9 @@ class AudioRecorderEngine {
 
     private val running = AtomicBoolean(false)
     private val paused = AtomicBoolean(false)
-    private val markers = mutableListOf<Long>()
+    // Belgi UI oqimidan qo'shiladi, `stop()` esa boshqa oqimdan o'qiydi:
+    // oddiy ro'yxatda bu ConcurrentModificationException berardi.
+    private val markers = CopyOnWriteArrayList<Long>()
 
     /** Yozuvchi oqim o'qiydigan maydon — shuning uchun @Volatile. */
     @Volatile
@@ -60,6 +64,7 @@ class AudioRecorderEngine {
      * Yozishni boshlaydi. Xato bo'lsa `null` emas, istisno tashlaydi —
      * chaqiruvchi tomon uni ushlab, foydalanuvchiga ko'rsatadi.
      */
+    @Synchronized
     @SuppressLint("MissingPermission")
     fun start(config: RecorderConfig, dest: File, listener: Listener) {
         check(!running.get()) { "Yozish allaqachon ketmoqda" }
@@ -95,7 +100,15 @@ class AudioRecorderEngine {
             throw IllegalStateException("Mikrofon ochilmadi")
         }
 
-        val activeWriter = WavWriter(dest, sampleRate, config.channels, config.bitDepth)
+        val activeWriter = try {
+            WavWriter(dest, sampleRate, config.channels, config.bitDepth)
+        } catch (error: Exception) {
+            // Fayl ochilmadi (joy yo'q, papka yopiq). Mikrofon bo'shatilmasa,
+            // u keyingi urinishgacha band bo'lib qolardi.
+            audioRecord.release()
+            runCatching { dest.delete() }
+            throw error
+        }
         record = audioRecord
         writer = activeWriter
         currentFile = dest
@@ -103,12 +116,13 @@ class AudioRecorderEngine {
         framesWritten = 0
         paused.set(false)
 
-        applyAudioEffects(audioRecord.audioSessionId, config)
-
-        // Yozishni boshlash oxirgi qadam: agar u xato bersa, ochilgan resurslar
-        // shu yerda bo'shatiladi. Aks holda `running` abadiy `true` bo'lib qolardi
-        // va keyingi urinish «yozish allaqachon ketmoqda» xatosi bilan yopilardi.
+        // Effektlarni ulash ham, yozishni boshlash ham xato berishi mumkin:
+        // ikkalasi bitta himoya ostida. Xato bo'lsa ochilgan resurslar shu
+        // yerda bo'shatiladi — aks holda `running` abadiy `true` bo'lib
+        // qolardi va keyingi urinish «yozish allaqachon ketmoqda» xatosi
+        // bilan yopilardi.
         try {
+            applyAudioEffects(audioRecord.audioSessionId, config)
             audioRecord.startRecording()
         } catch (error: Exception) {
             releaseAfterFailedStart()
@@ -122,10 +136,27 @@ class AudioRecorderEngine {
 
         thread = Thread({
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO)
+            var failedReads = 0
             try {
                 while (running.get()) {
                     val read = audioRecord.read(readBuffer, 0, readBuffer.size, AudioRecord.READ_BLOCKING)
-                    if (read <= 0) continue
+                    if (read < 0) {
+                        // Manfiy qiymat — XATO KODI, «hozircha ma'lumot yo'q»
+                        // emas. Uni e'tiborsiz qoldirsak, sikl to'xtovsiz
+                        // aylanib protsessorni to'liq band qiladi (mikrofonni
+                        // boshqa ilova olganda, quloqchin uzilganda) —
+                        // foydalanuvchi esa yozuv ketmayotganini bilmaydi.
+                        // `running` yolg'on bo'lsa, bu oddiy to'xtatish.
+                        failedReads++
+                        if (running.get() &&
+                            (read == AudioRecord.ERROR_DEAD_OBJECT || failedReads >= MAX_READ_FAILURES)
+                        ) {
+                            throw IllegalStateException("Mikrofondan ovoz kelmayapti (kod $read)")
+                        }
+                        continue
+                    }
+                    failedReads = 0
+                    if (read == 0) continue
                     if (paused.get()) continue // pauza paytida yozilmaydi
 
                     var peak = 0f
@@ -141,6 +172,10 @@ class AudioRecorderEngine {
                 }
             } catch (error: Exception) {
                 Log.e(TAG, "Yozish jarayonida xatolik", error)
+                // Mikrofon darhol bo'shatiladi: oqim tugadi, lekin `AudioRecord`
+                // hali yozib turibdi (tizim mikrofon belgisi yonib qoladi).
+                // Yadro holatini esa `stop()` tozalaydi — uni tinglovchi chaqiradi.
+                runCatching { audioRecord.stop() }
                 listener.onError(error.message ?: "Yozishda xatolik")
             }
         }, "ovoz-recorder").apply { start() }
@@ -161,7 +196,15 @@ class AudioRecorderEngine {
         return at
     }
 
-    /** Yozishni to'xtatadi va tayyor faylni qaytaradi. */
+    /**
+     * Yozishni to'xtatadi va tayyor faylni qaytaradi.
+     *
+     * Yozuvchi oqim xato bilan o'zi tugagan bo'lsa ham, mikrofon va fayl
+     * ochiq qoladi va `running` `true` turadi — shuning uchun tinglovchi
+     * xatodan keyin ham shu metodni chaqirishi shart. Aks holda keyingi
+     * yozish «allaqachon ketmoqda» deb rad etilardi.
+     */
+    @Synchronized
     fun stop(): Result? {
         if (!running.get()) return null
         running.set(false)
@@ -185,10 +228,19 @@ class AudioRecorderEngine {
         }
         thread = null
 
-        writer?.close()
+        // Fayl yopilganda joy yetmay qolishi mumkin (disk to'lgan). Bu xato
+        // mikrofonni bo'shatishga xalaqit bermasligi kerak: aks holda u band
+        // qolardi, «to'xtatish» tugmasi esa ilovani yiqitardi. Yozilgan qism
+        // baribir o'qiladi: `WavFile` sarlavha noto'g'ri bo'lsa, uzunlikni
+        // fayl hajmidan oladi.
+        try {
+            writer?.close()
+        } catch (error: IOException) {
+            Log.w(TAG, "Yozuv faylini yopib bo'lmadi (joy yetmadimi?)", error)
+        }
         writer = null
 
-        record?.release()
+        runCatching { record?.release() }
         record = null
         releaseAudioEffects()
 
@@ -230,6 +282,9 @@ class AudioRecorderEngine {
     private companion object {
         const val TAG = "AudioRecorderEngine"
         const val FRAMES_PER_READ = 2048
+
+        /** Ketma-ket shuncha xato kodidan keyin yozish to'xtatiladi va xato aytiladi. */
+        const val MAX_READ_FAILURES = 50
         const val STOP_TIMEOUT_MS = 3_000L
     }
 }

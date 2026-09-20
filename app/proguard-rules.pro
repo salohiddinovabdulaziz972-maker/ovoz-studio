@@ -1,4 +1,5 @@
-# V1 uchun minify o'chirilgan; qoidalar keyingi bosqich uchun zaxira.
+# Standart yig'ishda minify o'chirilgan. `-Povoz.fastRelease=true` bilan
+# (tez reliz) R8 yoqiladi va shu qoidalar ishlatiladi.
 -keep class uz.ovozstudio.app.** { *; }
 
 # --- jump3r (MP3 kodlovchisi) ---

@@ -1,5 +1,6 @@
 package uz.ovozstudio.app.settings
 
+import uz.ovozstudio.app.util.AtomicFileWriter
 import java.io.File
 import java.util.Properties
 
@@ -13,7 +14,8 @@ import java.util.Properties
  * yaratadi, u esa `attachBaseContext` da faylni **darhol** o'qiydi. Yozuv
  * fonda bo'lsa, poyga chiqardi: qayta ochilgan ekran eski tilni o'qib,
  * foydalanuvchi tanlagan til «o'z-o'zidan qaytib ketgandek» ko'rinardi.
- * Fayl ~100 bayt, ya'ni bitta yozuv bir millisekunddan qisqa.
+ * Fayl ~100 bayt; yozuv (diskka tushirish bilan) bir necha millisekund
+ * oladi. Til almashtirish kam bo'ladigan amal, shuning uchun bu sezilmaydi.
  *
  * Buzuq fayl — buzuq sozlama emas, **zaxira sozlama**: o'qib bo'lmasa
  * standart qiymatlar olinadi. Sozlama fayli uchun xato oynasi ko'rsatish
@@ -38,8 +40,12 @@ class AppSettingsStore(private val file: File) {
         val properties = Properties()
         properties.setProperty(KEY_LANGUAGE, settings.language.tag ?: SYSTEM_VALUE)
         properties.setProperty(KEY_SIMPLIFIED, settings.simplified.toString())
-        file.parentFile?.mkdirs()
-        file.outputStream().use { properties.store(it, "OvozStudio sozlamalari") }
+        // Vaqtinchalik fayl + `rename`: yozish yiqilsa (joy yo'q), eski
+        // sozlama butun qoladi — «yozib bo'lmasa o'zgarish qo'llanmaydi»
+        // qoidasi shu bilan haqiqatan bajariladi.
+        AtomicFileWriter.write(file) { output ->
+            properties.store(output, "OvozStudio sozlamalari")
+        }
     }
 
     companion object {

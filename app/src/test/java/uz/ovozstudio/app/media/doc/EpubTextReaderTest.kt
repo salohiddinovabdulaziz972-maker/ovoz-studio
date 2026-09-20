@@ -2,6 +2,7 @@ package uz.ovozstudio.app.media.doc
 
 import java.io.File
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -194,5 +195,39 @@ class EpubTextReaderTest {
         assertEquals("1+2.xhtml", percentDecode("1%2B2.xhtml"))
         // Ko'p baytli belgi (o'zbekcha so'z) to'liq yig'iladi.
         assertEquals("soʻz", percentDecode("so%CA%BBz"))
+    }
+
+    @Test
+    fun `hujjatlar yigindisi chegaradan oshsa xato beradi`() {
+        // Har bir fayl alohida chegaradan ancha kichik, lekin ular birga
+        // katta: minglab fayldan iborat zip-bomba shunday yig'iladi.
+        val body = "<p>" + "a".repeat(300) + "</p>"
+        val file = zipOf(
+            "META-INF/container.xml" to container,
+            "OEBPS/content.opf" to opf("bob1", "bob2", "bob3"),
+            "OEBPS/bob1.xhtml" to xhtml("Bir", body),
+            "OEBPS/bob2.xhtml" to xhtml("Ikki", body),
+            "OEBPS/bob3.xhtml" to xhtml("Uch", body),
+        )
+
+        ZipFile(file).use { zip ->
+            assertThrows(DocumentTooLargeException::class.java) {
+                EpubTextReader.read(zip, maxTotalBytes = 1_000L)
+            }
+        }
+    }
+
+    @Test
+    fun `chegara ichidagi hujjatlar odatdagidek oqiladi`() {
+        val file = zipOf(
+            "META-INF/container.xml" to container,
+            "OEBPS/content.opf" to opf("bob1"),
+            "OEBPS/bob1.xhtml" to xhtml("Bir", "<p>Salim aka</p>"),
+        )
+
+        ZipFile(file).use { zip ->
+            val text = EpubTextReader.read(zip, maxTotalBytes = 100_000L)
+            assertTrue(text, text.contains("Salim aka"))
+        }
     }
 }

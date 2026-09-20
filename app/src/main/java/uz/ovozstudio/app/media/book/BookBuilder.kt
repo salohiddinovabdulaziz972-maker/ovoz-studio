@@ -7,8 +7,14 @@ import uz.ovozstudio.app.media.voice.SpeechRequest
 import uz.ovozstudio.app.media.voice.VoiceEngine
 import uz.ovozstudio.app.media.voice.VoiceError
 import java.io.File
+import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Kitob yig'ishdagi xatoliklar.
@@ -94,10 +100,17 @@ sealed interface BookBuildOutcome {
  * butun oqim (tartib, tozalash, to'xtatish) oddiy JVM sinovida
  * tekshiriladi, qurilma esa faqat tovush sifatiga javob beradi.
  *
- * Ish **ketma-ket**: sintezator bitta, parallel chaqiruv uni siqib
+ * Sintez **ketma-ket**: sintezator bitta, parallel chaqiruv uni siqib
  * qo'yardi. Shu sababli [synthesizeToFile] javobi kelguncha shu oqim
  * kutadi, boshqa oqim esa bloklanmaydi — Android'ning sintezatori javobni
  * asosiy oqimda beradi.
+ *
+ * Lekin bob **kodlash** (WAV'larni qo'shish + MP3) sintezga bog'liq emas va
+ * boshqa jarayonda ketadigan sintezatorni kutmaydi: u alohida oqimda, keyingi
+ * bobning sintezi bilan BIR VAQTDA bajariladi. Ilgari ikkalasi navbat bilan
+ * ketardi, ya'ni umumiy vaqt sintez va kodlash vaqtlarining YIG'INDISI edi;
+ * endi ulardan kattasiga yaqin. Bir vaqtda ko'pi bilan bitta bob kodlanadi:
+ * kodlash sintezdan sekin bo'lsa, navbat o'sib, diskni to'ldirib yubormasin.
  */
 class BookBuilder(
     private val engine: VoiceEngine,
@@ -115,7 +128,7 @@ class BookBuilder(
     private val utteranceTimeoutMs: Long = DEFAULT_UTTERANCE_TIMEOUT_MS,
     /** Kodlovchi ochilishi — sinovda almashtiriladi. */
     private val openEncoder: (File, AudioFormat) -> AudioEncoder = { file, format ->
-        Mp3Encoder(file, format)
+        Mp3Encoder(file, format, ChapterAssembler.MP3_QUALITY)
     },
 ) {
 
@@ -166,6 +179,46 @@ class BookBuilder(
         val total = plan.utteranceCount
         var failure: BookBuildOutcome.Failed? = null
 
+        // Bob kodlash alohida oqimda: u keyingi bobning sintezi bilan bir
+        // vaqtda ketadi. `abort` — xato yoki to'xtatishdan keyin ishlayotgan
+        // kodlashni to'xtatadi: aks holda foydalanuvchi «bekor qilish»ni
+        // bosgach, ko'p daqiqalik kodlash tugashini kutishga to'g'ri kelardi.
+        val abort = AtomicBoolean(false)
+        val worker = Executors.newSingleThreadExecutor(
+            ThreadFactory { task -> Thread(task, ASSEMBLY_THREAD_NAME).apply { isDaemon = true } },
+        )
+        var pending: PendingAssembly? = null
+
+        /** Kodlanayotgan bobni kutadi va tayyor bo'lsa ro'yxatga qo'shadi. `false` — yig'ilmadi. */
+        fun settle(job: PendingAssembly): Boolean {
+            val assembled: AssembledChapter? = try {
+                job.future.get()
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                null
+            } catch (error: ExecutionException) {
+                null
+            }
+            if (assembled == null) {
+                // Kodlash to'xtatish tufayli uzilgan bo'lsa, sabab — to'xtatish,
+                // yig'ish xatosi emas.
+                failure = BookBuildOutcome.Failed(
+                    if (cancelled) BookBuildError.CANCELLED else BookBuildError.ASSEMBLY_FAILED,
+                    job.chapter.index,
+                )
+                return false
+            }
+            built += BuiltChapter(
+                index = job.chapter.index,
+                title = job.chapter.title,
+                audio = assembled.audio,
+                cue = writeCue(assembled.audio, albumTitle, assembled.markers),
+                durationMs = assembled.durationMs,
+                markers = assembled.markers,
+            )
+            return true
+        }
+
         try {
             chapters@ for (chapter in plan.chapters) {
                 if (cancelled) {
@@ -179,6 +232,15 @@ class BookBuilder(
                         failure = BookBuildOutcome.Failed(BookBuildError.CANCELLED, chapter.index)
                         break@chapters
                     }
+                    // Oldingi bobning kodlanishi tugagan bo'lsa (xato bilan ham),
+                    // shu zahoti qabul qilinadi: bitta bob buzilgan bo'lsa,
+                    // qolganlarini soatlab sintez qilishning ma'nosi yo'q.
+                    val finished = pending
+                    if (finished != null && finished.future.isDone) {
+                        pending = null
+                        if (!settle(finished)) break@chapters
+                    }
+
                     val part = File(workDir, "bob-${chapter.index}-$n.wav")
                     created += part
                     val error = synthesize(utterance.text, part)
@@ -200,32 +262,63 @@ class BookBuilder(
                 }
 
                 val audio = File(outputDir, chapterFileName(albumTitle, chapter.index, chapter.title, target))
-                val assembled = assemble(chapter, parts, audio, target, gapMs)
-                if (assembled == null) {
-                    failure = BookBuildOutcome.Failed(BookBuildError.ASSEMBLY_FAILED, chapter.index)
-                    break@chapters
-                }
 
-                built += BuiltChapter(
-                    index = chapter.index,
-                    title = chapter.title,
-                    audio = assembled.audio,
-                    cue = writeCue(assembled.audio, albumTitle, assembled.markers),
-                    durationMs = assembled.durationMs,
-                    markers = assembled.markers,
+                // Oldingi bob kodlanib bo'lmaguncha yangisi yuborilmaydi: kodlash
+                // sintezdan sekin bo'lsa, navbat o'sib borib butun kitobning
+                // bo'laklari diskda to'planardi.
+                val previous = pending
+                if (previous != null) {
+                    pending = null
+                    if (!settle(previous)) break@chapters
+                }
+                pending = PendingAssembly(
+                    chapter = chapter,
+                    audio = audio,
+                    future = worker.submit(
+                        Callable<AssembledChapter?> {
+                            try {
+                                assemble(chapter, parts, audio, target, gapMs, abort)
+                            } finally {
+                                // Bo'laklar bobga qo'shilgach keraksiz. Ular
+                                // kitob oxirigacha saqlansa, uzun kitobda
+                                // keshda gigabaytlab joy band bo'lardi.
+                                parts.forEach { it.delete() }
+                            }
+                        },
+                    ),
                 )
+            }
+
+            // Oxirgi bobning kodlanishi tugashini kutamiz.
+            val last = pending
+            if (last != null) {
+                pending = null
+                settle(last)
             }
         } catch (error: Exception) {
             // Yiqilish emas, xabar: chaqiruvchiga kod qaytadi.
             failure = BookBuildOutcome.Failed(BookBuildError.WRITE_FAILED)
         } finally {
+            // Xato yoki to'xtatishda kodlash keraksiz — to'xtatiladi. Vaqtinchalik
+            // fayllar kodlash oqimi tugaguncha o'chirilmaydi: u hali ularni
+            // o'qiyotgan bo'lishi mumkin.
+            if (failure != null) abort.set(true)
+            worker.shutdown()
+            try {
+                worker.awaitTermination(TERMINATION_WAIT_SECONDS, TimeUnit.SECONDS)
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+            // Natijasi qabul qilinmagan bobning fayli (yozilgan bo'lsa) — yetim.
+            pending?.audio?.delete()
             // Bo'laklar vaqtinchalik: ular bobga qo'shildi. Xato bo'lgan
             // taqdirda ham o'chiriladi — telefon xotirasida yuzlab fayl
             // qolib ketmasligi kerak.
             created.forEach { it.delete() }
         }
 
-        if (failure != null) {
+        val outcome = failure
+        if (outcome != null) {
             // Yarim kitob qoldirilmaydi: tayyor boblar ham o'chiriladi.
             // Sabab — natija birdan yig'iladi; papkadagi yarim to'plam
             // foydalanuvchini chalg'itadi (u qaysi biri to'liq ekanini
@@ -235,7 +328,7 @@ class BookBuilder(
                 it.audio.delete()
                 it.cue?.delete()
             }
-            return failure
+            return outcome
         }
 
         return BookBuildOutcome.Done(
@@ -290,6 +383,7 @@ class BookBuilder(
         audio: File,
         target: AudioTarget,
         gapMs: Int,
+        abort: AtomicBoolean,
     ): AssembledChapter? = try {
         ChapterAssembler.assemble(
             parts = parts,
@@ -299,11 +393,19 @@ class BookBuilder(
             plan = chapter,
             gapMs = gapMs,
             openEncoder = openEncoder,
+            isCancelled = { cancelled || abort.get() },
         )
     } catch (error: Exception) {
         audio.delete()
         null
     }
+
+    /** Kodlashga yuborilgan bob: natijasi keyin, kutib olinadi. */
+    private class PendingAssembly(
+        val chapter: BookChapterPlan,
+        val audio: File,
+        val future: Future<AssembledChapter?>,
+    )
 
     /**
      * Belgilar varaqasini yozadi. Yozilmasa — bu xato emas: audio tayyor,
@@ -323,6 +425,12 @@ class BookBuilder(
     companion object {
         /** Bitta bo'lak uchun kutish chegarasi: 5 daqiqa. */
         const val DEFAULT_UTTERANCE_TIMEOUT_MS = 5 * 60 * 1000L
+
+        /** Kodlash oqimining nomi (nosozliklarni topishda oqimlar ro'yxatida ko'rinadi). */
+        private const val ASSEMBLY_THREAD_NAME = "ovoz-kitob-kodlash"
+
+        /** To'xtatilgan kodlash tugashini kutish chegarasi (soniya). */
+        private const val TERMINATION_WAIT_SECONDS = 60L
 
         /** Fayl nomidagi nomning eng katta uzunligi. */
         const val MAX_NAME_CHARS = 40

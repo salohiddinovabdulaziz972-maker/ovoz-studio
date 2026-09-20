@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.media.AudioPlayer
 import uz.ovozstudio.app.media.RecordingStore
+import uz.ovozstudio.app.media.WorkService
 import uz.ovozstudio.app.media.book.BookBuildError
 import uz.ovozstudio.app.media.book.BookBuildOutcome
 import uz.ovozstudio.app.media.book.BookBuilder
@@ -237,6 +238,12 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
                 } catch (error: Exception) {
                     Log.w(TAG, "Hujjat ochilmadi", error)
                     error
+                } catch (error: OutOfMemoryError) {
+                    // `OutOfMemoryError` — `Exception` emas: ushlanmasa ilova
+                    // yiqiladi. Katta hujjat xotiraga sig'masa, foydalanuvchi
+                    // yiqilishni emas, «hujjat juda katta» xabarini ko'radi.
+                    Log.w(TAG, "Hujjat xotiraga sig'madi", error)
+                    DocumentTooLargeException(Runtime.getRuntime().maxMemory())
                 }
             }
 
@@ -294,24 +301,38 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(busy = true, error = null, output = emptyList(), done = 0, percent = 0)
         }
 
+        // Kitob yig'ish soatlab davom etadi. Ekran o'chsa protsessor uxlab,
+        // ish to'xtab qoladi; ilova fonda qolsa, tizim jarayonni o'ldirishi
+        // mumkin. Fon xizmati (wake lock bilan) ikkalasidan saqlaydi. Xizmat
+        // yoqilmasa ham yig'ish boshlanadi — faqat u ekran yoniq paytdagina
+        // ishonchli ishlaydi.
+        val keptAlive = runCatching { WorkService.start(getApplication<Application>()) }.isSuccess
+
         viewModelScope.launch {
-            // Yig'ish fon oqimida: sintezator javobini kutish asosiy oqimda
-            // bajarilsa, ekran butun kitob davomida qotib qolardi.
-            val outcome = withContext(Dispatchers.IO) {
-                active.build(plan, store.directory, title) { progress ->
-                    _state.update {
-                        it.copy(
-                            chapterNumber = progress.chapterIndex + 1,
-                            chapters = progress.chapters,
-                            done = progress.done,
-                            total = progress.total,
-                            percent = progress.percent,
-                        )
+            try {
+                // Yig'ish fon oqimida: sintezator javobini kutish asosiy oqimda
+                // bajarilsa, ekran butun kitob davomida qotib qolardi.
+                val outcome = withContext(Dispatchers.IO) {
+                    active.build(plan, store.directory, title) { progress ->
+                        _state.update {
+                            it.copy(
+                                chapterNumber = progress.chapterIndex + 1,
+                                chapters = progress.chapters,
+                                done = progress.done,
+                                total = progress.total,
+                                percent = progress.percent,
+                            )
+                        }
                     }
                 }
+                builder = null
+                applyOutcome(outcome)
+            } finally {
+                // `finally`: ekran yopilib, korutina bekor qilinganda ham xizmat
+                // va wake lock bo'shatilishi shart — aks holda protsessor
+                // bekorga uyg'oq turib, batareyani yeb qo'yardi.
+                if (keptAlive) runCatching { WorkService.stop(getApplication<Application>()) }
             }
-            builder = null
-            applyOutcome(outcome)
         }
     }
 
@@ -748,6 +769,13 @@ private class Imported(
 ) {
     companion object {
         /**
+         * Nusxalash buferi. Standart 8 KB: o'nlab megabaytlik hujjat uchun
+         * minglab kichik o'qish. 64 KB — tizim chaqiruvlari 8 baravar kam,
+         * xotira esa sezilmaydi.
+         */
+        private const val COPY_BUFFER_BYTES = 64 * 1024
+
+        /**
          * Faylni ilova papkasiga nusxalab, boblarga bo'ladi.
          *
          * Faqat fon oqimidan chaqiriladi: ichida fayl o'qish va arxiv
@@ -759,28 +787,41 @@ private class Imported(
             // kitob yasash esa undan keyin ham davom etadi.
             val target = store.newSourceFile(name.substringAfterLast('.', ""))
 
-            val copied = context.contentResolver.openInputStream(uri)?.use { input ->
-                target.outputStream().use { output -> input.copyTo(output) }
-                true
-            } ?: false
-            if (!copied) throw DocumentFormatException("Fayl ochilmadi")
+            // Nusxa faqat QABUL QILINGAN hujjat uchun qoladi. Rad etilsa
+            // (format noma'lum, matn yo'q, nusxalash uzildi) u o'chiriladi:
+            // aks holda har bir muvaffaqiyatsiz urinish ilova papkasida
+            // (fayl menejerida ko'rinadigan joyda) katta fayl qoldirardi.
+            // `AndroidAudioImporter` ham rad etilgan nusxani shunday
+            // o'chiradi — naqsh bir xil bo'lishi kerak.
+            var accepted = false
+            try {
+                val copied = context.contentResolver.openInputStream(uri)?.use { input ->
+                    target.outputStream().use { output -> input.copyTo(output, COPY_BUFFER_BYTES) }
+                    true
+                } ?: false
+                if (!copied) throw DocumentFormatException("Fayl ochilmadi")
 
-            // Kengaytma yolg'on bo'lishi mumkin (Telegram'dan kelgan fayllar
-            // ko'pincha `file.bin`), shuning uchun zaxira yo'l — imzo.
-            val format = DocumentLoader.formatOf(target)
-                ?: DocumentLoader.zipKindOf(target)
-                ?: throw DocumentFormatException("Format aniqlanmadi")
+                // Kengaytma yolg'on bo'lishi mumkin (Telegram'dan kelgan fayllar
+                // ko'pincha `file.bin`), shuning uchun zaxira yo'l — imzo.
+                val format = DocumentLoader.formatOf(target)
+                    ?: DocumentLoader.zipKindOf(target)
+                    ?: throw DocumentFormatException("Format aniqlanmadi")
 
-            val loaded = DocumentLoader.load(
-                file = target,
-                format = format,
-                fallbackTitle = context.getString(R.string.book_chapter_fallback),
-                prefaceTitle = context.getString(R.string.book_preface_title),
-            )
-            if (loaded.chapters.isEmpty() || loaded.text.isBlank()) {
-                throw DocumentTextMissingException("Hujjatda o'qiladigan matn yo'q")
+                val loaded = DocumentLoader.load(
+                    file = target,
+                    format = format,
+                    fallbackTitle = context.getString(R.string.book_chapter_fallback),
+                    prefaceTitle = context.getString(R.string.book_preface_title),
+                )
+                if (loaded.chapters.isEmpty() || loaded.text.isBlank()) {
+                    throw DocumentTextMissingException("Hujjatda o'qiladigan matn yo'q")
+                }
+                val imported = Imported(name, format, loaded.text, loaded.chapters)
+                accepted = true
+                return imported
+            } finally {
+                if (!accepted) target.delete()
             }
-            return Imported(name, format, loaded.text, loaded.chapters)
         }
 
         /** Tanlagich bergan ko'rinadigan nom. Topilmasa — zaxira nom. */

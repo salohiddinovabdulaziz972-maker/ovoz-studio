@@ -53,7 +53,10 @@ so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
   BOB.mp3`), har bir bob uchun belgilar varaqasi (CUE) yoziladi. Boblar
   ro'yxati yasashdan oldin ko'rsatiladi — bo'linish to'g'rimi, foydalanuvchi
   o'zi ko'radi. Tezlik va balandlik qo'lda kiritiladi, jarayon foizda
-  ko'rinadi, to'xtatish istalgan paytda ishlaydi. Halol cheklovlar:
+  ko'rinadi, to'xtatish istalgan paytda ishlaydi. Yig'ish ekran o'chsa yoki
+  ilova fonda qolsa ham davom etadi (bildirishnoma ko'rinib turadi): bob
+  kodlash esa keyingi bobning sintezi bilan bir vaqtda ketadi, shuning uchun
+  uzun kitob tezroq tayyor bo'ladi. Halol cheklovlar:
   skaner qilingan PDF'da matn qatlami yo'q (OCR ilovada yo'q) va `ToUnicode`
   jadvalisiz murakkab shriftli PDF **ataylab** o'qilmaydi — «savatcha» matn
   o'qigandan ko'ra ochiq xato yaxshiroq.

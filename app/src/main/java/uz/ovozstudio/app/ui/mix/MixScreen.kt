@@ -415,4 +415,3 @@ private fun loweringText(appliedGainDb: Float): String =
 
 /** Tushirish 60 dB dan oshmaydi — 1/1000 koeffitsient, undan kattasi jimlik. */
 private const val MAX_LOWERING_DB = 60.0
-

@@ -106,9 +106,17 @@ class WavWriter(
     override fun close() {
         if (closed) return
         closed = true
-        out.flush()
-        out.close()
-        patchHeader()
+        try {
+            // `close()` buferni o'zi yuvadi va oqimni xato bo'lganda ham
+            // yopadi. Alohida `flush()` xato bersa (disk to'lgan), `close()`
+            // chaqirilmay qolar va fayl deskriptori oqib ketardi.
+            out.close()
+        } finally {
+            // Sarlavha yopish xato bergan taqdirda ham to'g'rilanadi: yozilgan
+            // qism eshitilishi kerak. Sarlavha kattaroq bo'lib qolsa,
+            // `WavFile` uni haqiqiy fayl hajmigacha qisqartirib o'qiydi.
+            patchHeader()
+        }
     }
 
     private fun writeHeader(dataSize: Int) {

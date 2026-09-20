@@ -168,6 +168,26 @@ class RecordViewModel(application: Application) :
                 errorMessage = message,
             )
         }
+        // Yozuvchi oqim xato bilan tugagan bo'lsa ham mikrofon va fayl hali
+        // ochiq, yadro esa «ishlayapti» deb turibdi. Bo'shatilmasa: mikrofon
+        // band qoladi, keyingi «Yozish» «allaqachon ketmoqda» deb rad etiladi
+        // va xatodan oldin yozilgan qism sarlavhasiz qoladi.
+        if (engine.isRunning) salvageAfterError()
+    }
+
+    /** Xatodan keyin yadroni bo'shatadi va yozilgan qismni saqlaydi. */
+    private fun salvageAfterError() {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) { runCatching { engine.stop() }.getOrNull() }
+            if (result != null) {
+                _state.update {
+                    it.copy(
+                        savedPath = result.file.absolutePath,
+                        savedDurationMs = result.info.durationMs,
+                    )
+                }
+            }
+        }
     }
 
     /**

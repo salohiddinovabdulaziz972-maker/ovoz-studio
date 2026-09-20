@@ -74,6 +74,18 @@ object ChapterAssembler {
     private const val READ_FRAMES = 4096
 
     /**
+     * Audio-kitob MP3'ining LAME sifat darajasi (0 — eng yaxshi va eng
+     * sekin, 9 — eng tez). 5 — LAME'ning o'z standarti.
+     *
+     * Nega 2 emas. 2-daraja qo'shimcha shovqin shakllantirish va Huffman
+     * qidiruvini yoqadi: bu murakkab musiqada foydali, nutqda esa 128 kbit/s
+     * da eshitiladigan farq bermaydi. Kodlash vaqti esa sezilarli oshadi va u
+     * soatlab ovoz beradigan kitobda umumiy vaqtning katta qismi. Musiqa yoki
+     * tahrir eksportida kodlovchining o'z standarti (2) saqlangan.
+     */
+    const val MP3_QUALITY = 5
+
+    /**
      * [parts] — bitta bobning sintezlangan bo'laklari (tartibi muhim).
      *
      * [joinTarget] — oraliq WAV: ish tugagach o'chiriladi. Xatolik bo'lsa ham
@@ -89,8 +101,14 @@ object ChapterAssembler {
         plan: BookChapterPlan,
         gapMs: Int = WavJoiner.DEFAULT_GAP_MS,
         openEncoder: (File, AudioFormat) -> AudioEncoder = { file, format ->
-            Mp3Encoder(file, format)
+            Mp3Encoder(file, format, MP3_QUALITY)
         },
+        /**
+         * `true` qaytarsa, kodlash to'xtatiladi. Fonda ishlaydigan kodlashni
+         * to'xtatish yo'li bo'lmasa, foydalanuvchi «bekor qilish»ni bosgach
+         * bobning oxirigacha kutishga majbur bo'lardi.
+         */
+        isCancelled: () -> Boolean = { false },
     ): AssembledChapter {
         val joined = WavJoiner.join(parts, joinTarget, gapMs)
         try {
@@ -98,6 +116,7 @@ object ChapterAssembler {
                 WavPcmReader(joinTarget).use { reader ->
                     val buffer = IntArray(READ_FRAMES * joined.info.channels)
                     while (true) {
+                        if (isCancelled()) throw BookAssemblyException("Kodlash to'xtatildi")
                         val got = reader.read(buffer, READ_FRAMES)
                         if (got <= 0) break
                         encoder.write(buffer, got)

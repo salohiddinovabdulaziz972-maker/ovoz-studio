@@ -54,7 +54,7 @@ ORDER = [
     ("Resurslar", ["app/src/main/res/"]),
     ("Testlar", ["app/src/test/"]),
     ("Asboblar (bin/, tools/)", ["bin/", "tools/"]),
-    ("Hujjatlar", ["README.md", "docs/", "LICENSE", ".gitignore"]),
+    ("Hujjatlar", ["README.md", "SECURITY.md", "docs/", "LICENSE", ".gitignore"]),
 ]
 
 

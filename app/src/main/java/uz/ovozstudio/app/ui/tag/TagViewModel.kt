@@ -165,7 +165,7 @@ class TagViewModel(application: Application) : AndroidViewModel(application) {
                 val target = store.newSourceFile(extension)
                 val ok = runCatching {
                     context.contentResolver.openInputStream(uri)?.use { input ->
-                        target.outputStream().use { output -> input.copyTo(output) }
+                        target.outputStream().use { output -> input.copyTo(output, 64 * 1024) }
                     } != null
                 }.getOrDefault(false)
 
