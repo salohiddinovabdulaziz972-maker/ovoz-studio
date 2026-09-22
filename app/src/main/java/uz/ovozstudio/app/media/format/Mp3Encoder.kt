@@ -195,7 +195,16 @@ class Mp3Encoder(
     }
 
     private companion object {
-        const val DEFAULT_QUALITY = 2
+        /**
+         * LAME algoritm darajasi: 0 — eng yaxshi va eng sekin, 9 — eng tez.
+         *
+         * 5 — LAME'ning o'z standart qiymati, deyarli hamma dastur shuni
+         * ishlatadi. Avvalgi 2 «deyarli eng yaxshi» edi, lekin bir necha
+         * baravar sekin: bu kutubxona telefonda sof Java'da ishlaydi va soatlik
+         * faylni kodlash daqiqalab cho'zilardi. Bit tezligi bir xil bo'lganda
+         * ikki daraja orasidagi sifat farqini quloq ajrata olmaydi.
+         */
+        const val DEFAULT_QUALITY = 5
         const val DEFAULT_BIT_DEPTH = 16
         const val VBR_QUALITY = 4
         const val MIN_BITRATE_KBPS = 8

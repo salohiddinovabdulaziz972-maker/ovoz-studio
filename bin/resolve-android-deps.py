@@ -40,12 +40,13 @@ DIRECT = [
     ("androidx.compose.ui", "ui-graphics", None),
     ("androidx.compose.ui", "ui-tooling-preview", None),
     ("androidx.compose.material3", "material3", None),
-    ("androidx.compose.material", "material-icons-core", None),
     ("androidx.navigation", "navigation-compose", "2.8.5"),
     ("androidx.annotation", "annotation-jvm", "1.8.0"),
     ("org.jetbrains.kotlinx", "kotlinx-coroutines-android", "1.8.1"),
     # MP3 kodlovchisi (LAME'ning sof Java porti). Oddiy JAR, AAR emas.
     ("de.sciss", "jump3r", "1.0.5"),
+    # PDF: sahifalarni ajratish va matnni o'qish (PDFBox'ning Android porti, AAR).
+    ("com.tom-roush", "pdfbox-android", "2.0.27.0"),
 ]
 BOM = "https://dl.google.com/dl/android/maven2/androidx/compose/compose-bom/2024.12.01/compose-bom-2024.12.01.pom"
 

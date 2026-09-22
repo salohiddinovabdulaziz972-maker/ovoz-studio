@@ -16,15 +16,33 @@ enum class DocumentFormat(val extension: String) {
     DOCX("docx"),
     EPUB("epub"),
     PDF("pdf"),
+    RTF("rtf"),
+
+    /** OpenDocument: matn (odt), jadval (ods) va taqdimot (odp) — uchalasi bir xil o'qiladi. */
+    ODT("odt"),
+    FB2("fb2"),
+    HTML("html"),
+    PPTX("pptx"),
     ;
 
     companion object {
+        /** Oddiy matn sifatida o'qiladigan kengaytmalar. */
+        private val TEXT_LIKE = setOf(
+            "md", "markdown", "text", "log", "csv", "tsv", "json", "srt", "ini", "cfg", "yaml", "yml", "tex",
+        )
+
         /** Kengaytmadan tanish. Katta-kichik harf va nuqta ahamiyatsiz. */
         fun ofExtension(name: String): DocumentFormat? {
             val tail = name.substringAfterLast('.', "").lowercase()
-            return entries.firstOrNull { it.extension == tail }
-                // Markdown — matn; kitoblar shu ko'rinishda ham tarqaladi.
-                ?: if (tail == "md" || tail == "markdown" || tail == "text") TXT else null
+            val exact = entries.firstOrNull { it.extension == tail }
+            if (exact != null) return exact
+            return when {
+                // Markdown va shunga o'xshash — matn; kitoblar shu ko'rinishda ham tarqaladi.
+                tail in TEXT_LIKE -> TXT
+                tail == "htm" || tail == "xhtml" -> HTML
+                tail == "ods" || tail == "odp" -> ODT
+                else -> null
+            }
         }
     }
 }
@@ -61,6 +79,7 @@ object DocumentLoader {
 
     private val ZIP_MAGIC = byteArrayOf(0x50, 0x4B, 0x03, 0x04)
     private val PDF_MAGIC = "%PDF-".toByteArray(Charsets.US_ASCII)
+    private val RTF_MAGIC = "{\\rtf".toByteArray(Charsets.US_ASCII)
 
     /** Formatni aniqlaydi: kengaytma, keyin fayl imzosi, keyin matn. */
     fun formatOf(file: File): DocumentFormat? {
@@ -73,10 +92,17 @@ object DocumentLoader {
      *   faqat kengaytmaga qarab qaror qilinadi.
      */
     fun formatOf(name: String, header: ByteArray?): DocumentFormat? {
+        // Ikki imzo shunchalik aniqki, ular kengaytmadan ustun turadi: Word
+        // hujjati ko'pincha RTF bo'lib, `.doc` nomi bilan saqlanadi, PDF esa
+        // `.txt` nomi bilan yuboriladi. Bunday faylni kengaytma bo'yicha
+        // o'qish savatcha matn beradi.
+        if (header != null) {
+            if (startsWith(header, PDF_MAGIC)) return DocumentFormat.PDF
+            if (startsWith(header, RTF_MAGIC)) return DocumentFormat.RTF
+        }
         val byName = DocumentFormat.ofExtension(name)
         if (byName != null) return byName
         if (header == null) return null
-        if (startsWith(header, PDF_MAGIC)) return DocumentFormat.PDF
         if (startsWith(header, ZIP_MAGIC)) return zipKind(header)
         return null
     }
@@ -86,6 +112,7 @@ object DocumentLoader {
      *
      * @param fallbackTitle sarlavhalar topilmasa butun hujjatga beriladigan nom.
      * @param prefaceTitle sarlavhadan oldingi uzun matnning nomi.
+     * @param slideTitle taqdimot slaydlariga beriladigan nom («Slayd»).
      * @throws DocumentFormatException fayl buzuq yoki ichida kerakli qism yo'q.
      * @throws DocumentTooLargeException fayl o'qish chegarasidan katta.
      */
@@ -95,6 +122,7 @@ object DocumentLoader {
         fallbackTitle: String,
         prefaceTitle: String,
         minPrefaceChars: Int = ChapterSplitter.DEFAULT_MIN_PREFACE_CHARS,
+        slideTitle: String = "Slide",
     ): LoadedDocument {
         val encoding: TextEncoding?
         val text = when (format) {
@@ -118,6 +146,31 @@ object DocumentLoader {
                 encoding = null
                 PdfTextReader.read(file)
             }
+
+            DocumentFormat.RTF -> {
+                encoding = null
+                RtfTextReader.read(file)
+            }
+
+            DocumentFormat.ODT -> {
+                encoding = null
+                OdtTextReader.read(file)
+            }
+
+            DocumentFormat.FB2 -> {
+                encoding = null
+                Fb2TextReader.read(file)
+            }
+
+            DocumentFormat.HTML -> {
+                encoding = null
+                HtmlTextReader.read(file)
+            }
+
+            DocumentFormat.PPTX -> {
+                encoding = null
+                PptxTextReader.read(file, slideTitle)
+            }
         }
         val chapters = ChapterSplitter.split(
             text = text,
@@ -139,6 +192,11 @@ object DocumentLoader {
         val marker = String(header, Charsets.ISO_8859_1)
         return when {
             marker.contains("word/") || marker.contains("word\\") -> DocumentFormat.DOCX
+            marker.contains("ppt/") || marker.contains("ppt\\") -> DocumentFormat.PPTX
+            // ODF va EPUB ikkalasida ham `mimetype` birinchi turadi; ODF'ning
+            // `META-INF/` i esa arxiv boshida ham uchrashi mumkin, shuning uchun
+            // ODF tekshiruvi EPUB'dan oldin.
+            marker.contains("opendocument") -> DocumentFormat.ODT
             marker.contains("META-INF/") -> DocumentFormat.EPUB
             else -> null
         }
@@ -155,12 +213,43 @@ object DocumentLoader {
         ZipFile(file).use { zip ->
             when {
                 zip.getEntry(DocxTextReader.DOCUMENT_ENTRY) != null -> DocumentFormat.DOCX
+                zip.getEntry(PptxTextReader.PRESENTATION_ENTRY) != null -> DocumentFormat.PPTX
                 zip.getEntry(EpubTextReader.CONTAINER_ENTRY) != null -> DocumentFormat.EPUB
+                // ODF: ildizda `content.xml` bilan birga `mimetype` turadi.
+                zip.getEntry(OdtTextReader.CONTENT_ENTRY) != null && zip.getEntry("mimetype") != null ->
+                    DocumentFormat.ODT
                 else -> null
             }
         }
     } catch (error: Exception) {
         null
+    }
+
+    /**
+     * Fayl oddiy matnga o'xshaydimi.
+     *
+     * Kengaytmasi noma'lum fayl (`.log`, `.srt`, kengaytmasiz) ko'pincha shunchaki
+     * matn. Boshidagi baytlarga qaraladi: matnda boshqaruv belgilari (yozuv
+     * mashinkasidagi tab, qator ko'chirish bundan mustasno) deyarli bo'lmaydi,
+     * ikkilik faylda esa ular ko'p. UTF-16 fayl nol baytlarga boy, shuning
+     * uchun BOM bilan alohida tekshiriladi.
+     */
+    fun looksLikeText(file: File): Boolean {
+        val header = readHeader(file) ?: return false
+        if (header.isEmpty()) return false
+        if (header.size >= 2) {
+            val first = header[0].toInt() and 0xFF
+            val second = header[1].toInt() and 0xFF
+            if ((first == 0xFF && second == 0xFE) || (first == 0xFE && second == 0xFF)) return true
+        }
+        var suspicious = 0
+        for (byte in header) {
+            val value = byte.toInt() and 0xFF
+            val control = value < 32 && value != 9 && value != 10 && value != 13 && value != 12
+            if (control) suspicious++
+        }
+        // 2% dan ko'p boshqaruv belgisi — bu matn emas.
+        return suspicious * 50 <= header.size
     }
 
     private fun readHeader(file: File): ByteArray? = try {

@@ -3,8 +3,8 @@ package uz.ovozstudio.app.media.format
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import uz.ovozstudio.app.media.RecordingStore
 import uz.ovozstudio.app.media.WavFile
+import uz.ovozstudio.app.media.WorkStore
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -45,7 +45,7 @@ sealed interface ImportOutcome {
  *    **manbaning o'z formatiga** qaytariladi — foydalanuvchi yuklagan format
  *    o'zgarmasdan qaytishi kerak.
  */
-class AndroidAudioImporter(private val store: RecordingStore) {
+class AndroidAudioImporter(private val store: WorkStore) {
 
     /**
      * Tizim tanlagichidan kelgan havolani nusxalab, [open] ga uzatadi.
@@ -113,6 +113,13 @@ class AndroidAudioImporter(private val store: RecordingStore) {
 
         if (info.frames <= 0) return ImportOutcome.Rejected(ImportFailure.EMPTY)
 
+        // Tahrirlagich faqat 16 va 24 bitni biladi. 8 va 32 bitli fayl bu yerda
+        // aniq sabab bilan rad etiladi: aks holda xato tahrirlash paytida,
+        // umumiy «bajarib bo'lmadi» ko'rinishida chiqardi.
+        if (info.bitsPerSample != 16 && info.bitsPerSample != 24) {
+            return ImportOutcome.Rejected(ImportFailure.UNSUPPORTED_DEPTH)
+        }
+
         return ImportOutcome.Ready(
             source = source,
             wav = source,
@@ -158,7 +165,11 @@ class AndroidAudioImporter(private val store: RecordingStore) {
         }
     }
 
-    private fun displayName(context: Context, uri: Uri): String {
+    /**
+     * Faylning foydalanuvchi ko'radigan nomi. Provayder nom bermasa — havola
+     * oxiridagi qism, u ham bo'lmasa — umumiy nom.
+     */
+    fun displayName(context: Context, uri: Uri): String {
         val fromProvider = runCatching {
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)

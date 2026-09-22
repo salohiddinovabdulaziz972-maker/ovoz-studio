@@ -1,5 +1,6 @@
 package uz.ovozstudio.app.media.format
 
+import uz.ovozstudio.app.log.ErrorLog
 import java.io.File
 
 /**
@@ -26,7 +27,14 @@ object AndroidAudioEncoders {
     fun open(target: AudioFormat, destination: File): AudioEncoder? {
         if (target.codec != AudioCodec.AAC && target.codec != AudioCodec.OPUS) return null
 
-        val encoder = runCatching { MediaCodecEncoder(destination, target) }.getOrNull()
+        val encoder = try {
+            MediaCodecEncoder(destination, target)
+        } catch (error: Exception) {
+            // Qurilma bu kodekni yozib bera olmasa, sababi jurnalda qoladi:
+            // «AAC yozilmadi» degan xabar o'zi hech narsani aytmaydi.
+            ErrorLog.error("audio.encode", "Kodlovchi ochilmadi: ${target.codec}", error)
+            null
+        }
         if (encoder == null) destination.delete()
         return encoder
     }

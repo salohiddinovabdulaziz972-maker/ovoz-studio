@@ -1,7 +1,7 @@
 package uz.ovozstudio.app.media
 
 import android.media.MediaPlayer
-import android.util.Log
+import uz.ovozstudio.app.log.ErrorLog
 import java.io.File
 
 /**
@@ -33,7 +33,7 @@ class AudioPlayer {
                 onFinished?.invoke()
             }
             media.setOnErrorListener { _, what, extra ->
-                Log.e(TAG, "MediaPlayer xatolik: what=$what extra=$extra")
+                ErrorLog.error("audio.player", "MediaPlayer xatolik: what=$what extra=$extra")
                 stopPlayer()
                 true
             }
@@ -41,7 +41,7 @@ class AudioPlayer {
             if (startMs > 0) media.seekTo(startMs.toInt())
             media.start()
         } catch (error: Exception) {
-            Log.e(TAG, "Eshitishni boshlab bo'lmadi", error)
+            ErrorLog.error("audio.player", "Eshitishni boshlab bo'lmadi", error)
             stopPlayer()
         }
     }
@@ -90,7 +90,4 @@ class AudioPlayer {
         runCatching { media.release() }
     }
 
-    private companion object {
-        const val TAG = "AudioPlayer"
-    }
 }

@@ -1,50 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Faqat mikrofon. Fayllar ilovaning o'z papkasida saqlanadi, shuning uchun
-         ommaviy xotirani o'qish ruxsati SO'RALMAYDI: keraksiz ruxsat —
-         foydalanuvchi uchun xavf va ishonchsizlik. -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!-- Yozuv ekran o'chganda ham davom etishi uchun. `FOREGROUND_SERVICE_MICROPHONE`
-         Android 14+ da majburiy; eski versiyalar uni shunchaki tanimaydi. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-
-    <!-- Yozuv bildirishnomasi ko'rinishi uchun (Android 13+). Ruxsat berilmasa
-         ham yozuv ishlaydi — faqat bildirishnoma ko'rinmaydi. -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Audio-kitob yig'ish soatlab davom etadi. Ekran o'chganda Android
-         protsessorni uxlatadi va ish to'xtab qoladi: `WAKE_LOCK` uni ish
-         davomida uyg'oq tutadi, `FOREGROUND_SERVICE_DATA_SYNC` (Android 14+)
-         esa jarayonni o'ldirishdan saqlaydigan xizmat uchun kerak. Ikkalasi
-         ham oddiy ruxsat: foydalanuvchidan so'ralmaydi, internetga kirish
-         bermaydi. -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-
-    <!-- Mikrofon bo'lmasa ham ilova o'rnatiladi: tahrirlash qismi ishlayveradi. -->
-    <uses-feature
-        android:name="android.hardware.microphone"
-        android:required="false" />
+    <!-- HECH QANDAY RUXSAT SO'RALMAYDI. Fayllar tizimning o'z tanlagichi
+         orqali olinadi va saqlanadi (Storage Access Framework): foydalanuvchi
+         faqat o'zi tanlagan faylga ilova kirishini ko'radi. Mikrofon,
+         ommaviy xotira, bildirishnoma va INTERNET ruxsati yo'q — ilova
+         internetga chiqa olmaydi, ya'ni fayllar telefondan tashqariga
+         chiqib ketishi texnik jihatdan mumkin emas. -->
 
     <!-- Android 11 (API 30) dan boshlab ilova o'zi ko'rmaydigan xizmatlarni
          so'ray olmaydi. Ovoz sintezatori — aynan shunday tashqi xizmat:
-         usiz `TextToSpeech` ovozlar ro'yxatini bo'sh qaytaradi va o'zbek
-         ovozi bor-yo'qligini bilib bo'lmaydi. -->
+         usiz `TextToSpeech` ovozlar va dvigatellar ro'yxatini bo'sh qaytaradi
+         (Microsoft Sardor/Madina kabi ovozlarni beradigan dvigatel ham
+         ko'rinmay qoladi). -->
     <queries>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
     </queries>
 
-    <!-- Zaxira nusxa (bulut va `adb backup`) O'CHIRILGAN. Ilovada mikrofon
-         yozuvlari va yuklangan hujjatlar bor — bu foydalanuvchining shaxsiy
-         ma'lumoti va u o'z-o'zidan bulutga yoki kompyuterga chiqib ketmasligi
-         kerak. (Avto-zaxira tashqi papkadagi fayllarni ham olardi.) Yozuvlar
-         katta bo'lgani uchun zaxira baribir to'liq ishlamasdi. -->
+    <!-- Zaxira nusxa (bulut va `adb backup`) O'CHIRILGAN. Ilova foydalanuvchining
+         shaxsiy fayllari (audio, PDF, hujjat) bilan ishlaydi — ular o'z-o'zidan
+         bulutga yoki kompyuterga chiqib ketmasligi kerak. -->
     <application
+        android:name=".OvozApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:localeConfig="@xml/locales_config"
@@ -65,26 +44,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Yozuv davomida jarayonni tirik ushlab turadi. Chaqiruvchi faqat
-             ilovaning o'zi, shuning uchun `exported=false`. -->
-        <service
-            android:name=".media.RecordingService"
-            android:exported="false"
-            android:foregroundServiceType="microphone" />
-
-        <!-- Audio-kitob yig'ish davomida jarayonni tirik va protsessorni
-             uyg'oq ushlab turadi. Chaqiruvchi faqat ilovaning o'zi. -->
-        <service
-            android:name=".media.WorkService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-
         <!-- Fayl ulashish uchun. Android 7+ da `file://` yo'l boshqa ilovaga
              berilmaydi (FileUriExposedException), faqat `content://` havola
              mumkin — uni shu provayder yasaydi. `exported=false`: boshqa
              ilovalar provayderni o'zi chaqira olmaydi, havola esa faqat
-             ulashish paytida, bir marta beriladi. Qaysi papkalar
-             ko'rinishini `res/xml/file_paths.xml` belgilaydi. -->
+             ulashish paytida, bir marta beriladi. Qaysi papka ko'rinishini
+             `res/xml/file_paths.xml` belgilaydi (faqat tayyor natijalar). -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"

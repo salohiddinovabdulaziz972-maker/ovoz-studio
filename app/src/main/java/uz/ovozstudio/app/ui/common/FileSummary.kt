@@ -33,7 +33,7 @@ fun fileSummary(info: WavInfo, durationMs: Long): String =
 fun fileSummary(channels: Int, sampleRate: Int, durationMs: Long): String {
     val locale = LocalConfiguration.current.locales[0]
     val channelsText = stringResource(
-        if (channels == 1) R.string.convert_channels_mono else R.string.convert_channels_stereo
+        if (channels == 1) R.string.audio_channels_mono else R.string.audio_channels_stereo
     )
     val rate = LocalizedNumber.format(sampleRate / 1000.0, locale, fractionDigits = 1)
     return "$channelsText, $rate kHz, ${TimeFormat.format(durationMs)}"

@@ -1,335 +1,134 @@
 # Ovoz Studio
 
-O'zbek tilidagi, ekran o'quvchilarga (TalkBack / VoiceOver) to'liq moslashgan
-professional audio tahrirlovchi — Android uchun.
+Android uchun ochiq kodli, **internetsiz** ishlaydigan ilova: audio va PDF
+fayllarni tahrirlash, hujjatlarni o'qish. Ekran o'quvchi (TalkBack) bilan
+ishlash uchun yozilgan; ilova matni sodda o'zbek tilida.
 
-> Bu ishchi nom. Yakuniy nom va brendni egasi tanlaydi.
+Versiya: **0.2.0**. Litsenziya: **GPL-3.0**.
 
-## Ilovani yuklab olish
+## Nima qiladi
 
-Tayyor APK GitHub Actions artifact sifatida turadi — kompyuter kerak emas,
-telefondan ham yuklab olish mumkin:
+| Bo'lim | Imkoniyat |
+|---|---|
+| Audio | belgilangan qismni **kesib olish** — faqat shu qism qoladi |
+| Audio | belgilangan qismni **o'chirish** — qolgan qismlar birlashadi |
+| Audio | bir nechta audioni **birlashtirish** |
+| PDF | belgilangan sahifalarni **kesib olish** — yangi PDF |
+| PDF | belgilangan sahifalarni **o'chirish** — yangi PDF |
+| Hujjat | hujjatni **o'qish**: matn ekranda, ekran o'quvchi bilan yoki ilovaning ovozida (Microsoft Sardor/Madina ham, agar qurilmada bo'lsa) |
+| Jurnal | **xatolar jurnali**: nima buzilgani yozib boriladi, foydalanuvchi uni ulashishi mumkin |
 
-https://github.com/salohiddinovabdulaziz972-maker/ovoz-studio/actions
+Boshqa hech narsa yo'q: yozib olish, konvertatsiya, ekvalayzer, shovqin
+tozalash va shunga o'xshashlar olib tashlangan.
 
-Eng yuqoridagi yashil yozuvni oching → pastdagi **Artifacts** → `ovozstudio-debug-apk`.
-Yuklangan fayl ustiga bosib o'rnatasiz (Android «noma'lum manba» ruxsatini
-so'raydi — bu normal, ilova hali do'konga qo'yilmagan).
+## Format qoidasi (qat'iy)
 
-## Nima bor (V1, hozirgi holat)
+**Audio qaysi formatda yuklansa, natija aynan shu formatda qaytadi.**
+Boshqa formatga «taklif» ham, jimgina «zaxira» ham yo'q.
 
-- **Yozib olish**: PCM WAV, 44.1 / 48 / 96 kHz, 16 yoki 24-bit, mono/stereo,
-  pauza-davom ettirish, belgilar (marker), shovqin bostirish va exo yo'qotish.
-  Ekran o'chsa yoki ilova fonda qolsa ham yozuv davom etadi.
-- **Aniq kesish**: vaqtni slayder bilan emas, to'rt maydonda qo'lda kiritish
-  (soat / daqiqa / soniya / millisoniya), tanlangan qismni eshitish,
-  silliq boshlanish va tugash (fade in/out), orqaga va oldinga qaytarish.
-- **Bo'lish va ko'p nuqtali o'chirish**: faylni ixtiyoriy nuqtadan ikki
-  qismga bo'lish; bir nechta oraliqni ro'yxatga yig'ib, hammasini bir marta
-  o'chirish.
-- **Format konvertori**: MP3, WAV, M4A, FLAC, AAC, OPUS. Fayl import qilinsa,
-  tahrirdan keyin **o'z formatida** qaytadi (talab shu edi). WMA va OGG
-  yozilmaydi — Android'da ular uchun kodlovchi yo'q, buni import paytida ochiq
-  aytiladi.
-- **Ekvalayzer**: 10 va 31 polosa, 6 tayyor profil, past chastota kesish,
-  kesish himoyasi (cho'qqi ko'tarilsa butun fayl bir xil tushiriladi). Har bir
-  polosa raqamli maydonda kiritiladi.
-- **Tezlik va ohang**: 0.5x–2x, ohang ±12 yarim ton; ohang o'zgarganda uzunlik
-  o'zgarmaydi, ya'ni ikkalasini birga qo'llash mumkin.
-- **Shovqin tozalash**: shovqin namunasini belgilaysiz (odatda yozuv boshi),
-  ilova o'sha profilni butun fayldan ayiradi. Kuch va qoldiq qo'lda kiritiladi.
-  Halol aytilgan cheklov: bu **statistik spektral ayirish**, neyron tarmoq
-  emas — batafsil `docs/PROGRESS.md` da.
-- **Ovoz bilan o'qish (TTS)**: `VoiceEngine` abstraksiyasi va uning ustida
-  «Ovoz sinovi» ekrani — qurilmada qanday ovozlar bor, o'zbek ovozi topildimi,
-  uzun matn to'g'ri bo'laklarga bo'linyaptimi. Uzun matn jumla chegarasida
-  bo'linadi (sintezator chegaradan uzun matnni jimgina tashlab ketadi), til
-  esa matnning yozuvidan (lotin/kirill) tanlanadi. Halol cheklov: hozircha
-  bu **qurilmaning o'z ovozi** — o'zbek ovozi o'rnatilmagan bo'lsa, u zaxira
-  tilga o'tadi. Neyron AI ovozi keyin shu interfeys ortiga ulanadi.
-- **Hujjatdan audio-kitob**: PDF, DOCX, EPUB yoki TXT hujjatni tanlaysiz —
-  ilova matnni boblarga bo'lib, har bir bobni alohida **MP3** fayl qilib
-  o'qiydi. Fayl nomida bob tartib raqami turadi (`Kitob - 01 - BIRINCHI
-  BOB.mp3`), har bir bob uchun belgilar varaqasi (CUE) yoziladi. Boblar
-  ro'yxati yasashdan oldin ko'rsatiladi — bo'linish to'g'rimi, foydalanuvchi
-  o'zi ko'radi. Tezlik va balandlik qo'lda kiritiladi, jarayon foizda
-  ko'rinadi, to'xtatish istalgan paytda ishlaydi. Yig'ish ekran o'chsa yoki
-  ilova fonda qolsa ham davom etadi (bildirishnoma ko'rinib turadi): bob
-  kodlash esa keyingi bobning sintezi bilan bir vaqtda ketadi, shuning uchun
-  uzun kitob tezroq tayyor bo'ladi. Halol cheklovlar:
-  skaner qilingan PDF'da matn qatlami yo'q (OCR ilovada yo'q) va `ToUnicode`
-  jadvalisiz murakkab shriftli PDF **ataylab** o'qilmaydi — «savatcha» matn
-  o'qigandan ko'ra ochiq xato yaxshiroq.
-- **Kitob pleyeri va uxlash taymeri**: yasalgan kitob ilovaning o'zida
-  tinglanadi — boblar ketma-ket o'tadi, bob tugaganda keyingisi o'zi
-  boshlanadi, oxirgi bobdan keyin pleyer to'xtaydi. Har bir tugma nima
-  qilishini aytadi: 15 soniya orqaga/oldinga, oldingi/keyingi bo'lim
-  (belgi bo'ylab), oldingi/keyingi bob. To'xtatilgan joy eslab qolinadi —
-  kitob qayta yasalsa, tugma «Davom etish» bo'lib turadi. Uxlash taymeri
-  15/30/60 daqiqaga qo'yiladi, «bob oxirigacha» rejimida esa gap
-  o'rtasida uzilmaydi: vaqt tugasa ham joriy bob oxirigacha o'qiladi.
-  Vaqt faqat o'qish paytida sanaydi — tanaffusda taymer ham to'xtaydi.
-- **ID3 teglar**: MP3 faylning nomi, ijrochisi, albomi, yili, janri, tartib
-  raqami va muqova rasmi tahrirlanadi. Maydonlar **fayldagi mavjud teg bilan**
-  to'ldiriladi — aks holda faqat muqova qo'shmoqchi bo'lgan foydalanuvchi
-  nomini jimgina yo'qotardi. Manba fayl o'zgarmaydi, teg yangi faylga
-  yoziladi. Halol cheklov: ID3 faqat MP3 da bor — WAV/M4A/FLAC uchun bu
-  ekran formatni aytadi va konvertorga havola beradi (M4A va FLAC teglari
-  boshqa standartda, ular alohida qo'shiladi). ID3v2.2 teglari o'qilmaydi:
-  eski fayl ochilsa maydonlar bo'sh chiqadi.
-- **Ko'p yo'lli aralashtirish**: bir necha yozuv bitta faylga qo'shiladi.
-  Har bir yo'lga balandlik (desibelda), chap/o'ng joylashuv va siljish
-  beriladi; yo'lni o'chirish (mute), faqat bittasini eshitish (solo) va
-  butun aralashmaning umumiy balandligi bor. Natija **har doim stereo** —
-  panorama faqat ikki kanalda ma'noga ega. Yo'llar yig'indisi chegaradan
-  oshsa, har bir namuna alohida qisilmaydi: butun fayl bitta koeffitsientga
-  tushiriladi va ekran buni aytadi. Har bir o'zgarish darhol saqlanadi,
-  «orqaga qaytarish» esa oxirgi 30 qadamni tiklaydi. Halol cheklovlar:
-  manbalar **WAV** bo'lishi kerak (boshqa format konvertorda o'tkaziladi),
-  yo'llarning chastotasi teng bo'lishi shart — har xil chastota jimgina
-  qayta namunalanmaydi, ochiq xato beriladi. Sakkiz yo'lgacha.
-- **Vokal va cholg'uni ajratish**: stereo yozuv ikkita faylga bo'linadi —
-  vokal va cholg'u. Ikki rejim bor: «aniq ayirish» markazni butunlay olib
-  tashlaydi (vokal butunlay o'chadi, sun'iy tovush qo'shilmaydi), «qismiy
-  ajratish» esa har bir polosani markazga qanchalik xos ekaniga qarab
-  oladi — kuch maydoni shuni boshqaradi (0.5–4.0). Natija **ikkita yangi
-  fayl**, manba o'zgarmaydi, va ularning yig'indisi aynan manbani beradi:
-  hech narsa yo'qolmaydi, bu usulning tuzilish xossasi. Halol aytilgan
-  cheklov: bu **kanal usuli**, neyron model emas — markazda turgan cholg'u
-  (bas, baraban) ham o'chadi, mono yozuvda esa ajratadigan narsa yo'q.
-  Shuning uchun ilova mono faylni ochiq rad etadi, natija yonida esa
-  **o'lchangan** «yon/markaz» nisbati ko'rsatiladi va u juda kichik bo'lsa
-  («deyarli mono») ogohlantiradi. Batafsil `docs/PROGRESS.md` da.
-- **Ulashish**: tayyor faylni tizim oynasi orqali boshqa ilovaga yuborish
-  (Telegram, pochta, bulut). Fayl `content://` havola bilan, faqat o'qish
-  uchun va bir marta beriladi.
-- **Sozlamalar**: til qo'lda tanlanadi — «tizim tili bilan bir xil», o'zbekcha
-  (lotin), o'zbekcha (kirill), ruscha yoki inglizcha. Ekranda **hozir amalda
-  ishlayotgan til** ham yozib qo'yiladi: «tizim tili» tanlanganda qaysi til
-  ochilishini foydalanuvchi oldindan biladi (qurilma tili ro'yxatdagi
-  tillardan biri bo'lmasa — o'zbekcha). Til darhol qo'llanadi, ekran qayta
-  ochiladi va tanlov keyingi ishga tushirishda ham saqlanadi; yozib
-  bo'lmasa (joy yo'q) — o'zgarish qo'llanmaydi va ekran buni aytadi, jimgina
-  «eski tilga qaytib qolish» bo'lmaydi. Soddalashtirilgan rejim ikkinchi
-  darajali tugmalarni yashiradi (ekran o'quvchi bilan har bir amalga yetish
-  osonlashadi), lekin **hech narsani yo'qotmaydi**: bosh ekranda «Boshqa
-  imkoniyatlar» tugmasi ochib beradi va rejim yoniqligi ekranda yozib
-  qo'yiladi. Ilova haqida bo'limida versiya, litsenziya nomi va manba kod
-  havolasi bor. Halol cheklov: til ilova ekranlariga va yozish bildirishnomasiga
-  ta'sir qiladi; tizim sozlagichlaridan keladigan bir necha satr (masalan,
-  ruxsat oynasi) qurilma tilida qolaveradi.
-- **Accessibility**: har bir interaktiv element matnli yorliqqa ega, minimal
-  tegish maydoni 48 dp, vaqt va daraja faqat so'ralganda ovoz bilan e'lon qilinadi.
-- **Tillar**: o'zbek (lotin va kirill), rus, ingliz. Til qurilmadan olinadi —
-  kod yozish shart emas, xohlasa sozlamalarda qo'lda tanlanadi. Standart
-  (zaxira) til — **o'zbekcha**: qurilma tili ro'yxatdagi tillardan biri
-  bo'lmasa ham, ilova o'zbekcha ochiladi. Kirill yozuvini tanlash alohida:
-  o'zbekcha ikki yozuvda yoziladi, ya'ni «o'zbek tili» o'zi yetarli emas.
+- MP3, M4A/AAC, WAV, FLAC va (Android 10+, 48 kHz) OGG Opus shu formatga qayta yoziladi.
+- Android yoza olmaydigan format (OGG Vorbis, WMA) **ish boshlanmasdan oldin**
+  rad etiladi va sababi aytiladi — foydalanuvchi soatlab ishlab, oxirida
+  «saqlab bo'lmadi» degan xabarni ko'rmaydi.
+- Bir nechta faylni birlashtirishda hamma fayl **bir xil formatda** bo'lishi
+  shart. Chastotasi yoki kanali (mono/stereo) boshqa fayllar moslashtiriladi.
+- Yo'qotishli formatda (MP3, AAC) bit tezligi asl fayl hajmi va uzunligidan
+  taxmin qilinadi: 64 kbit/s lik yozuv bir necha baravar kattalashmaydi.
 
-## Nima hali yo'q
+Ichkarida tahrirlash yo'qotishsiz PCM (WAV) ustida ketadi; faqat oxirida
+natija asl formatga yoziladi. Kesilgan va tutashgan joylarda 5 ms lik silliq
+o'tish bor: «chiqillash» eshitilmaydi.
 
-Nutqni matnga aylantirish (STT) va neyron shovqin
-tozalash. Vokal/cholg'u ajratish bor, lekin **kanal usuli** bilan — neyron
-model bilan emas; bu farq yuqorida va `docs/PROGRESS.md` da ochiq yozilgan.
-Aralashtirishda manbalar hozircha faqat WAV (boshqa format
-konvertorda o'tkaziladi) va ularning chastotasi teng bo'lishi shart.
-ID3 teg faqat MP3 faylga yoziladi (M4A/FLAC teglari keyingi
-qadamda). Kitob pleyeri faqat shu seansda yasalgan kitobni tinglaydi:
-ilova qayta ochilgach, kitobni yana yasash kerak (fayllar joyida qoladi).
-Ovoz sintezi (TTS) bor, lekin hozircha faqat
-qurilma ovozi bilan — o'zbekcha neyron AI ovozi shu interfeys ortiga keyin
-ulanadi. Hammasi reja bo'yicha ketma-ket qo'shiladi — to'liq ro'yxat va
-tartib `docs/PROGRESS.md` da.
+## PDF
 
-## Qurish
+Sahifalar bitta maydonda yoziladi: `3, 5-8, 12`. Natija yangi hujjatga
+ko'chirish yo'li bilan yasaladi — o'chirilgan sahifalarning mazmuni faylda
+**qolmaydi**. Asl fayl o'zgarmaydi. Parol bilan ochiladigan yoki muallif
+ajratishni taqiqlagan PDF rad etiladi. Kutubxona: PDFBox (Android porti, Apache-2.0).
 
-**Android Studio orqali (eng oson).** Loyihani oching, Gradle sinxronlanishini
-kuting va `Run` tugmasini bosing. Studio gradle wrapper'ni o'zi yaratadi —
-repoda `gradlew` va `gradle-wrapper.jar` ataylab saqlanmagan (binary fayl).
+## Hujjatni o'qish
 
-**Buyruq qatoridan**, Gradle 8.11.1 o'rnatilgan bo'lsa:
+Qo'llab-quvvatlanadi: **PDF, DOCX, ODT (ODS, ODP), RTF, EPUB, FB2, HTML, PPTX, TXT**
+(va `.md`, `.log`, `.csv` kabi oddiy matn). Fayl kengaytmasi noto'g'ri bo'lsa
+ham (masalan RTF `.doc` nomi bilan) imzosiga qarab tanib olinadi.
+
+- Matn abzatslarga bo'linadi va ekranda turadi: **ekran o'quvchi** o'qiydi.
+- «O'qishni boshlash» — ilovaning ovozi. Ovoz dvigateli va ovoz tanlanadi.
+  Nomida «Sardor» yoki «Madina» bor ovoz bo'lsa, u avtomatik tanlanadi.
+- PDF da har bir sahifa — bob. Matni buzuq (shrift kodlashi noma'lum) PDF
+  «buzuq matn» deb aytiladi, tushunarsiz shovqin o'qib berilmaydi.
+
+**Microsoft Sardor/Madina haqida.** Bu bulutli ovozlar; Android'da ular faqat
+ularni tizim sintezatori sifatida ochib beradigan dvigatel dasturi orqali
+ko'rinadi. Ilovaning o'zi internetga chiqmaydi, shuning uchun bulutga ulanmaydi.
+
+Qo'llab-quvvatlanmaydi: eski Word `.doc`, `.xls`, `.ppt` (DOCX/PPTX qilib
+saqlang), parol bilan himoyalangan PDF, matn qatlami yo'q skaner PDF (OCR yo'q).
+
+## Til
+
+Ilova tili **tizim tilidan** aniqlanadi (`LocaleContext.followSystem`):
+o'zbekcha (lotin), o'zbekcha (kirill), ruscha, inglizcha. Tizim tili
+o'zbekcha bo'lsa ilova to'liq o'zbekcha. Qo'llab-quvvatlanmagan til —
+o'zbekcha. Sozlamalarda til tanlash yo'q; Android 13+ da «Ilova tili» ishlaydi.
+
+## Xatolar jurnali
+
+`Bosh ekran → Xatolar jurnali`. Ilova xatolarni qurilmadagi matn fayliga
+yozadi (`filesDir/jurnal/`), shu jumladan kutilmagan to'xtashlarni.
+
+- hajmi cheklangan (256 KB + eski nusxa), cheksiz o'smaydi;
+- **fayl nomlari, `content://` havolalari, yo'llar va hujjat matni yozilmaydi**;
+- o'zi hech qayerga yuborilmaydi: foydalanuvchi «Ulashish» yoki «Saqlash» ni bosadi.
+
+## Maxfiylik va xavfsizlik
+
+- **Hech qanday ruxsat so'ralmaydi**, `INTERNET` ham yo'q. Fayllar tizim
+  tanlagichi orqali olinadi va saqlanadi.
+- Zaxira nusxa o'chirilgan (`allowBackup=false`).
+- `FileProvider` faqat tayyor natijalar papkasini (`cache/natija/`) ochadi.
+- Ish fayllari kesh papkasida; ilova boshlanganda tozalanadi, natijalar bir kun saqlanadi.
+- Batafsil: `SECURITY.md`.
+
+## Yig'ish va sinash
 
 ```
-gradle assembleDebug
+gradle testDebugUnitTest     # birlik testlari (sof JVM)
+gradle assembleDebug         # APK
 ```
 
-Tayyor APK: `app/build/outputs/apk/debug/app-debug.apk`
+GitHub Actions (`.github/workflows/android.yml`) shuni bajaradi. Qo'shimcha:
 
-**GitHub Actions orqali.** `.github/workflows/android.yml` har push'da
-testlarni yurgizadi, debug APK yig'adi va artifact sifatida beradi — kompyuter
-shart emas, telefondan yuklab olish kifoya.
-
-## Tekshirish (testlar)
-
-Uch qatlam bor — uchalasi ham Android SDK'siz, oddiy kompyuterda ishlaydi.
-
-**1. Mantiq testlari** — WAV, kesish, vaqt, DSP jadvallari:
-
-```
-bash bin/run-tests.sh
-```
-
-593 ta test: vaqtni o'qish/yozish, WAV sarlavhasi va namunlarning aniqligi,
-kesish, ko'p nuqtali o'chirish, bo'lish, fade, «butun fayl o'chirilmoqda»
-holatini oldindan aniqlash, ekvalayzer va shovqin sozlamalarining chegaralari,
-matnni bo'laklarga bo'lish va yozuvni (lotin/kirill) aniqlash, hujjat
-o'qish (PDF/DOCX/EPUB/TXT), boblarga bo'lish va kitob yig'ish (soxta
-sintezator bilan: tartib, pauza, to'xtatish, xato bob raqami), kitob
-pleyerining mantig'i (boblar bo'ylab o'tish chegaralari, belgi bo'ylab
-sakrash, qoldirilgan joyni saqlash, uxlash taymeri), ID3 tegining to'g'ri
-yozilishi va **o'qilishi** (kirill, UTF-8, UTF-16, v2.4 ramka o'lchami,
-buzilgan teg ilovani yiqitmasligi), aralashtirish ekranining hisoblari (aralashma
-uzunligi, tugma yoqilganmi) va yo'l sozlamalari matnining chegaralari
-(-60 dB maydonga sig'adimi, matn va son orasidagi aylanish aynanmi).
-Vokal/cholg'u ajratish ham shu yerda: ikki faylning yig'indisi manbani
-namuna-darajada beradimi, markaz ohangi vokal faylda qolib, cholg'u
-fayldan ketdimi, «aniq ayirish» markazni butunlay o'chiradimi, noto'g'ri
-manba (mono, kanallari bir xil, bo'sh) rad etiladimi.
-Sozlamalar mantig'i ham shu yerda: qurilma tilidan ilova tilini aniqlash
-(kirill yozuvi `uz-Cyrl` tegidan ajraladi, tartib saqlanadi, notanish til —
-o'zbekchaga tushadi), sozlama faylining har bir holati (yo'q, bo'sh, buzuq,
-notanish teg — hech biri ilovani yiqitmaydi) va «hozir ishlatilayotgan til»
-satrining hisobi.
-Gradle orqali ham ishlaydi (`gradle testDebugUnitTest`) — CI shuni bajaradi.
-
-**2. Butun kodni kompilyatsiya qilish** — ekranlar, ViewModel'lar,
-accessibility qatlami:
-
-```
-bash bin/typecheck-android.sh
-```
-
-Bu skript android.jar, AndroidX/Compose sinflari va Compose kompilyator
-plagini yuklab oladi (bir marta, keshda saqlanadi) va **barcha** manba
-fayllarni haqiqiy kompilyatordan o'tkazadi. APK yig'ilmaydi — u uchun
-`aapt2` kerak, u esa faqat x86_64 uchun chiqariladi — lekin Kotlin xatolari
-CI'ni kutmasdan, bir necha soniyada topiladi.
-
-**3. Mustaqil tekshiruvlar** — qayta ishlangan ovozni **boshqa** dastur
-o'lchaydi. Bu uchinchi qatlam eng muhimi: ilovaning o'zi o'z natijasini
-tekshirsa, bu o'z-o'zini tekshirish bo'lardi — «to'g'ri ko'rinadi» deganidan
-nariga o'tmaydi.
-
-```
-bash bin/verify-mp3.sh      # MP3 kodlovchisi ffmpeg bilan
-bash bin/verify-eq.sh       # ekvalayzer ffmpeg'ning equalizer filtri bilan
-bash bin/verify-speed.sh    # tezlik/ohang ffmpeg'ning atempo zanjiri bilan
-bash bin/verify-noise.sh    # shovqin tozalash ffmpeg'ning afftdn filtri bilan
-bash bin/verify-tag.sh      # ID3 teglarini ffprobe o'qiydi, tegni ilova
-                            # o'z o'quvchisi bilan qayta o'qib solishtiradi
-bash bin/verify-mix.sh      # aralashmani ffmpeg o'qiydi: balandlik va
-                            # panorama analitik javobga mosmi, kesish
-                            # himoyasi ishlayaptimi
-bash bin/verify-stem.sh     # ajratilgan vokal/cholg'u: yig'indi manbani
-                            # beradimi (ffmpeg), «aniq ayirish» ffmpeg'ning
-                            # pan filtri bilan bir xilmi, o'lchangan ohang
-                            # balandliklari formulaga mosmi
-bash bin/verify-locales.sh  # to'rt til fayli: kalitlar to'plami, o'rin
-                            # egallovchilar, qochirilmagan apostrof, yozuv
-                            # aralashuvi
-```
-
-`verify-locales.sh` boshqalardan farq qiladi: u ilovani ishga solmaydi,
-balki uni **yig'ish** imkonsizligini qoplaydi. APK bu konteynerda
-yig'ilmaydi (`aapt2` faqat x86_64 uchun), ya'ni til fayllaridagi xatoni
-ushlaydigan aapt2 ham yo'q. Xatolar esa jim: ruscha faylda kalit yetishmasa,
-foydalanuvchi buni «xato» deb hisoblamaydi — shunchaki o'zbekcha satrni
-ko'radi. Shuning uchun har bir qoida sun'iy xato kiritib tekshirildi.
-
-```
-python3 bin/falsify-stem.py  # tekshiruvning o'zini sinaydi
-```
-
-Bu skript `StemSeparator.kt` ga beshta **haqiqiy nuqson** kiritadi — maskani
-teskari qo'llash, kuchni e'tiborsiz qoldirish, xato matnini boshqa so'z bilan
-aytish — va `verify-stem.sh` har birini o'sha qoidaning nomi bilan ushlashini
-talab qiladi. Nuqson kiritilgach ham «o'tdi» deb turaveradigan tekshiruv
-foydasiz: u ishlamayotganini hech qachon aytmaydi. Shuning uchun qoidaning
-«o'tdi» deyishi uning haqiqiy nuqsonni tutgani bilan tasdiqlanadi.
-
-Har biri kerakli hollarni o'zi yaratadi, ilovani ishga soladi va natijani
-mustaqil o'lchaydi (`ffmpeg`, `python3`). Batafsil natijalar va topilgan
-xatolar `docs/PROGRESS.md` da.
-
-**Butun kodni bitta faylga yig'ish** — kodni ko'rib chiqish yoki boshqa
-asbobga berish uchun:
-
-```
-python3 bin/dump-source.py [chiqish-fayli]
-```
-
-Fayl tartibi: yig'ish fayllari → ilova kodi → resurslar → testlar →
-asboblar → hujjatlar. Har bir fayl oldiga `===== yo'l =====` sarlavhasi
-qo'yiladi, boshida esa satr raqamlari bilan mundarija turadi — ya'ni
-parcha bo'lib o'qilsa ham, u qaysi fayldan va qayerdan olingani ko'rinib
-turadi. Ikonkalar (PNG) va boshqa binary fayllar tushirib qoldiriladi:
-ular matn ichida ma'nosiz.
-
-Bu qatlamlar shunchaki nazorat emas. Ular ustida ishlash davomida bir necha
-jiddiy xato topildi: biri ilovani umuman yig'ib bo'lmas holga keltirgan,
-biri har bir o'chirishda bir kadrni jimgina yo'qotardi, biri ekran
-o'quvchisi uchun vaqtni noto'g'ri tilda o'qirdi, biri 24-bit faylni butunlay
-buzardi. Batafsil: `docs/PROGRESS.md`.
-
-## Litsenziya — GPL-3.0
-
-Bu loyiha **GNU GPL v3** ostida tarqatiladi (`LICENSE` fayli). Litsenziya
-ataylab shunday tanlangan: u ilovani yopiq kodli qilib olishni taqiqlaydi.
-Kim ushbu kodni olib o'zgartirsa va tarqatsa, manba kodini ham xuddi shu
-litsenziya ostida ochiq berishga majbur. Ya'ni **hech kim bu ilovaga reklama
-joylashtirib, yopiq mahsulot sifatida sotolmaydi** — bu huquqiy chegara,
-shunchaki va'da emas.
-
-Loyihaga hissa qo'shish ham shu shart bilan qabul qilinadi.
-
-## Nega o'zbekcha
-
-Ilovaning standart tili — o'zbekcha, va bu tasodif emas. Ekran o'quvchi
-foydalanuvchisi uchun interfeys tili — bu qulaylik emas, balki ilovadan
-foydalanish imkoniyatining o'zi. Qurilma tili ro'yxatdagi tillardan biri
-bo'lmasa ham, ilova o'zbekcha ochiladi; qurilma o'zbekcha bo'lsa — lotin
-yoki kirill yozuvi avtomatik tanlanadi.
-
-## Talablar
-
-- minSdk 24 (Android 7.0), targetSdk 35
-- JDK 17
-- Kotlin 2.0.21, Jetpack Compose (BOM 2024.12.01), AGP 8.7.3
+| Skript | Vazifasi |
+|---|---|
+| `bin/verify-locales.sh` | to'rt til fayli: kalitlar, `%1$s`, apostroflar, yozuv aralashuvi |
+| `bin/run-tests.sh` | Android'siz JVM testlari (kotlinc bilan) |
+| `bin/typecheck-android.sh` | butun manbani haqiqiy kompilyatordan o'tkazish |
+| `bin/verify-mp3.sh` | MP3 kodlovchisini `ffmpeg` bilan tekshirish |
+| `bin/dump-source.py` | butun manbani bitta matn fayliga yig'ish |
 
 ## Tuzilish
 
 ```
 app/src/main/java/uz/ovozstudio/app/
-  media/      WAV yozish/o'qish, kesish, pleyer, fayl saqlash, fon xizmati
-  media/dsp/  ekvalayzer, tezlik/ohang (WSOLA), shovqin tozalash, FFT,
-              vokal/cholg'u ajratish (kanal usuli)
-  media/format/ format aniqlash, kodlovchilar, formatni saqlash
-  media/voice/ ovoz dvigateli interfeysi, qurilma TTS'i, matnni bo'laklash
-  media/doc/  hujjat o'qish: TXT, DOCX, EPUB, PDF (o'zimizning o'quvchi)
-  media/book/ boblarga bo'lish, kitob yig'ish, belgilar, pleyer tartibi,
-              qoldirilgan joy, uxlash taymeri
-  media/tag/  ID3 tegini yozish va o'qish, foydalanuvchi kiritgan qiymatlar
-  media/mix/  ko'p yo'lli aralashtirish: mikser, yo'l sozlamalari,
-              loyihani saqlash
-  settings/   til tanlash mantig'i, sozlamalar fayli, litsenziya havolalari
-  ui/common/  Accessibility komponentlari, vaqt va raqam kiritish maydonlari
-  ui/home/    bosh ekran va fayllar ro'yxati
-  ui/record/  yozib olish ekrani
-  ui/trim/    kesish ekrani
-  ui/convert/ format konvertori ekrani
-  ui/eq/      ekvalayzer ekrani
-  ui/speed/   tezlik va ohang ekrani
-  ui/noise/   shovqin tozalash ekrani
-  ui/voice/   ovoz sinovi ekrani (qurilmada qanday ovozlar bor)
-  ui/book/    hujjatdan audio-kitob ekrani va pleyer
-  ui/tag/     ID3 teg muharriri va ulashish ekrani
-  ui/mix/     ko'p yo'lli aralashtirish ekrani
-  ui/stem/    vokal/cholg'u ajratish ekrani
-  ui/settings/ sozlamalar ekrani: til, soddalashtirilgan rejim, ilova haqida
-  ui/nav/     ekranlar orasidagi yo'l
-  util/       vaqt va raqam formatlash
-bin/          testlar, kompilyatsiya va mustaqil tekshiruv skriptlari
-tools/        tekshiruv dasturlari (ilovani buyruq qatoridan ishga soladi)
+  OvozApp.kt, MainActivity.kt
+  log/            xatolar jurnali (ErrorJournal, ErrorLog)
+  settings/       til aniqlash (AppLanguage, LocaleContext), About
+  media/          WavFile, WavWriter, AudioTrimmer, AudioPlayer, WorkStore
+    format/       import/eksport, qat'iy format qoidasi (StrictFormat, AudioOpener)
+    merge/        AudioMerger
+    dsp/          Resampler
+    pdf/          PdfPageTools (PDFBox), PageRange
+    doc/          hujjat o'quvchilari, ReadingText, TextQuality
+    voice/        ovoz sintezatori (DeviceTtsEngine, VoiceChoice, VoicePrefs)
+  ui/             home, trim (kesish/o'chirish), merge, pdf, reader, log, nav, common, theme
+  util/           vaqt, son formati, Sharing, ResultFiles
 ```
 
-Muhim texnik qarorlar `docs/PROGRESS.md` da qisqa izohlangan.
+## Ma'lum cheklovlar
+
+- OGG Vorbis va WMA audio ochilmaydi (yozib bo'lmaydi — qoida shuni talab qiladi).
+- Mixed-format birlashtirish yo'q (MP3 + M4A): qaysi biriga o'xshatish noaniq.
+- Birinchi PDF ochilganda PDFBox resurslarni yuklaydi — bir necha soniya.
+- PDF ni yangi hujjatga ko'chirishda xatcho'plar, tegli tuzilma va shakl maydonlari saqlanmaydi.
+- Ilova hali telefonda sinalmagan: qarang `docs/PROGRESS.md`, «Tekshiruv holati».

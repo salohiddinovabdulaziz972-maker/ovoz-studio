@@ -19,6 +19,13 @@ class WavSampleReader(file: File) : Closeable {
     private val bytesPerSample = info.bitsPerSample / 8
     private val bytesPerFrame = info.bytesPerFrame
 
+    /**
+     * Bayt buferi. Har chaqiruvda yangisini yaratish o'rniga qayta ishlatiladi:
+     * uzun faylda chaqiruvlar soni o'n minglab, har biri esa yuzlab kilobayt
+     * ajratardi — axlat yig'uvchi shuni tozalab ulgurmasdan tezlik tushardi.
+     */
+    private var scratch = ByteArray(0)
+
     /** [startFrame] dan boshlab [frameCount] ta kadrni [out] ga yozadi.
      *  Qaytaradi: haqiqatda o'qilgan kadrlar soni. */
     @Throws(IOException::class)
@@ -28,31 +35,37 @@ class WavSampleReader(file: File) : Closeable {
         if (toRead <= 0) return 0
 
         val byteCount = toRead * bytesPerFrame
-        val bytes = ByteArray(byteCount)
+        if (scratch.size < byteCount) scratch = ByteArray(byteCount)
+        val bytes = scratch
         raf.seek(info.dataOffset + startFrame * bytesPerFrame)
-        raf.readFully(bytes)
+        raf.readFully(bytes, 0, byteCount)
 
-        var byteOffset = 0
-        var sampleIndex = 0
-        while (sampleIndex < toRead * info.channels) {
-            out[sampleIndex] = when (bytesPerSample) {
-                2 -> {
+        // Chuqurlik sikldan tashqarida tanlanadi: har bir namuna uchun qayta
+        // tekshirish yuz millionlab ortiqcha shartga aylanardi.
+        val samples = toRead * info.channels
+        when (bytesPerSample) {
+            2 -> {
+                var byteOffset = 0
+                for (index in 0 until samples) {
                     val value = (bytes[byteOffset].toInt() and 0xFF) or
                         ((bytes[byteOffset + 1].toInt() and 0xFF) shl 8)
-                    value.toShort() / 32_768f
+                    out[index] = value.toShort() / 32_768f
+                    byteOffset += 2
                 }
-                3 -> {
+            }
+            3 -> {
+                var byteOffset = 0
+                for (index in 0 until samples) {
                     val raw = (bytes[byteOffset].toInt() and 0xFF) or
                         ((bytes[byteOffset + 1].toInt() and 0xFF) shl 8) or
                         ((bytes[byteOffset + 2].toInt() and 0xFF) shl 16)
                     // 24-bitdan 32-bitga belgini saqlab kengaytirish.
                     val signed = if (raw and 0x800000 != 0) raw or -0x1000000 else raw
-                    signed / 8_388_608f
+                    out[index] = signed / 8_388_608f
+                    byteOffset += 3
                 }
-                else -> throw IOException("Qo'llab-quvvatlanmaydigan bit chuqurligi: ${info.bitsPerSample}")
             }
-            byteOffset += bytesPerSample
-            sampleIndex++
+            else -> throw IOException("Qo'llab-quvvatlanmaydigan bit chuqurligi: ${info.bitsPerSample}")
         }
         return toRead
     }
@@ -114,20 +127,24 @@ object AudioTrimmer {
                     val got = reader.readFrames(frame, want, buffer)
                     if (got <= 0) break
 
-                    val positionInSelection = frame - startFrame
-                    for (i in 0 until got) {
-                        val offset = positionInSelection + i
-                        var gain = 1f
-                        if (fadeInFrames > 0 && offset < fadeInFrames) {
-                            gain *= offset.toFloat() / fadeInFrames
-                        }
-                        if (fadeOutFrames > 0 && offset >= totalFrames - fadeOutFrames) {
-                            gain *= (totalFrames - offset).toFloat() / fadeOutFrames
-                        }
-                        if (gain != 1f) {
-                            for (channel in 0 until info.channels) {
-                                val index = i * info.channels + channel
-                                buffer[index] *= gain
+                    // Silliqlash yo'q bo'lsa (odatiy hol) har bir kadr bo'ylab
+                    // yurish ortiqcha: namunalar o'zgarmasdan yoziladi.
+                    if (fadeInFrames > 0 || fadeOutFrames > 0) {
+                        val positionInSelection = frame - startFrame
+                        for (i in 0 until got) {
+                            val offset = positionInSelection + i
+                            var gain = 1f
+                            if (fadeInFrames > 0 && offset < fadeInFrames) {
+                                gain *= offset.toFloat() / fadeInFrames
+                            }
+                            if (fadeOutFrames > 0 && offset >= totalFrames - fadeOutFrames) {
+                                gain *= (totalFrames - offset).toFloat() / fadeOutFrames
+                            }
+                            if (gain != 1f) {
+                                for (channel in 0 until info.channels) {
+                                    val index = i * info.channels + channel
+                                    buffer[index] *= gain
+                                }
                             }
                         }
                     }
@@ -153,6 +170,7 @@ object AudioTrimmer {
         dest: File,
         cuts: List<Cut>,
         fades: Fades = Fades(),
+        joinFadeMs: Long = 0,
         onProgress: (Float) -> Unit = {},
     ): WavInfo {
         WavSampleReader(source).use { reader ->
@@ -170,8 +188,17 @@ object AudioTrimmer {
             val writer = WavWriter(dest, info.sampleRate, info.channels, bitDepthOf(info.bitsPerSample))
             try {
                 val buffer = FloatArray(CHUNK_FRAMES * info.channels)
+                val joinFrames = info.msToFrame(joinFadeMs).coerceAtLeast(0)
                 var written = 0L
-                for (segment in keep) {
+                for ((segmentIndex, segment) in keep.withIndex()) {
+                    // Qism o'chirilganda ikki chekka yonma-yon tushadi va to'lqin bir
+                    // zumda boshqa qiymatga sakraydi — quloqqa «chiqillash» bo'lib
+                    // eshitiladi. Tutashuv joyida ikki tomondan qisqa silliqlash shuni
+                    // yo'qotadi. Faylning boshi va oxiri bunga kirmaydi.
+                    val length = segment.last - segment.first
+                    val joinIn = if (segmentIndex > 0) minOf(joinFrames, length / 2) else 0L
+                    val joinOut = if (segmentIndex < keep.size - 1) minOf(joinFrames, length / 2) else 0L
+
                     var frame = segment.first
                     while (frame < segment.last) {
                         val want = minOf(CHUNK_FRAMES.toLong(), segment.last - frame).toInt()
@@ -186,6 +213,13 @@ object AudioTrimmer {
                             }
                             if (fadeOutFrames > 0 && offset >= keptFrames - fadeOutFrames) {
                                 gain *= (keptFrames - offset).toFloat() / fadeOutFrames
+                            }
+                            val inSegment = frame - segment.first + i
+                            if (joinIn > 0 && inSegment < joinIn) {
+                                gain *= inSegment.toFloat() / joinIn
+                            }
+                            if (joinOut > 0 && inSegment >= length - joinOut) {
+                                gain *= (length - inSegment).toFloat() / joinOut
                             }
                             if (gain != 1f) {
                                 for (channel in 0 until info.channels) {

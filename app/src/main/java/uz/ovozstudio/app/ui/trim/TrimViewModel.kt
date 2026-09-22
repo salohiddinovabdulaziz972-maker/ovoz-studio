@@ -1,6 +1,8 @@
 package uz.ovozstudio.app.ui.trim
 
 import android.app.Application
+import android.net.Uri
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -12,13 +14,42 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import uz.ovozstudio.app.log.ErrorLog
 import uz.ovozstudio.app.media.AudioPlayer
 import uz.ovozstudio.app.media.AudioTrimmer
-import uz.ovozstudio.app.media.RecordingStore
 import uz.ovozstudio.app.media.WavFile
 import uz.ovozstudio.app.media.WavInfo
+import uz.ovozstudio.app.media.WorkStore
+import uz.ovozstudio.app.media.format.AndroidAudioEncoders
+import uz.ovozstudio.app.media.format.AudioFormat
+import uz.ovozstudio.app.media.format.AudioOpener
+import uz.ovozstudio.app.media.format.ExportOutcome
+import uz.ovozstudio.app.media.format.FormatPreservingExporter
+import uz.ovozstudio.app.media.format.ImportFailure
+import uz.ovozstudio.app.media.format.OpenResult
+import uz.ovozstudio.app.media.format.StrictFormat
+import uz.ovozstudio.app.ui.common.ResultFile
+import uz.ovozstudio.app.util.ResultFiles
 import uz.ovozstudio.app.util.TimeParts
 import java.io.File
+
+/**
+ * Ekran qaysi amalni bajaradi.
+ *
+ * Ikkalasi ham bitta tahrirlagichdan foydalanadi, lekin foydalanuvchi ularni
+ * ikki xil niyat bilan ochadi — «shu qism kerak» yoki «shu qism keraksiz».
+ * Ikki niyat — ikki alohida ekran: har birida faqat bitta amal tugmasi turadi
+ * va ekran o'quvchi «Belgilangan qismni o'chirish» deb aniq aytadi.
+ *
+ * [suffix] — natija fayl nomining oxiriga qo'shiladi (`ovoz-kesilgan.mp3`).
+ */
+enum class TrimMode(val suffix: String) {
+    /** Belgilangan qism qoladi, qolgani olib tashlanadi. */
+    CUT("-kesilgan"),
+
+    /** Belgilangan qism o'chadi, qolgan qismlar tutashtiriladi. */
+    DELETE("-tahrirlangan"),
+}
 
 /**
  * Xatolik turlari.
@@ -27,76 +58,80 @@ import java.io.File
  * qiladi. Aks holda rus yoki ingliz tilidagi qurilmada ham o'zbekcha xabar
  * chiqib qolardi.
  */
-/**
- * Yangi fade uzunligi (ms) uchun boshlang'ich qiymat.
- *
- * Fayl darajasida turibdi, `TrimViewModel` ning ichida emas: `TrimUiState`
- * ham shu qiymatni ishlatadi, sinf ichidagi `private` esa undan ko'rinmaydi.
- */
-private const val DEFAULT_FADE_MS = "30"
-
 enum class TrimError {
-    FILE_NOT_FOUND,
     SELECTION_EMPTY,
     SELECTION_ALL,
     NOTHING_TO_UNDO,
-    /** Ro'yxat bo'sh — o'chirish uchun hech narsa qo'shilmagan. */
-    CUTS_EMPTY,
-    /** Ro'yxatdagi bo'laklar butun faylni qamrab olgan. */
-    CUTS_ALL,
-    /** Bo'lish nuqtasi fayl chegarasida yoki kiritilmagan. */
-    SPLIT_POINT_INVALID,
+
     /** Tahrirlashning o'zi bajarilmadi (o'qish/yozish xatosi). */
     EDIT_FAILED,
+
+    /** Natijani asl formatda yozib bo'lmadi. */
+    EXPORT_FAILED,
+
+    /** Tayyor faylni tanlangan joyga nusxalab bo'lmadi. */
     SAVE_FAILED,
 }
 
+/** Hozir bajarilayotgan uzoq ish. */
+enum class TrimBusy { NONE, OPENING, EDITING, PREPARING, SAVING }
+
 data class TrimUiState(
     val fileName: String = "",
+    val formatName: String = "",
     val info: WavInfo? = null,
     val startParts: TimeParts = TimeParts(),
     val endParts: TimeParts = TimeParts(),
-    val splitParts: TimeParts = TimeParts(),
-    /**
-     * Ko'p nuqtali o'chirish ro'yxati.
-     *
-     * Bo'laklar fayl vaqtida saqlanadi, ya'ni ro'yxat tahrirlar orasida
-     * o'zgarmaydi: foydalanuvchi ularni bir to'plam qilib yig'ib, keyin bir
-     * marta qo'llaydi. Har bir tahrir ularni tozalaydi.
-     */
-    val cuts: List<AudioTrimmer.Cut> = emptyList(),
-    val fadeIn: Boolean = false,
-    val fadeOut: Boolean = false,
-    val fadeMs: String = DEFAULT_FADE_MS,
     val isPlaying: Boolean = false,
     val playPositionMs: Long = 0L,
     val canUndo: Boolean = false,
-    val canRedo: Boolean = false,
-    val busy: Boolean = false,
-    val savedPath: String? = null,
-    /** Bo'lishdan keyingi ikkinchi qism — kutubxonaga tushgan yangi fayl. */
-    val splitSecondPath: String? = null,
+    /**
+     * Tahrir yoki bekor qilish har bajarilganda bittaga ortadi. Ekran shu
+     * raqamning o'zgarishiga qarab «bajarildi» deb e'lon qiladi: ekran
+     * o'quvchi foydalanuvchisi natijani ko'rmaydi, faqat eshitadi.
+     */
+    val revision: Int = 0,
+    val busy: TrimBusy = TrimBusy.NONE,
+    /** Fayl ochilmagan sababi (ochish tugmasi bosilgandan keyin). */
+    val openFailure: ImportFailure? = null,
+    val openFailureFormat: String = "",
+    val result: ResultFile? = null,
+    /** Tayyor fayl saqlangan bo'lsa — uning nomi. */
+    val savedName: String? = null,
     val error: TrimError? = null,
 ) {
+    val isOpen: Boolean get() = info != null
+    val isBusy: Boolean get() = busy != TrimBusy.NONE
     val durationMs: Long get() = info?.durationMs ?: 0L
 }
 
 /**
- * Kesish ekranining holati.
+ * Kesish va o'chirish ekranlarining holati.
+ *
+ * Tartib: fayl tanlanadi → ochiladi (qat'iy format qoidasi shu yerda
+ * tekshiriladi) → tahrirlanadi → natija **asl formatda** tayyorlanadi →
+ * foydalanuvchi uni saqlaydi yoki ulashadi.
  *
  * Muhim qoida: hech bir amal mavjud faylni joyida o'zgartirmaydi. Har bir
- * kesish YANGI fayl yozadi, tarix esa shu fayllar ro'yxatidan iborat.
- * «Orqaga qaytarish» — shunchaki tarixda bir qadam orqaga ketish, ya'ni
- * hech qachon ma'lumot yo'qolmaydi.
+ * tahrir YANGI fayl yozadi, tarix esa shu fayllar ro'yxatidan iborat.
+ * «Bekor qilish» — shunchaki tarixda bir qadam orqaga ketish, ya'ni hech
+ * qachon ma'lumot yo'qolmaydi. Asl fayl esa umuman tegilmaydi.
  */
 class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val store = RecordingStore(application)
+    private val store = WorkStore(application, SCOPE)
+    private val opener = AudioOpener(store, Build.VERSION.SDK_INT)
+    private val exporter = FormatPreservingExporter(Build.VERSION.SDK_INT, AndroidAudioEncoders::open)
     private val player = AudioPlayer()
 
     /** Tahrirlash zanjiri: har bir element — to'liq WAV fayl. */
     private val history = mutableListOf<File>()
     private var historyIndex = -1
+
+    /** Yuklangan faylning nusxasi va uning formati (natija shu formatda yoziladi). */
+    private var sourceFile: File? = null
+    private var origin: AudioFormat? = null
+    private var baseName = ""
 
     private var playTicker: Job? = null
 
@@ -106,33 +141,47 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private val currentFile: File?
         get() = history.getOrNull(historyIndex)
 
-    fun load(path: String) {
-        stopPlayback()
-        val file = File(path)
-        if (!file.exists()) {
-            _state.update { it.copy(error = TrimError.FILE_NOT_FOUND) }
-            return
+    /** Tanlangan faylni ochadi. Eski ish (bo'lsa) yangi fayl muvaffaqiyatli ochilgandan keyin tashlanadi. */
+    fun open(uri: Uri) {
+        if (_state.value.isBusy) return
+        viewModelScope.launch {
+            stopPlayback()
+            _state.update {
+                it.copy(busy = TrimBusy.OPENING, openFailure = null, openFailureFormat = "", error = null, savedName = null)
+            }
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching { opener.open(getApplication<Application>(), uri) }
+            }
+            when (val opened = outcome.getOrNull()) {
+                is OpenResult.Opened -> startSession(opened)
+                is OpenResult.Refused -> {
+                    ErrorLog.info("audio.open", "Fayl ochilmadi: ${opened.reason}, format: ${opened.formatName}")
+                    _state.update {
+                        it.copy(
+                            busy = TrimBusy.NONE,
+                            openFailure = opened.reason,
+                            openFailureFormat = opened.formatName,
+                        )
+                    }
+                }
+                null -> {
+                    ErrorLog.error("audio.open", "Fayl ochishda kutilmagan xato", outcome.exceptionOrNull())
+                    _state.update {
+                        it.copy(busy = TrimBusy.NONE, openFailure = ImportFailure.READ_FAILED, openFailureFormat = "")
+                    }
+                }
+            }
         }
-        history.clear()
-        history += file
-        historyIndex = 0
-        refreshFromCurrent()
     }
 
     fun setStart(parts: TimeParts) = _state.update { it.copy(startParts = parts) }
     fun setEnd(parts: TimeParts) = _state.update { it.copy(endParts = parts) }
-    fun setSplitPoint(parts: TimeParts) = _state.update { it.copy(splitParts = parts) }
-    fun setFadeIn(enabled: Boolean) = _state.update { it.copy(fadeIn = enabled) }
-    fun setFadeOut(enabled: Boolean) = _state.update { it.copy(fadeOut = enabled) }
-    fun setFadeMs(value: String) = _state.update {
-        it.copy(fadeMs = value.filter(Char::isDigit).take(4))
-    }
 
     fun clearError() = _state.update { it.copy(error = null) }
-    fun consumeSaved() = _state.update { it.copy(savedPath = null) }
-    fun consumeSplit() = _state.update { it.copy(splitSecondPath = null) }
+    fun clearOpenFailure() = _state.update { it.copy(openFailure = null, openFailureFormat = "") }
+    fun clearSaved() = _state.update { it.copy(savedName = null) }
 
-    /** Tanlangan oraliqning boshlanishi (ms). Butun fayl kiritilmagan bo'lsa — 0. */
+    /** Tanlangan oraliqning boshlanishi (ms). Kiritilmagan bo'lsa — 0. */
     fun selectionStartMs(state: TrimUiState = _state.value): Long =
         state.startParts.toMillisOrNull() ?: 0L
 
@@ -161,8 +210,8 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(isPlaying = false) }
     }
 
-    /** Tanlangan oraliqni saqlaydi: oraliqdan tashqari hamma narsa o'chadi. */
-    fun applyTrim() {
+    /** Tanlangan oraliqni saqlaydi: oraliqdan tashqari hamma narsa olib tashlanadi. */
+    fun cutSelection() {
         val source = currentFile ?: return
         val current = _state.value
         val start = selectionStartMs(current)
@@ -171,8 +220,15 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(error = TrimError.SELECTION_EMPTY) }
             return
         }
-        runEdit(TAG_TRIM) { destination ->
-            AudioTrimmer.copyRange(source, destination, start, end, fadesOf(current))
+        // Yangi faylning chetlari to'lqin o'rtasidan boshlanadi: bir zumlik
+        // silliqlash «chiqillash»ning oldini oladi. Faylning haqiqiy boshi va
+        // oxiriga tegilmaydi.
+        val fades = AudioTrimmer.Fades(
+            fadeInMs = if (start > 0L) EDGE_FADE_MS else 0L,
+            fadeOutMs = if (end < current.durationMs) EDGE_FADE_MS else 0L,
+        )
+        runEdit(TAG_CUT) { destination ->
+            AudioTrimmer.copyRange(source, destination, start, end, fades)
         }
     }
 
@@ -197,147 +253,87 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                 source,
                 destination,
                 listOf(AudioTrimmer.Cut(start, end)),
-                fadesOf(current),
-            )
-        }
-    }
-
-    /**
-     * Joriy tanlovni o'chirish ro'yxatiga qo'shadi.
-     *
-     * Hech narsa o'chirilmaydi — faqat ro'yxat to'ladi. Shu sababli bu amal
-     * tarixga ham tushmaydi: bekor qilish uchun «ro'yxatdan olib tashlash» bor.
-     */
-    fun addCut() {
-        val current = _state.value
-        val start = selectionStartMs(current)
-        val end = selectionEndMs(current)
-        if (end <= start) {
-            _state.update { it.copy(error = TrimError.SELECTION_EMPTY) }
-            return
-        }
-        _state.update {
-            it.copy(cuts = it.cuts + AudioTrimmer.Cut(start, end), error = null)
-        }
-    }
-
-    fun removeCut(index: Int) = _state.update {
-        if (index in it.cuts.indices) it.copy(cuts = it.cuts.filterIndexed { i, _ -> i != index })
-        else it
-    }
-
-    fun clearCuts() = _state.update { it.copy(cuts = emptyList(), error = null) }
-
-    /** Ro'yxatdagi barcha bo'laklarni bir marta o'chiradi. */
-    fun applyCuts() {
-        val source = currentFile ?: return
-        val current = _state.value
-        val info = current.info
-        if (current.cuts.isEmpty()) {
-            _state.update { it.copy(error = TrimError.CUTS_EMPTY) }
-            return
-        }
-        if (info == null) {
-            _state.update { it.copy(error = TrimError.FILE_NOT_FOUND) }
-            return
-        }
-        // Butun fayl o'chirilishini oldindan aytamiz: aks holda foydalanuvchi
-        // umumiy «tahrirlab bo'lmadi» xatosini olardi va sababini bilmasdi.
-        if (AudioTrimmer.coversWholeFile(info, current.cuts)) {
-            _state.update { it.copy(error = TrimError.CUTS_ALL) }
-            return
-        }
-        val cuts = current.cuts
-        runEdit(tag = TAG_DELETE, onSuccess = { clearCuts() }) { destination ->
-            AudioTrimmer.deleteRanges(source, destination, cuts, fadesOf(current))
-        }
-    }
-
-    /**
-     * Faylni bo'lish nuqtasidan ikki qismga ajratadi.
-     *
-     * Birinchi qism tahrirlash zanjirida qoladi (ya'ni uni yana tahrirlab,
-     * «Saqlash» bilan yakunlash mumkin), ikkinchisi esa darhol kutubxonaga —
-     * asosiy yozuvlar papkasiga — tushadi. Shu sababli bo'lish hech qachon
-     * ma'lumot yo'qotmaydi: ikkala qism ham fayl ko'rinishida mavjud.
-     */
-    fun applySplit() {
-        val source = currentFile ?: return
-        val current = _state.value
-        val at = current.splitParts.toMillisOrNull()
-        if (at == null || at <= 0L || at >= current.durationMs) {
-            _state.update { it.copy(error = TrimError.SPLIT_POINT_INVALID) }
-            return
-        }
-        viewModelScope.launch {
-            stopPlayback()
-            _state.update { it.copy(busy = true, error = null) }
-            val first = store.newEditFile(TAG_SPLIT)
-            val second = store.newRecordingFile("${source.nameWithoutExtension}-2")
-            val result = withContext(Dispatchers.IO) {
-                runCatching { AudioTrimmer.split(source, first, second, at) }
-            }
-            result.fold(
-                onSuccess = {
-                    while (history.size > historyIndex + 1) history.removeAt(history.size - 1)
-                    history += first
-                    historyIndex = history.size - 1
-                    _state.update {
-                        it.copy(busy = false, splitSecondPath = second.absolutePath)
-                    }
-                    refreshFromCurrent()
-                },
-                onFailure = {
-                    // Yarim yozilgan fayllar qolib ketmasligi kerak.
-                    first.delete()
-                    second.delete()
-                    _state.update { it.copy(busy = false, error = TrimError.EDIT_FAILED) }
-                },
+                joinFadeMs = JOIN_FADE_MS,
             )
         }
     }
 
     fun undo() {
+        if (_state.value.isBusy) return
         if (historyIndex <= 0) {
             _state.update { it.copy(error = TrimError.NOTHING_TO_UNDO) }
             return
         }
+        stopPlayback()
         historyIndex--
+        _state.update {
+            it.copy(result = null, savedName = null, error = null, revision = it.revision + 1)
+        }
         refreshFromCurrent()
     }
 
-    fun redo() {
-        if (historyIndex >= history.size - 1) return
-        historyIndex++
-        refreshFromCurrent()
-    }
-
-    /** Joriy natijani asosiy papkaga saqlaydi. */
-    fun save() {
-        val source = currentFile ?: return
+    /**
+     * Natijani **asl formatda** yozadi.
+     *
+     * Ichkarida tahrirlash yo'qotishsiz PCM ustida ketgan; bu yerda u faylning
+     * yuklangan konteyneri va kodekiga qayta kodlanadi. Boshqa formatga
+     * o'tish yo'q: [AudioOpener] shunday format bilan ishlab bo'lmaydigan
+     * faylni ish boshlanmasdan oldin rad etgan.
+     */
+    fun prepareResult(mode: TrimMode) {
+        val edited = currentFile ?: return
+        val format = origin ?: return
+        if (_state.value.isBusy) return
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val destination = store.newRecordingFile()
+            stopPlayback()
+            _state.update { it.copy(busy = TrimBusy.PREPARING, error = null, savedName = null) }
+            val destination = store.newOutputFile(baseName, mode.suffix, format.container.extension)
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching { exporter.export(edited, format, destination) }
+            }
+            val done = outcome.getOrNull()
+            if (done is ExportOutcome.Done && destination.exists()) {
+                _state.update {
+                    it.copy(
+                        busy = TrimBusy.NONE,
+                        result = ResultFile(
+                            path = destination.absolutePath,
+                            name = destination.name,
+                            mimeType = StrictFormat.mimeType(format.container),
+                            sizeBytes = destination.length(),
+                        ),
+                    )
+                }
+            } else {
+                // Yarim yozilgan fayl qolib ketmasligi kerak.
+                runCatching { destination.parentFile?.deleteRecursively() }
+                ErrorLog.error(
+                    "audio.export",
+                    "Natijani asl formatda yozib bo'lmadi: ${StrictFormat.label(format)}, natija: ${done?.javaClass?.simpleName}",
+                    outcome.exceptionOrNull(),
+                )
+                _state.update { it.copy(busy = TrimBusy.NONE, error = TrimError.EXPORT_FAILED) }
+            }
+        }
+    }
+
+    /** Tayyor faylni foydalanuvchi tanlagan joyga ([uri]) nusxalaydi. */
+    fun saveTo(uri: Uri) {
+        val result = _state.value.result ?: return
+        if (_state.value.isBusy) return
+        viewModelScope.launch {
+            _state.update { it.copy(busy = TrimBusy.SAVING, error = null) }
             val ok = withContext(Dispatchers.IO) {
-                runCatching { source.copyTo(destination, overwrite = true) }.isSuccess
+                ResultFiles.copyTo(getApplication<Application>(), File(result.path), uri)
             }
-            if (ok) {
-                // Oraliq fayllar o'chiriladi, shuning uchun tarix ham yangilanadi:
-                // aks holda «orqaga qaytarish» o'chirilgan faylga olib borardi.
-                // Saqlangan fayl — yangi zanjirning boshi.
-                history.clear()
-                history += destination
-                historyIndex = 0
-                store.clearEdits(keep = null)
-            }
+            if (!ok) ErrorLog.error("audio.save", "Faylni tanlangan joyga yozib bo'lmadi")
             _state.update {
                 it.copy(
-                    busy = false,
-                    savedPath = if (ok) destination.absolutePath else null,
+                    busy = TrimBusy.NONE,
+                    savedName = if (ok) result.name else null,
                     error = if (ok) null else TrimError.SAVE_FAILED,
                 )
             }
-            if (ok) refreshFromCurrent()
         }
     }
 
@@ -348,34 +344,62 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- yordamchi ---
 
-    private fun runEdit(
-        tag: String,
-        onSuccess: () -> Unit = {},
-        operation: (File) -> WavInfo,
-    ) {
-        if (currentFile == null) return
+    private fun startSession(opened: OpenResult.Opened) {
+        // Oldingi ish tugadi: uning fayllari endi keraksiz.
+        val previous = history.toList() + listOfNotNull(sourceFile)
+
+        sourceFile = opened.source
+        origin = opened.origin
+        baseName = opened.displayName.substringBeforeLast('.').ifBlank { DEFAULT_NAME }
+        history.clear()
+        history += opened.wav
+        historyIndex = 0
+
+        for (file in previous) runCatching { file.delete() }
+
+        _state.update {
+            it.copy(
+                busy = TrimBusy.NONE,
+                formatName = StrictFormat.label(opened.origin),
+                openFailure = null,
+                openFailureFormat = "",
+                result = null,
+                savedName = null,
+                error = null,
+                revision = 0,
+            )
+        }
+        refreshFromCurrent()
+    }
+
+    private fun runEdit(tag: String, operation: (File) -> WavInfo) {
+        if (currentFile == null || _state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
-            _state.update { it.copy(busy = true, error = null) }
+            _state.update { it.copy(busy = TrimBusy.EDITING, error = null, savedName = null) }
             val destination = store.newEditFile(tag)
             val result = withContext(Dispatchers.IO) {
                 runCatching { operation(destination) }
             }
             result.fold(
                 onSuccess = {
-                    // Yangi amaldan keyin «oldinga» tarixi yo'qoladi.
-                    while (history.size > historyIndex + 1) history.removeAt(history.size - 1)
+                    // Yangi amaldan keyin «oldinga» tarixi yo'qoladi va tayyor
+                    // natija eskirdi: u endi oldingi tahrirga tegishli.
+                    while (history.size > historyIndex + 1) {
+                        val dropped = history.removeAt(history.size - 1)
+                        runCatching { dropped.delete() }
+                    }
                     history += destination
                     historyIndex = history.size - 1
-                    _state.update { it.copy(busy = false) }
-                    onSuccess()
+                    _state.update {
+                        it.copy(busy = TrimBusy.NONE, result = null, revision = it.revision + 1)
+                    }
                     refreshFromCurrent()
                 },
                 onFailure = { error ->
-                    destination.delete()
-                    _state.update {
-                        it.copy(busy = false, error = TrimError.EDIT_FAILED)
-                    }
+                    ErrorLog.error("audio.edit", "Tahrirlash bajarilmadi ($tag)", error)
+                    runCatching { destination.delete() }
+                    _state.update { it.copy(busy = TrimBusy.NONE, error = TrimError.EDIT_FAILED) }
                 },
             )
         }
@@ -386,26 +410,15 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         val info = runCatching { WavFile.readInfo(file) }.getOrNull()
         _state.update {
             it.copy(
-                fileName = file.nameWithoutExtension,
+                fileName = baseName,
                 info = info,
-                // Har bir amaldan keyin tanlov butun faylni qamrab oladi,
-                // bo'lish nuqtasi esa bo'shatiladi: eski raqam yangi fayl
-                // uzunligiga to'g'ri kelmasligi mumkin.
+                // Har bir amaldan keyin tanlov butun faylni qamrab oladi:
+                // eski raqam yangi fayl uzunligiga to'g'ri kelmasligi mumkin.
                 startParts = TimeParts.fromMillis(0),
                 endParts = TimeParts.fromMillis(info?.durationMs ?: 0L),
-                splitParts = TimeParts(),
                 canUndo = historyIndex > 0,
-                canRedo = historyIndex < history.size - 1,
             )
         }
-    }
-
-    private fun fadesOf(state: TrimUiState): AudioTrimmer.Fades {
-        val length = state.fadeMs.toLongOrNull() ?: 0L
-        return AudioTrimmer.Fades(
-            fadeInMs = if (state.fadeIn) length else 0L,
-            fadeOutMs = if (state.fadeOut) length else 0L,
-        )
     }
 
     private fun startTicker(fromMs: Long) {
@@ -436,12 +449,22 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         releasePlayer()
+        // Ish fayllari o'chadi. Tayyor natijalar qoladi: ulashilgan fayl
+        // boshqa ilovada keyinroq o'qilishi mumkin (`WorkStore.clearWork`).
+        store.clearWork()
     }
 
     private companion object {
-        const val TAG_TRIM = "kesish"
+        const val SCOPE = "audio"
+        const val TAG_CUT = "kesish"
         const val TAG_DELETE = "ochirish"
-        const val TAG_SPLIT = "bolish"
+        const val DEFAULT_NAME = "audio"
         const val POSITION_TICK_MS = 100L
+
+        /** Kesilgan joyning chetidagi silliqlash (ms): quloq eshitmaydi, «chiqillash»ni yo'qotadi. */
+        const val EDGE_FADE_MS = 5L
+
+        /** O'chirilgan qism o'rnidagi tutashuv silliqlashi (ms). */
+        const val JOIN_FADE_MS = 5L
     }
 }

@@ -1,91 +1,65 @@
 package uz.ovozstudio.app.ui.home
 
-import androidx.compose.foundation.clickable
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
-import uz.ovozstudio.app.media.Recording
+import uz.ovozstudio.app.settings.About
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.a11yHeading
-import uz.ovozstudio.app.util.TimeFormat
+import uz.ovozstudio.app.ui.common.rememberAnnouncer
 
+/**
+ * Bosh ekran: ilovaning barcha imkoniyatlari bitta ro'yxatda.
+ *
+ * Ro'yxat qisqa (yetti tugma), shuning uchun ekran o'quvchi foydalanuvchisi
+ * hammasini bir yo'la ko'radi. Bo'limlar sarlavhali: TalkBack sarlavhadan
+ * sarlavhaga sakray oladi.
+ */
 @Composable
 fun HomeScreen(
-    onRecord: () -> Unit,
-    onOpenFile: (String) -> Unit,
-    onConvertFile: (String) -> Unit,
-    onConvert: () -> Unit,
-    onEqFile: (String) -> Unit,
-    onEq: () -> Unit,
-    onSpeedFile: (String) -> Unit,
-    onSpeed: () -> Unit,
-    onNoiseFile: (String) -> Unit,
-    onNoise: () -> Unit,
-    onStemFile: (String) -> Unit,
-    onStem: () -> Unit,
-    onVoice: () -> Unit,
-    onBook: () -> Unit,
-    onTag: () -> Unit,
-    onMix: () -> Unit,
-    onSettings: () -> Unit,
-    viewModel: HomeViewModel = viewModel(),
+    onAudioCut: () -> Unit,
+    onAudioDelete: () -> Unit,
+    onAudioMerge: () -> Unit,
+    onPdfCut: () -> Unit,
+    onPdfDelete: () -> Unit,
+    onReader: () -> Unit,
+    onLog: () -> Unit,
 ) {
-    val recordings by viewModel.recordings.collectAsState()
-    val simplified by viewModel.simplified.collectAsState()
-    var pendingDelete by remember { mutableStateOf<Recording?>(null) }
-
-    // Soddalashtirilgan rejimda yopilgan bo'lim shu seans ichida ochilishi
-    // mumkin. `rememberSaveable`: ekran burilganda ham ochiq qolsin.
-    var toolsExpanded by rememberSaveable { mutableStateOf(false) }
-    val toolsVisible = !simplified || toolsExpanded
-
-    // Ro'yxat har safar ekranga qaytilganda qayta o'qiladi. ViewModel ekrandan
-    // uzoq yashaydi, shuning uchun faqat `init` dagi o'qish yetarli emas edi:
-    // yangi yozuv yoki saqlangan tahrir ro'yxatda ko'rinmay qolardi.
-    LaunchedEffect(Unit) { viewModel.refresh() }
+    val context = LocalContext.current
+    val announce = rememberAnnouncer()
+    var showAbout by rememberSaveable { mutableStateOf(false) }
+    val linkFailed = stringResource(R.string.about_link_failed)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             // Edge-to-edge rejimida tizim panellari ostiga tushmaslik uchun.
             .safeDrawingPadding()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             text = stringResource(R.string.home_title),
@@ -97,256 +71,115 @@ fun HomeScreen(
             style = MaterialTheme.typography.bodyLarge,
         )
 
-        A11yButton(
-            label = stringResource(R.string.home_action_record),
-            onClick = onRecord,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        A11yOutlinedButton(
-            label = stringResource(R.string.home_action_settings),
-            onClick = onSettings,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        if (toolsVisible) {
-            A11yOutlinedButton(
-                label = stringResource(R.string.home_action_convert),
-                onClick = onConvert,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            A11yOutlinedButton(
-                label = stringResource(R.string.eq_title),
-                onClick = onEq,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            A11yOutlinedButton(
-                label = stringResource(R.string.speed_title),
-                onClick = onSpeed,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            A11yOutlinedButton(
-                label = stringResource(R.string.noise_title),
-                onClick = onNoise,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            A11yOutlinedButton(
-                label = stringResource(R.string.stem_title),
-                onClick = onStem,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            // Ovoz sinovi faylga bog'lanmagan: u matnni o'qiydi, shuning uchun
-            // faqat shu yerda — qatorlar ichida takrorlanmaydi.
-            A11yOutlinedButton(
-                label = stringResource(R.string.voice_title),
-                onClick = onVoice,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            // Audio-kitob ham faylga bog'lanmagan: hujjat ekranning o'zida
-            // tanlanadi, chunki kirish audio emas — PDF, DOCX, EPUB yoki TXT.
-            A11yOutlinedButton(
-                label = stringResource(R.string.book_title),
-                onClick = onBook,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            // Teglar ekrani: ilova ichidagi MP3 fayllar o'sha yerda ro'yxat
-            // bo'lib chiqadi — tizim tanlagichi bu papkani ko'rmaydi.
-            A11yOutlinedButton(
-                label = stringResource(R.string.tag_title),
-                onClick = onTag,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            // Aralashtirish ham faylga bog'lanmagan: u bir necha yozuvni talab
-            // qiladi, shuning uchun yo'l oldindan berilmaydi — yo'llar ekranning
-            // o'zida ro'yxatdan yig'iladi.
-            A11yOutlinedButton(
-                label = stringResource(R.string.mix_title),
-                onClick = onMix,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        } else {
-            // Yopilgan bo'lim jimgina yo'qolmasligi kerak: foydalanuvchi
-            // nima uchun kam tugma borligini va qanday ochishni biladi.
-            Text(
-                text = stringResource(R.string.home_tools_hidden),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-
-        // Ochish/yopish tugmasi faqat soddalashtirilgan rejimda ko'rinadi:
-        // oddiy rejimda yashiradigan narsa yo'q.
-        if (simplified) {
-            A11yOutlinedButton(
-                label = stringResource(
-                    if (toolsExpanded) R.string.home_tools_hide else R.string.home_tools_show,
-                ),
-                onClick = { toolsExpanded = !toolsExpanded },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
         Text(
-            text = stringResource(R.string.home_recent_title),
-            style = MaterialTheme.typography.titleLarge,
+            text = stringResource(R.string.home_section_audio),
+            style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.a11yHeading(),
         )
+        A11yButton(
+            label = stringResource(R.string.home_audio_cut),
+            onClick = onAudioCut,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_audio_delete),
+            onClick = onAudioDelete,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_audio_merge),
+            onClick = onAudioMerge,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-        if (recordings.isEmpty()) {
-            Text(
-                text = stringResource(R.string.home_empty),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(recordings, key = { it.file.absolutePath }) { recording ->
-                    RecordingRow(
-                        recording = recording,
-                        showTools = !simplified,
-                        onOpen = { onOpenFile(recording.file.absolutePath) },
-                        onConvert = { onConvertFile(recording.file.absolutePath) },
-                        onEq = { onEqFile(recording.file.absolutePath) },
-                        onSpeed = { onSpeedFile(recording.file.absolutePath) },
-                        onNoise = { onNoiseFile(recording.file.absolutePath) },
-                        onStem = { onStemFile(recording.file.absolutePath) },
-                        onDeleteRequest = { pendingDelete = recording },
-                    )
-                    HorizontalDivider()
-                }
-            }
-        }
+        Text(
+            text = stringResource(R.string.home_section_pdf),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.a11yHeading(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_pdf_cut),
+            onClick = onPdfCut,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_pdf_delete),
+            onClick = onPdfDelete,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Text(
+            text = stringResource(R.string.home_section_documents),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.a11yHeading(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_reader),
+            onClick = onReader,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Text(
+            text = stringResource(R.string.home_section_other),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.a11yHeading(),
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.home_log),
+            onClick = onLog,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        A11yOutlinedButton(
+            label = stringResource(R.string.home_about),
+            onClick = { showAbout = true },
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 
-    pendingDelete?.let { target ->
+    if (showAbout) {
         AlertDialog(
-            onDismissRequest = { pendingDelete = null },
-            title = { Text(stringResource(R.string.common_delete)) },
-            text = { Text(target.title) },
+            onDismissRequest = { showAbout = false },
+            title = { Text(text = stringResource(R.string.about_title)) },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.about_text,
+                        versionName(context),
+                        About.LICENSE_NAME,
+                    ),
+                )
+            },
             confirmButton = {
                 A11yButton(
-                    label = stringResource(R.string.common_delete),
+                    label = stringResource(R.string.about_open_source),
                     onClick = {
-                        viewModel.delete(target)
-                        pendingDelete = null
+                        if (!openUrl(context, About.SOURCE_URL)) announce(linkFailed)
                     },
                 )
             },
             dismissButton = {
                 A11yOutlinedButton(
-                    label = stringResource(R.string.common_cancel),
-                    onClick = { pendingDelete = null },
+                    label = stringResource(R.string.common_ok),
+                    onClick = { showAbout = false },
                 )
             },
         )
     }
 }
 
-/**
- * Bitta yozuv qatori.
- *
- * [showTools] — soddalashtirilgan rejimda qatorning to'rt ikonkasi
- * yashiriladi. Ular yo'qolmaydi: har bir amal bosh ekrandagi tugmalarda ham
- * bor, ya'ni qator esa faqat «ochish» va «o'chirish» bo'lib qoladi — ekran
- * o'quvchi uchun har bir yozuvdagi to'xtash nuqtalari soni keskin kamayadi.
- */
-@Composable
-private fun RecordingRow(
-    recording: Recording,
-    showTools: Boolean,
-    onOpen: () -> Unit,
-    onConvert: () -> Unit,
-    onEq: () -> Unit,
-    onSpeed: () -> Unit,
-    onNoise: () -> Unit,
-    onStem: () -> Unit,
-    onDeleteRequest: () -> Unit,
-) {
-    val duration = TimeFormat.format(recording.durationMs)
-    val title = recording.title
+/** Ilova versiyasi; aniqlanmasa — «?». */
+private fun versionName(context: Context): String = try {
+    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
+} catch (error: Exception) {
+    "?"
+}
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                // Butun qator bosiladi va TalkBack uni bitta element sifatida o'qiydi:
-                // «yozuv-20260917-2112, 00:03:14» — fayl nomi va uzunligi birga.
-                .clickable(role = Role.Button, onClickLabel = title, onClick = onOpen)
-                .padding(vertical = 14.dp),
-        ) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = duration,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        if (showTools) {
-            // Konvertatsiya shu qatordan boshlanadi, chunki ilovaning o'z
-            // papkasidagi fayllar tizim tanlagichida ko'rinmaydi: foydalanuvchi
-            // ularni faqat shu ro'yxat orqali topa oladi.
-            IconButton(onClick = onConvert) {
-                Icon(
-                    imageVector = Icons.Filled.Refresh,
-                    contentDescription = stringResource(R.string.home_action_convert) + ": " + title,
-                )
-            }
-
-            IconButton(onClick = onEq) {
-                Icon(
-                    imageVector = Icons.Filled.Build,
-                    contentDescription = stringResource(R.string.eq_title) + ": " + title,
-                )
-            }
-
-            // «FastForward» ikonkasi material-icons-core da yo'q; «Create» —
-            // tahrirlash amalini bildiradi va mavjud to'plamdan olinadi.
-            IconButton(onClick = onSpeed) {
-                Icon(
-                    imageVector = Icons.Filled.Create,
-                    contentDescription = stringResource(R.string.speed_title) + ": " + title,
-                )
-            }
-
-            // Shovqin tozalash uchun ham alohida ikonka kerak: asosiy to'plamda
-            // «tozalash» ikonkasi yo'q, pastga strelka esa shovqin darajasini
-            // pasaytirishni bildiradi.
-            IconButton(onClick = onNoise) {
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = stringResource(R.string.noise_title) + ": " + title,
-                )
-            }
-
-            // Asosiy to'plamda «ajratish» ikonkasi yo'q; «List» — ajratish
-            // natijasi ro'yxat bo'lib chiqadi (vokal va cholg'u alohida
-            // fayllar), shuning uchun shu belgi tanlandi. Ekran o'quvchi
-            // uchun muhimi — `contentDescription`, u amalni nomlaydi.
-            IconButton(onClick = onStem) {
-                Icon(
-                    imageVector = Icons.Filled.List,
-                    contentDescription = stringResource(R.string.stem_title) + ": " + title,
-                )
-            }
-        }
-
-        IconButton(onClick = onDeleteRequest) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                // Yorliqsiz tugma bo'lmasligi qoidasi: nom fayl nomi bilan aytiladi,
-                // shunda foydalanuvchi qaysi faylni o'chirishini biladi.
-                contentDescription = stringResource(R.string.common_delete) + ": " + title,
-            )
-        }
-    }
+/** Havolani brauzerda ochadi. `false` — ochib bo'lmadi (brauzer yo'q). */
+private fun openUrl(context: Context, url: String): Boolean = try {
+    context.startActivity(
+        Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+    )
+    true
+} catch (error: Exception) {
+    false
 }

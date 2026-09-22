@@ -1,256 +1,80 @@
 package uz.ovozstudio.app.ui.nav
 
-import android.net.Uri
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import uz.ovozstudio.app.ui.book.BookScreen
-import uz.ovozstudio.app.ui.convert.ConvertScreen
-import uz.ovozstudio.app.ui.eq.EqScreen
 import uz.ovozstudio.app.ui.home.HomeScreen
-import uz.ovozstudio.app.ui.mix.MixScreen
-import uz.ovozstudio.app.ui.noise.NoiseScreen
-import uz.ovozstudio.app.ui.record.RecordScreen
-import uz.ovozstudio.app.ui.settings.SettingsScreen
-import uz.ovozstudio.app.ui.speed.SpeedScreen
-import uz.ovozstudio.app.ui.stem.StemScreen
-import uz.ovozstudio.app.ui.tag.TagScreen
+import uz.ovozstudio.app.ui.log.LogScreen
+import uz.ovozstudio.app.ui.merge.MergeScreen
+import uz.ovozstudio.app.ui.pdf.PdfMode
+import uz.ovozstudio.app.ui.pdf.PdfScreen
+import uz.ovozstudio.app.ui.reader.ReaderScreen
+import uz.ovozstudio.app.ui.trim.TrimMode
 import uz.ovozstudio.app.ui.trim.TrimScreen
-import uz.ovozstudio.app.ui.voice.VoiceScreen
 
+/**
+ * Ilovadagi ekranlar. Har biri alohida, fayl talab qilmaydi: fayl ekranning
+ * o'zida tizim tanlagichi orqali olinadi.
+ */
 object Routes {
     const val HOME = "home"
-    const val RECORD = "record"
-    const val TRIM = "trim?path={path}"
-
-    /**
-     * Konvertor ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun u beriladi,
-     * boshqa hollarda fayl tizim tanlagichi orqali olinadi.
-     */
-    const val CONVERT = "convert?path={path}"
-
-    /**
-     * Ekvalayzer ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun beriladi,
-     * aks holda fayl tizim tanlagichi orqali olinadi.
-     */
-    const val EQ = "eq?path={path}"
-
-    /**
-     * Tezlik va ohang ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun u
-     * beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
-     */
-    const val SPEED = "speed?path={path}"
-
-    /**
-     * Shovqin tozalash ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun u
-     * beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
-     */
-    const val NOISE = "noise?path={path}"
-
-    /**
-     * Vokal/cholg'u ajratish ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl
-     * uchun u beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
-     */
-    const val STEM = "stem?path={path}"
-
-    /**
-     * Ovoz sinovi ekrani. Fayl talab qilmaydi: u matn bilan ishlaydi, ya'ni
-     * yo'lni oldindan berish shart emas.
-     */
-    const val VOICE = "voice"
-
-    /**
-     * Teglar va ulashish ekrani. Yo'l ixtiyoriy: ilova ichidagi fayl uchun
-     * u beriladi, aks holda fayl tizim tanlagichi orqali olinadi.
-     */
-    const val TAG = "tag?path={path}"
-
-    /**
-     * Hujjatdan audio-kitob ekrani. Fayl talab qilmaydi: hujjat ekranning
-     * o'zida tanlanadi, chunki fayl tizimidan audio emas, hujjat olinadi.
-     */
-    const val BOOK = "book"
-
-    /**
-     * Ko'p yo'lli aralashtirish ekrani. Yo'l talab qilmaydi: yo'llar
-     * ekranning o'zida, ilova papkasidagi yozuvlardan yig'iladi — bir
-     * necha fayl kerak bo'ladi, bittasi emas.
-     */
-    const val MIX = "mix"
-
-    /**
-     * Sozlamalar ekrani. Fayl talab qilmaydi: til, soddalashtirilgan rejim
-     * va ilova haqida — hammasi ilovaning o'ziga tegishli.
-     */
-    const val SETTINGS = "settings"
-
-    fun trim(path: String): String = "trim?path=${Uri.encode(path)}"
-
-    fun convert(path: String): String = "convert?path=${Uri.encode(path)}"
-
-    fun eq(path: String): String = "eq?path=${Uri.encode(path)}"
-
-    fun speed(path: String): String = "speed?path=${Uri.encode(path)}"
-
-    fun noise(path: String): String = "noise?path=${Uri.encode(path)}"
-
-    fun stem(path: String): String = "stem?path=${Uri.encode(path)}"
-
-    fun tag(path: String): String = "tag?path=${Uri.encode(path)}"
+    const val AUDIO_CUT = "audio_cut"
+    const val AUDIO_DELETE = "audio_delete"
+    const val AUDIO_MERGE = "audio_merge"
+    const val PDF_CUT = "pdf_cut"
+    const val PDF_DELETE = "pdf_delete"
+    const val READER = "reader"
+    const val LOG = "log"
 }
 
 @Composable
 fun AppNav() {
     val navController = rememberNavController()
+    val back: () -> Unit = { navController.popBackStack() }
 
+    // Har bir ekran o'z ViewModel'iga ega, u ekran yopilganda tozalanadi:
+    // ochiq audio va vaqtinchalik fayllar shu bilan birga ketadi.
     NavHost(navController = navController, startDestination = Routes.HOME) {
 
         composable(Routes.HOME) {
             HomeScreen(
-                onRecord = { navController.navigate(Routes.RECORD) },
-                onOpenFile = { path -> navController.navigate(Routes.trim(path)) },
-                onConvertFile = { path -> navController.navigate(Routes.convert(path)) },
-                onConvert = { navController.navigate(Routes.convert("")) },
-                onEqFile = { path -> navController.navigate(Routes.eq(path)) },
-                onEq = { navController.navigate(Routes.eq("")) },
-                onSpeedFile = { path -> navController.navigate(Routes.speed(path)) },
-                onSpeed = { navController.navigate(Routes.speed("")) },
-                onNoiseFile = { path -> navController.navigate(Routes.noise(path)) },
-                onNoise = { navController.navigate(Routes.noise("")) },
-                onStemFile = { path -> navController.navigate(Routes.stem(path)) },
-                onStem = { navController.navigate(Routes.stem("")) },
-                onTag = { navController.navigate(Routes.tag("")) },
-                onMix = { navController.navigate(Routes.MIX) },
-                onVoice = { navController.navigate(Routes.VOICE) },
-                onBook = { navController.navigate(Routes.BOOK) },
-                onSettings = { navController.navigate(Routes.SETTINGS) },
+                onAudioCut = { navController.navigate(Routes.AUDIO_CUT) },
+                onAudioDelete = { navController.navigate(Routes.AUDIO_DELETE) },
+                onAudioMerge = { navController.navigate(Routes.AUDIO_MERGE) },
+                onPdfCut = { navController.navigate(Routes.PDF_CUT) },
+                onPdfDelete = { navController.navigate(Routes.PDF_DELETE) },
+                onReader = { navController.navigate(Routes.READER) },
+                onLog = { navController.navigate(Routes.LOG) },
             )
         }
 
-        composable(Routes.RECORD) {
-            RecordScreen(
-                onBack = { navController.popBackStack() },
-                onOpenSaved = { path ->
-                    navController.navigate(Routes.trim(path)) {
-                        // Yozish ekrani tarixda qolmasin — orqaga bosilganda
-                        // foydalanuvchi to'g'ridan-to'g'ri bosh ekranga qaytadi.
-                        popUpTo(Routes.RECORD) { inclusive = true }
-                    }
-                },
-            )
+        composable(Routes.AUDIO_CUT) {
+            TrimScreen(mode = TrimMode.CUT, onBack = back)
         }
 
-        composable(
-            route = Routes.TRIM,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            TrimScreen(
-                filePath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-            )
+        composable(Routes.AUDIO_DELETE) {
+            TrimScreen(mode = TrimMode.DELETE, onBack = back)
         }
 
-        composable(
-            route = Routes.CONVERT,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            ConvertScreen(
-                initialPath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-            )
+        composable(Routes.AUDIO_MERGE) {
+            MergeScreen(onBack = back)
         }
 
-        composable(
-            route = Routes.EQ,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            EqScreen(
-                initialPath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-                // Natija kutubxonaga tushadi; uni darhol kesish ekranida
-                // ochish mumkin — foydalanuvchi ro'yxatdan qidirmasin.
-                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
-            )
+        composable(Routes.PDF_CUT) {
+            PdfScreen(mode = PdfMode.CUT, onBack = back)
         }
 
-        composable(
-            route = Routes.SPEED,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            SpeedScreen(
-                initialPath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
-            )
+        composable(Routes.PDF_DELETE) {
+            PdfScreen(mode = PdfMode.DELETE, onBack = back)
         }
 
-        composable(
-            route = Routes.NOISE,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            NoiseScreen(
-                initialPath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
-            )
+        composable(Routes.READER) {
+            ReaderScreen(onBack = back)
         }
 
-        composable(
-            route = Routes.TAG,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            TagScreen(
-                initialPath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-                // Teg yozib bo'lmaydigan format — konvertor shu ilovaning
-                // o'zida: foydalanuvchi boshqa dastur qidirmasin.
-                onConvert = { navController.navigate(Routes.convert("")) },
-            )
-        }
-
-        composable(Routes.MIX) {
-            MixScreen(
-                onBack = { navController.popBackStack() },
-                // Manbalar WAV bo'lishi kerak — boshqa format shu ilovaning
-                // o'zida o'tkaziladi.
-                onConvert = { navController.navigate(Routes.convert("")) },
-                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
-            )
-        }
-
-        composable(
-            route = Routes.STEM,
-            arguments = listOf(navArgument("path") { type = NavType.StringType }),
-        ) { entry ->
-            val path = entry.arguments?.getString("path").orEmpty()
-            StemScreen(
-                initialPath = Uri.decode(path),
-                onBack = { navController.popBackStack() },
-                // Natijaning ikkala fayli ham kutubxonaga tushadi; ularni
-                // darhol kesish ekranida ochish mumkin.
-                onOpenSaved = { saved -> navController.navigate(Routes.trim(saved)) },
-            )
-        }
-
-        composable(Routes.VOICE) {
-            VoiceScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.BOOK) {
-            BookScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+        composable(Routes.LOG) {
+            LogScreen(onBack = back)
         }
     }
 }

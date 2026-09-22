@@ -1,8 +1,9 @@
 #!/bin/bash
 # Ovoz Studio — sof JVM testlarini yig'ib ishga tushirish.
 #
-# Android SDK talab qilinmaydi: WAV, kesish va vaqt mantiqi Android'ga
-# bog'liq emas, shuning uchun ular oddiy kotlinc bilan tekshiriladi.
+# Android SDK talab qilinmaydi: WAV, kesish, birlashtirish, sahifalar ro'yxati,
+# hujjat o'quvchilari, ovoz tanlash va xatolar jurnali Android'ga bog'liq emas,
+# shuning uchun ular oddiy kotlinc bilan tekshiriladi.
 # To'liq APK yig'ish uchun Gradle va Android SDK kerak (CI'da bajariladi).
 #
 # Kerak: ~/.local/lib/jdk, ~/.local/lib/kotlinc, ~/.local/lib/jars
@@ -36,135 +37,85 @@ for tool in "$KOTLINC" "$JARS/junit.jar" "$STDLIB" "$JUMP3R"; do
 done
 
 MAIN=(
-    app/src/main/java/uz/ovozstudio/app/util/TimeFormat.kt
-    app/src/main/java/uz/ovozstudio/app/util/TimeParts.kt
-    app/src/main/java/uz/ovozstudio/app/util/AtomicFileWriter.kt
-    app/src/main/java/uz/ovozstudio/app/media/RecorderConfig.kt
-    app/src/main/java/uz/ovozstudio/app/media/WavWriter.kt
-    app/src/main/java/uz/ovozstudio/app/media/WavFile.kt
+    app/src/main/java/uz/ovozstudio/app/log/ErrorJournal.kt
     app/src/main/java/uz/ovozstudio/app/media/AudioTrimmer.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/ImportFailure.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/FormatSupport.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/AudioEncoder.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/WavPcmReader.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/FormatPreservingExporter.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/FlacEncoder.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/Mp3Encoder.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/AdtsHeader.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/CodecRates.kt
-    app/src/main/java/uz/ovozstudio/app/media/format/PcmBytes.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/Biquad.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/EqBands.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/Equalizer.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/PcmWindow.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/Wsola.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/Resampler.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/SpeedPitch.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/Fft.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/NoiseReducer.kt
-    app/src/main/java/uz/ovozstudio/app/media/dsp/StemSeparator.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/TextChunker.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/VoiceEngine.kt
+    app/src/main/java/uz/ovozstudio/app/media/BitDepth.kt
+    app/src/main/java/uz/ovozstudio/app/media/WavFile.kt
+    app/src/main/java/uz/ovozstudio/app/media/WavWriter.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/ChapterSplitter.kt
-    app/src/main/java/uz/ovozstudio/app/media/doc/PlainTextDecoder.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/DocumentErrors.kt
-    app/src/main/java/uz/ovozstudio/app/media/doc/MarkupBlocks.kt
-    app/src/main/java/uz/ovozstudio/app/media/doc/ZipEntries.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/DocumentLoader.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/DocxTextReader.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/EpubTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/Fb2TextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/HtmlTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/MarkupBlocks.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/OdtTextReader.kt
     app/src/main/java/uz/ovozstudio/app/media/doc/PdfTextReader.kt
-    app/src/main/java/uz/ovozstudio/app/media/doc/DocumentLoader.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/BookErrors.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/BookPlan.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/WavJoiner.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/BookMarkers.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/ChapterAssembler.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/SleepTimer.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/BookBuilder.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/BookPlaylist.kt
-    app/src/main/java/uz/ovozstudio/app/media/book/BookPlaybackStore.kt
-    app/src/main/java/uz/ovozstudio/app/media/mix/AudioMixer.kt
-    app/src/main/java/uz/ovozstudio/app/media/mix/MixProject.kt
-    app/src/main/java/uz/ovozstudio/app/media/mix/MixProjectStore.kt
-    app/src/main/java/uz/ovozstudio/app/media/mix/MixSource.kt
-    app/src/main/java/uz/ovozstudio/app/media/mix/MixTrack.kt
-    app/src/main/java/uz/ovozstudio/app/media/mix/MixTrackText.kt
-    app/src/main/java/uz/ovozstudio/app/media/tag/AudioTags.kt
-    app/src/main/java/uz/ovozstudio/app/media/tag/Id3v2Reader.kt
-    app/src/main/java/uz/ovozstudio/app/media/tag/Id3v2Tag.kt
-    app/src/main/java/uz/ovozstudio/app/media/tag/Mp3Tagger.kt
-    app/src/main/java/uz/ovozstudio/app/media/tag/TagDraft.kt
-    app/src/main/java/uz/ovozstudio/app/ui/mix/MixUiState.kt
-    app/src/main/java/uz/ovozstudio/app/ui/settings/SettingsUiState.kt
-    app/src/main/java/uz/ovozstudio/app/ui/stem/StemUiState.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/PlainTextDecoder.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/PptxTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/ReadingText.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/RtfTextReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/TextQuality.kt
+    app/src/main/java/uz/ovozstudio/app/media/doc/ZipEntries.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/PcmWindow.kt
+    app/src/main/java/uz/ovozstudio/app/media/dsp/Resampler.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AdtsHeader.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AudioEncoder.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/CodecRates.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/FlacEncoder.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/FormatPreservingExporter.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/FormatSupport.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/ImportFailure.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/Mp3Encoder.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/PcmBytes.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/StrictFormat.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/WavPcmReader.kt
+    app/src/main/java/uz/ovozstudio/app/media/merge/AudioMerger.kt
+    app/src/main/java/uz/ovozstudio/app/media/pdf/PageRange.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/TextChunker.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/VoiceChoice.kt
+    app/src/main/java/uz/ovozstudio/app/media/voice/VoiceEngine.kt
+    app/src/main/java/uz/ovozstudio/app/settings/About.kt
     app/src/main/java/uz/ovozstudio/app/settings/AppLanguage.kt
-    app/src/main/java/uz/ovozstudio/app/settings/AppSettings.kt
-    app/src/main/java/uz/ovozstudio/app/settings/AppSettingsStore.kt
-    app/src/main/java/uz/ovozstudio/app/util/DecimalText.kt
-    app/src/main/java/uz/ovozstudio/app/util/GainText.kt
-    app/src/main/java/uz/ovozstudio/app/util/SpeedText.kt
     app/src/main/java/uz/ovozstudio/app/util/LocalizedNumber.kt
+    app/src/main/java/uz/ovozstudio/app/util/TimeFormat.kt
+    app/src/main/java/uz/ovozstudio/app/util/TimeParts.kt
 )
 TESTS=(
-    app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
-    app/src/test/java/uz/ovozstudio/app/util/TimePartsTest.kt
-    app/src/test/java/uz/ovozstudio/app/util/AtomicFileWriterTest.kt
-    app/src/test/java/uz/ovozstudio/app/util/GainTextTest.kt
-    app/src/test/java/uz/ovozstudio/app/util/SpeedTextTest.kt
-    app/src/test/java/uz/ovozstudio/app/util/LocalizedNumberTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/WavFileTest.kt
+    app/src/test/java/uz/ovozstudio/app/log/ErrorJournalTest.kt
     app/src/test/java/uz/ovozstudio/app/media/AudioTrimmerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/AudioFormatDetectorTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/FormatSupportTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/FormatPreservingExporterTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/Mp3EncoderTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/AdtsHeaderTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/CodecRatesTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/format/PcmBytesTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/BiquadTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/EqBandsTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/EqualizerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/WsolaTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/ResamplerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/SpeedPitchTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/FftTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/NoiseReducerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/dsp/StemSeparatorTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/voice/TextChunkerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/WavFileTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/ChapterSplitterTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/doc/PdfFixtures.kt
-    app/src/test/java/uz/ovozstudio/app/media/doc/PlainTextDecoderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/DocumentLoaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/DocxTextReaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/EpubTextReaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/PdfFixtures.kt
     app/src/test/java/uz/ovozstudio/app/media/doc/PdfTextReaderTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/doc/DocumentLoaderTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/BookPlannerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/WavJoinerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/BookMarkersTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/SleepTimerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/ChapterAssemblerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/BookBuilderPipelineTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/BookPlaylistTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/book/BookPlaybackStoreTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/mix/AudioMixerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/mix/MixEditorTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/mix/MixProjectStoreTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/mix/MixProjectStoreSafetyTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/mix/MixTrackTextTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/tag/Id3v2ReaderTest.kt
-    app/src/test/java/uz/ovozstudio/app/ui/mix/MixUiStateTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/tag/Id3v2TagTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/tag/Mp3TaggerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/tag/TagDraftTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/PlainTextDecoderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/ReadingTextTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/doc/TextQualityTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/dsp/ResamplerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/AdtsHeaderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/AudioFormatDetectorTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/CodecRatesTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/FormatPreservingExporterTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/FormatSupportTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/Mp3EncoderTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/PcmBytesTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/StrictFormatTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/merge/AudioMergerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/pdf/PageRangeTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/voice/TextChunkerTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/voice/VoiceChoiceTest.kt
     app/src/test/java/uz/ovozstudio/app/settings/LanguageMatchTest.kt
-    app/src/test/java/uz/ovozstudio/app/settings/AppSettingsStoreTest.kt
-    app/src/test/java/uz/ovozstudio/app/ui/settings/SettingsUiStateTest.kt
-    app/src/test/java/uz/ovozstudio/app/ui/stem/StemUiStateTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/LocalizedNumberTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
+    app/src/test/java/uz/ovozstudio/app/util/TimePartsTest.kt
 )
 
 # Ro'yxat qo'lda yuritiladi (hamma main fayl oddiy kotlinc bilan

@@ -61,9 +61,46 @@ fi
 
 # AndroidX/Compose sinflari. Ro'yxat `bin/resolve-android-deps.py` ichida va
 # `gradle/libs.versions.toml` bilan qo'lda sinxronlanadi.
-if [ ! -d "$LIBS" ] || [ -z "$(ls -A "$LIBS" 2>/dev/null)" ]; then
+# `resolve-android-deps.py` AAR ichidagi `classes.jar` ni ochadi, lekin
+# yuklangan papka allaqachon mavjud bo'lsa u qadam o'tkazib yuboriladi va
+# keshda AAR bor bo'lsa ham klass yo'li bo'sh qoladi. Natijada AAR paketli
+# kutubxona (pdfbox-android) klass yo'lidan tushib qoladi va o'sha paket
+# **umuman tekshirilmaydi** — 13 ta «unresolved reference» aynan shundan
+# chiqqan edi. Shuning uchun ishga tushishda yetishmayotgani tiklanadi:
+# skript qo'lda aralashuvsiz o'zini o'zi tuzatadi.
+python3 - "$CACHE/cache" "$LIBS" <<'PY'
+import os, sys, zipfile
+
+cache, libs = sys.argv[1], sys.argv[2]
+if not os.path.isdir(cache):
+    sys.exit(0)
+
+restored = []
+for name in sorted(os.listdir(cache)):
+    if not name.endswith(".aar"):
+        continue
+    # Fayl nomi `guruh_artefakt_versiya_artefakt-versiya.aar` ko'rinishida;
+    # klass yo'lidagi nom esa `artefakt-versiya.jar` (resolver shunday yozadi).
+    stem = name[:-4]
+    jar = os.path.join(libs, stem[stem.rfind("_") + 1:] + ".jar")
+    if os.path.exists(jar):
+        continue
+    with zipfile.ZipFile(os.path.join(cache, name)) as z:
+        if "classes.jar" not in z.namelist():
+            continue
+        with z.open("classes.jar") as src, open(jar, "wb") as dst:
+            dst.write(src.read())
+    restored.append(os.path.basename(jar))
+
+if restored:
+    print("AAR ichidan tiklandi: " + ", ".join(restored))
+PY
+
+LIBFETCH="$CACHE/.libs-fetched"
+if [ ! -d "$LIBS" ] || [ -z "$(ls -A "$LIBS" 2>/dev/null)" ] || [ ! -f "$LIBFETCH" ]; then
     echo "AndroidX/Compose kutubxonalari yuklanmoqda (bir marta, bir necha daqiqa)..."
     python3 bin/resolve-android-deps.py
+    touch "$LIBFETCH"
 fi
 
 # `R` sinfi: ishlatiladigan har bir resurs turi shu yerda generatsiya qilinadi.

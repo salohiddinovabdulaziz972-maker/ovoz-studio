@@ -3,6 +3,7 @@ package uz.ovozstudio.app.media.format
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import uz.ovozstudio.app.log.ErrorLog
 import uz.ovozstudio.app.media.BitDepth
 import uz.ovozstudio.app.media.WavWriter
 import java.io.File
@@ -41,10 +42,13 @@ class AndroidAudioDecoder {
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(source.absolutePath)
-        } catch (error: IOException) {
-            extractor.release()
+        } catch (error: Exception) {
             // Fayl ochilmadi: konteyner buzuq yoki Android uni umuman
-            // bilmaydi (WMA shunday).
+            // bilmaydi (WMA shunday). Faqat `IOException` emas, hamma istisno
+            // ushlanadi: `MediaExtractor` yaroqsiz faylda `IllegalArgumentException`
+            // ham tashlaydi, u esa ilovani yiqitmasligi kerak.
+            extractor.release()
+            ErrorLog.error("audio.decode", "MediaExtractor faylni ocha olmadi", error)
             return Result.Failed(FallbackReason.NO_DECODER)
         }
 
@@ -60,8 +64,11 @@ class AndroidAudioDecoder {
             codec.start()
 
             return pump(extractor, codec, destination)
-        } catch (error: IOException) {
+        } catch (error: Exception) {
+            // `MediaCodec` yaroqsiz yoki qo'llab-quvvatlanmagan oqimda
+            // `CodecException`, `IllegalStateException` ham tashlaydi.
             destination.delete()
+            ErrorLog.error("audio.decode", "Dekodlash bajarilmadi", error)
             return Result.Failed(FallbackReason.NO_DECODER)
         } finally {
             runCatching { codec?.stop() }
@@ -202,9 +209,12 @@ class AndroidAudioDecoder {
         }
 
         val count = info.size / 2
+        // Bufer bir yo'la o'qiladi (xotiradan xotiraga ko'chirish): har bir
+        // namunani alohida `get(i)` bilan olish uzun faylda sezilarli sekin.
+        val shorts = ShortArray(count)
+        buffer.asShortBuffer().get(shorts)
         val samples = IntArray(count)
-        val shorts = buffer.asShortBuffer()
-        for (i in 0 until count) samples[i] = shorts.get(i).toInt()
+        for (i in 0 until count) samples[i] = shorts[i].toInt()
         // 16-bitli namunalar WavWriter ning butun sonli yo'lidan o'tadi:
         // float orqali aylantirish 24-bitda aniqlikni yo'qotardi.
         sink.writeIntegers(samples, count)

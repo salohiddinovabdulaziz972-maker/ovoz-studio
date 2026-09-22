@@ -1,7 +1,5 @@
 package uz.ovozstudio.app.media.voice
 
-import java.io.File
-
 /**
  * Ovoz dvigateli xatolari.
  *
@@ -33,6 +31,20 @@ data class VoiceInfo(
     val name: String,
     /** Sifat darajasi: qurilma aytgan baho. */
     val quality: Int,
+)
+
+/**
+ * Qurilmada o'rnatilgan ovoz dvigateli (masalan «Google», «Samsung» yoki
+ * Microsoft ovozlarini beradigan uchinchi tomon dasturi).
+ *
+ * Ovozlar dvigatelga tegishli: Sardor va Madina kabi ovozlar faqat ularni
+ * bergan dvigatel tanlanganda ko'rinadi.
+ */
+data class TtsEngineInfo(
+    /** Dastur paketining nomi — dvigatelni tanlash uchun. */
+    val packageName: String,
+    /** Foydalanuvchiga ko'rsatiladigan nom. */
+    val label: String,
 )
 
 /**
@@ -70,9 +82,9 @@ interface SpeechListener {
  *
  * Nega interfeys kerak: bugun o'qish qurilmaning o'z sintezatori bilan
  * bajariladi, lekin o'zbek ovozi hamma qurilmada yo'q — ba'zilarida umuman
- * yo'q, ba'zilarida sifati past. Keyingi qadam shu interfeys ortiga bulutli
- * (AI) ovozni ulash. Ulanish nuqtasi bitta bo'lmasa, almashtirish butun
- * ilovani qayta yozishni talab qilardi.
+ * yo'q, ba'zilarida sifati past. Ovozni keyinroq boshqa manbaga (masalan
+ * bulutli) almashtirish kerak bo'lsa, ulanish nuqtasi shu interfeys bo'ladi:
+ * ilovaning qolgan qismi o'zgarmaydi.
  *
  * Barcha amallar **asosiy oqimdan** chaqiriladi. Dvigatel ichida
  * sintezatorning o'zi boshqa oqimda javob bersa ham, tashqariga xabar
@@ -110,22 +122,17 @@ interface VoiceEngine {
     /** Matnni o'qishni boshlaydi (yoki davom ettiradi). */
     fun speak(request: SpeechRequest, listener: SpeechListener)
 
+    /** Qurilmada o'rnatilgan ovoz dvigatellari (tanlangan dvigatel ham ro'yxatda). */
+    fun engines(): List<TtsEngineInfo>
+
     /**
-     * Matnni **faylga** sintez qiladi — jonli o'qish o'rniga.
+     * Aniq ovozni tanlaydi ([VoiceInfo.id]); `null` — ovozni til bo'yicha
+     * avtomatik tanlash.
      *
-     * Nega alohida amal: jonli o'qishni to'xtatish mumkin, fayl esa to'liq
-     * yozilishi kerak. Audio-kitob shu yo'l bilan yig'iladi: har bir bo'lak
-     * o'z WAV faylini oladi, keyin ular bitta bob fayliga qo'shiladi.
-     *
-     * **Jonli o'qish bilan bir vaqtda ishlatilmaydi.** Sintezator bitta:
-     * [stop] faylga yozishni ham to'xtatadi, shuning uchun kitob yig'ilayotganda
-     * jonli o'qish chaqirilmasligi kerak.
-     *
-     * Fayl WAV bo'ladi; uni [uz.ovozstudio.app.media.format.WavPcmReader]
-     * o'qiy oladi. Javob [onResult] orqali: tayyor bo'lsa `null`, xato bo'lsa
-     * sabab.
+     * Tanlangan ovoz keyingi [speak] dan kuchga kiradi. Ovoz topilmasa
+     * (dvigatel almashgan, ovoz o'chirilgan) o'qish til bo'yicha davom etadi.
      */
-    fun synthesizeToFile(request: SpeechRequest, output: File, onResult: (VoiceError?) -> Unit)
+    fun setVoice(id: String?)
 
     /** O'qishni to'xtatadi. Keyingi [speak] boshidan boshlanadi. */
     fun stop()

@@ -12,3 +12,13 @@
 -dontwarn de.sciss.jump3r.**
 -keep class de.sciss.jump3r.mp3.** { *; }
 -keep class de.sciss.jump3r.mpg.** { *; }
+
+# --- pdfbox-android (PDF sahifalari va matni) ---
+# Kutubxona ixtiyoriy bog'liqliklarga (JPEG2000, BouncyCastle) havola qiladi;
+# ular ilovada yo'q va kerak ham emas (rasm chizilmaydi, faqat sahifalar
+# ko'chiriladi va matn olinadi). Aks holda R8 «Missing class» bilan to'xtaydi.
+-dontwarn com.gemalto.jp2.**
+-dontwarn org.bouncycastle.**
+-dontwarn javax.xml.stream.**
+-dontwarn org.apache.commons.logging.**
+-keep class com.tom_roush.pdfbox.** { *; }

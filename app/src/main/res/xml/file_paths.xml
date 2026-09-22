@@ -1,25 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Ilova qaysi papkalarni boshqa ilovalarga bera oladi.
+  FileProvider ko'rsatadigan papkalar. Faqat TAYYOR NATIJALAR: kesh papkasidagi
+  `natija/`. Manba nusxalari, oraliq fayllar va jurnal papkasi bu yerda yo'q —
+  ular boshqa ilovaga hech qachon berilmaydi.
 
-  Bu ro'yxat ataylab tor: `FileProvider` faqat shu yerdagi yo'llarni
-  havola qila oladi, ya'ni ilovaning butun xotirasi emas, faqat o'z
-  ish papkasi ulashiladi.
-
-    * `OvozStudio/` (tashqi papka) — yozuvlar, saqlangan tahrirlar va
-      yuklangan manba fayllar (ular `getExternalFilesDir(null)` ichida turadi);
-    * `OvozStudio/` (ichki papka) — tashqi xotira mavjud bo'lmagan
-      qurilmalarda fayllar shu yerga tushadi.
-
-  Ichki papkaning ILDIZI ataylab ochilmagan. U yerda sozlamalar, aralashma
-  loyihasi va tinglash joyi turadi: ularni ulashish hech qachon kerak emas,
-  ochiq qoldirilsa esa `FileProvider` orqali chiqib ketish yo'li bo'lardi.
-
-  Yo'l noto'g'ri bo'lsa ulashish `IllegalArgumentException` bilan
-  yiqiladi — shuning uchun `RecordingStore` dagi papka nomlari bilan
-  bir xil bo'lishi shart.
+  Natija ulashilgach qabul qiluvchi ilova uni keyinroq ham o'qishi mumkin
+  (masalan xabar yuboruvchi ilova orqa fonda yuklaydi), shuning uchun natijalar
+  ekran yopilganda o'chirilmaydi: ularni `WorkStore.sweep` bir kundan keyin
+  tozalaydi.
 -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-files-path name="ovozstudio" path="OvozStudio/" />
-    <files-path name="ichki" path="OvozStudio/" />
+    <cache-path
+        name="natija"
+        path="natija/" />
 </paths>

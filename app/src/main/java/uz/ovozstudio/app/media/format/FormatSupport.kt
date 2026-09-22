@@ -41,6 +41,11 @@ sealed interface ExportDecision {
  * Bu yerda faqat platforma haqiqatlari: qaysi konteynerni o'qish mumkin,
  * qaysi biriga yozish mumkin. Siyosat (nima taklif qilinadi) — [resolve].
  *
+ * Ilovada qat'iy qoida amal qiladi ([StrictFormat]): natija faqat asl
+ * formatda yoziladi. [resolve] qaytaradigan boshqa format takliflari
+ * (`recommended`, `alternatives`) ilova tomonidan **ishlatilmaydi** — undan
+ * faqat «asl formatga yozib bo'ladimi va bo'lmasa nega» degan javob olinadi.
+ *
  * [apiLevel] ataylab parametr: shu tufayli jadvalni oddiy JVM testida
  * tekshirish mumkin, qurilmasiz.
  */

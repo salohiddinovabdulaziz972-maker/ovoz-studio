@@ -41,7 +41,7 @@ rm -rf "$WORK" && mkdir -p "$OUT" "$WORK/cases"
 "$KOTLINC" -cp "$JUMP3R" -jvm-target 17 -nowarn -d "$OUT" \
     app/src/main/java/uz/ovozstudio/app/media/WavWriter.kt \
     app/src/main/java/uz/ovozstudio/app/media/WavFile.kt \
-    app/src/main/java/uz/ovozstudio/app/media/RecorderConfig.kt \
+    app/src/main/java/uz/ovozstudio/app/media/BitDepth.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt \
     app/src/main/java/uz/ovozstudio/app/media/format/CodecRates.kt \

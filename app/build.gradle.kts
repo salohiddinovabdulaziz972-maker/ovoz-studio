@@ -18,8 +18,8 @@ android {
         applicationId = "uz.ovozstudio.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -67,6 +67,16 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // Kutubxonalar (PDFBox, jump3r) o'z litsenziya fayllarini bir xil
+            // nom bilan olib keladi; APK'ga bittasi ham kerak emas, takror
+            // esa yig'ishni to'xtatadi («More than one file was found»).
+            excludes += listOf(
+                "/META-INF/DEPENDENCIES",
+                "/META-INF/LICENSE",
+                "/META-INF/LICENSE.txt",
+                "/META-INF/NOTICE",
+                "/META-INF/NOTICE.txt",
+            )
         }
     }
 }
@@ -88,7 +98,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.navigation.compose)
 
     // MP3 kodlovchisi. Android'da MP3 uchun faqat DEKODER bor
@@ -97,6 +106,12 @@ dependencies {
     // `lowlevel` o'rami esa `javax.sound.sampled` ga tayanadi va biz uni
     // ishlatmaymiz (proguard qoidasi bilan chiqarib tashlangan).
     implementation(libs.jump3r)
+
+    // PDF: sahifalarni kesib olish, o'chirish va matnini o'qish. PDF'ni o'zimiz
+    // tahlil qilmaymiz: fayllar juda xilma-xil (siqilgan obyekt oqimlari,
+    // shifrlash, buzuq havolalar, murakkab shriftlar) va sinalgan kutubxona
+    // ularning deyarli hammasini o'qiydi. PDFBox'ning Android porti, Apache-2.0.
+    implementation(libs.pdfbox.android)
 
     debugImplementation(libs.androidx.ui.tooling)
 

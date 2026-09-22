@@ -10,6 +10,8 @@ junit = "4.13.2"
 # MP3 kodlovchisi (LAME'ning Java porti, LGPL-2.1+). Android'da MP3
 # kodlash uchun tizim kodeki yo'q — MediaCodec faqat dekodlaydi.
 jump3r = "1.0.5"
+# PDF: sahifalarni ajratish va matnni o'qish (PDFBox'ning Android porti, Apache-2.0).
+pdfbox = "2.0.27.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -22,12 +24,10 @@ androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-# `Icons.Filled.*` ikonkalari material3 bilan birga kelmaydi — alohida
-# artefakt. Versiya Compose BOM tomonidan boshqariladi.
-androidx-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 jump3r = { group = "de.sciss", name = "jump3r", version.ref = "jump3r" }
+pdfbox-android = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

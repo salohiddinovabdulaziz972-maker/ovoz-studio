@@ -27,6 +27,12 @@ class WavWriter(
     private val bytesPerFrame = bytesPerSample * channels
     private val out = BufferedOutputStream(FileOutputStream(file), BUFFER_BYTES)
 
+    /**
+     * Bayt buferi: har `write` chaqiruvida yangisini yaratish o'rniga qayta
+     * ishlatiladi (chaqiruvlar soni o'n minglab, har biri o'nlab kilobayt).
+     */
+    private var scratch = ByteArray(0)
+
     private var framesWritten = 0L
     private var closed = false
 
@@ -52,25 +58,30 @@ class WavWriter(
         // sarlavha fayldagidan ko'proq ma'lumot va'da qilib, fayl buzilardi.
         val frames = minOf(count, samples.size / channels)
         val sampleCount = frames * channels
-        val buffer = ByteArray(sampleCount * bytesPerSample)
+        val byteCount = sampleCount * bytesPerSample
+        if (scratch.size < byteCount) scratch = ByteArray(byteCount)
+        val buffer = scratch
         var offset = 0
-        for (i in 0 until sampleCount) {
-            val clamped = samples[i].coerceIn(-1f, 1f)
-            when (bitDepth) {
-                BitDepth.BIT_16 -> {
-                    val value = (clamped * SHORT_MAX).roundToInt()
+        // Chuqurlik sikldan tashqarida tanlanadi: har namuna uchun qayta
+        // tekshirish yuz millionlab ortiqcha shartga aylanardi.
+        when (bitDepth) {
+            BitDepth.BIT_16 -> {
+                for (i in 0 until sampleCount) {
+                    val value = (samples[i].coerceIn(-1f, 1f) * SHORT_MAX).roundToInt()
                     buffer[offset++] = (value and 0xFF).toByte()
                     buffer[offset++] = ((value shr 8) and 0xFF).toByte()
                 }
-                BitDepth.BIT_24 -> {
-                    val value = (clamped * INT24_MAX).roundToInt()
+            }
+            BitDepth.BIT_24 -> {
+                for (i in 0 until sampleCount) {
+                    val value = (samples[i].coerceIn(-1f, 1f) * INT24_MAX).roundToInt()
                     buffer[offset++] = (value and 0xFF).toByte()
                     buffer[offset++] = ((value shr 8) and 0xFF).toByte()
                     buffer[offset++] = ((value shr 16) and 0xFF).toByte()
                 }
             }
         }
-        out.write(buffer)
+        out.write(buffer, 0, byteCount)
         framesWritten += frames
     }
 
@@ -89,17 +100,27 @@ class WavWriter(
         require(count >= 0) { "count manfiy bo'lishi mumkin emas" }
         val frames = minOf(count, samples.size / channels)
         val sampleCount = frames * channels
-        val buffer = ByteArray(sampleCount * bytesPerSample)
+        val byteCount = sampleCount * bytesPerSample
+        if (scratch.size < byteCount) scratch = ByteArray(byteCount)
+        val buffer = scratch
         var offset = 0
         val min = -(1 shl (bitDepth.bits - 1))
         val max = (1 shl (bitDepth.bits - 1)) - 1
-        for (i in 0 until sampleCount) {
-            val value = samples[i].coerceIn(min, max)
-            for (byte in 0 until bytesPerSample) {
-                buffer[offset++] = ((value shr (8 * byte)) and 0xFF).toByte()
+        if (bytesPerSample == 2) {
+            for (i in 0 until sampleCount) {
+                val value = samples[i].coerceIn(min, max)
+                buffer[offset++] = (value and 0xFF).toByte()
+                buffer[offset++] = ((value shr 8) and 0xFF).toByte()
+            }
+        } else {
+            for (i in 0 until sampleCount) {
+                val value = samples[i].coerceIn(min, max)
+                buffer[offset++] = (value and 0xFF).toByte()
+                buffer[offset++] = ((value shr 8) and 0xFF).toByte()
+                buffer[offset++] = ((value shr 16) and 0xFF).toByte()
             }
         }
-        out.write(buffer)
+        out.write(buffer, 0, byteCount)
         framesWritten += frames
     }
 

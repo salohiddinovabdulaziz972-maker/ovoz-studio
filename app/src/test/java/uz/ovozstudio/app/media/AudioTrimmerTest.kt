@@ -202,6 +202,55 @@ class AudioTrimmerTest {
         assertTrue("400–599 oralig'i saqlanib qoladi", !covered)
     }
 
+    @Test
+    fun `deleteRanges tutashuv joyini silliqlaydi`() {
+        val source = ramp(frames = 1_000)
+        val dest = File(folder.root, "silliq.wav")
+
+        // 200…700 o'chadi: qoladi 0…200 va 700…1000, tutashuv 200-kadrda.
+        // Silliqlash 10 ms = 10 kadr.
+        val info = AudioTrimmer.deleteRanges(
+            source,
+            dest,
+            listOf(AudioTrimmer.Cut(200, 700)),
+            joinFadeMs = 10,
+        )
+
+        assertEquals(500L, info.frames)
+        WavSampleReader(dest).use { reader ->
+            val out = FloatArray(500)
+            reader.readFrames(0, 500, out)
+
+            // Faylning boshi va oxiri silliqlanmaydi.
+            assertEquals(0.0f, out[0], 0.001f)
+            assertEquals(0.999f, out[499], 0.001f)
+            // Birinchi qismning oxiri pasayadi: 189 gacha o'zgarmaydi.
+            assertEquals(0.189f, out[189], 0.001f)
+            assertEquals(0.190f, out[190], 0.001f)
+            assertEquals(0.195f * 0.5f, out[195], 0.001f)
+            assertEquals(0.199f * 0.1f, out[199], 0.001f)
+            // Ikkinchi qism noldan ko'tariladi (manba indeksi 700 + n).
+            assertEquals(0.0f, out[200], 0.001f)
+            assertEquals(0.705f * 0.5f, out[205], 0.001f)
+            assertEquals(0.710f, out[210], 0.001f)
+        }
+    }
+
+    @Test
+    fun `joinFadeMs berilmasa tutashuv o'zgarmaydi`() {
+        val source = ramp(frames = 1_000)
+        val dest = File(folder.root, "oddiy.wav")
+
+        AudioTrimmer.deleteRanges(source, dest, listOf(AudioTrimmer.Cut(200, 700)))
+
+        WavSampleReader(dest).use { reader ->
+            val out = FloatArray(500)
+            reader.readFrames(0, 500, out)
+            assertEquals(0.199f, out[199], 0.001f)
+            assertEquals(0.700f, out[200], 0.001f)
+        }
+    }
+
     // --- yordamchi ---
 
     /** Har bir kadri o'z indeksiga teng bo'lgan fayl: solishtirish oson. */
