@@ -1,6 +1,6 @@
 name: Android
 
-# Dekoder tuzatishi.
+# aapt2 apostrof ekranlashi tuzatildi.
 
 # Uch bosqichli oqim, tanlagich joyi va saqlash yo'li (f69462b). APK
 
@@ -115,5 +115,3 @@ jobs:
           name: ovozstudio-release-apk
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
-
-<!-- aapt2 escape tuzatishi -->
