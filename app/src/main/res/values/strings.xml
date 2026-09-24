@@ -43,7 +43,7 @@
     <string name="audio_busy_preparing">Natija tayyorlanmoqda. Kuting…</string>
     <string name="audio_busy_saving">Saqlanmoqda…</string>
     <string name="audio_error_unknown_format">Bu fayl audio emas yoki formati noma\'lum.</string>
-    <string name="audio_error_no_decoder">Fayl ochilmadi. Qurilmaning o\'z dekoderi bu faylni bera olmadi — fayl buzilgan bo'lishi yoki bu format qurilmada qo'llab-quvvatlanmasligi mumkin.</string>
+    <string name="audio_error_no_decoder">Fayl ochilmadi. Qurilmaning o\'z dekoderi bu faylni bera olmadi — fayl buzilgan bo\'lishi yoki bu format qurilmada qo\'llab-quvvatlanmasligi mumkin.</string>
     <string name="audio_error_read_failed">Faylni o\'qib bo\'lmadi. Qayta urinib ko\'ring.</string>
     <string name="audio_error_empty">Faylda ovoz yo\'q.</string>
     <string name="audio_error_bit_depth">Bu WAV fayl 16 yoki 24 bitli emas. Bunday fayl bilan ishlab bo\'lmaydi.</string>
