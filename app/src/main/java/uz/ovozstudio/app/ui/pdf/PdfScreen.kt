@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +28,8 @@ import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.TextRow
+import uz.ovozstudio.app.ui.common.WorkProgress
+import uz.ovozstudio.app.ui.common.a11yGroup
 import uz.ovozstudio.app.ui.common.a11yHeading
 import uz.ovozstudio.app.ui.common.rememberAnnouncer
 import uz.ovozstudio.app.util.Sharing
@@ -110,12 +111,11 @@ fun PdfScreen(
         )
 
         if (state.isBusy) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            Text(text = busyText, style = MaterialTheme.typography.bodyMedium)
+            WorkProgress(label = busyText, progress = state.progress)
         }
 
         if (state.isOpen) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(modifier = Modifier.a11yGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = stringResource(R.string.pdf_file_name, state.fileName),
                     style = MaterialTheme.typography.bodyLarge,

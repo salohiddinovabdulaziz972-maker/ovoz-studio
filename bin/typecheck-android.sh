@@ -96,11 +96,9 @@ if restored:
     print("AAR ichidan tiklandi: " + ", ".join(restored))
 PY
 
-LIBFETCH="$CACHE/.libs-fetched"
-if [ ! -d "$LIBS" ] || [ -z "$(ls -A "$LIBS" 2>/dev/null)" ] || [ ! -f "$LIBFETCH" ]; then
+if [ ! -d "$LIBS" ] || [ -z "$(ls -A "$LIBS" 2>/dev/null)" ]; then
     echo "AndroidX/Compose kutubxonalari yuklanmoqda (bir marta, bir necha daqiqa)..."
     python3 bin/resolve-android-deps.py
-    touch "$LIBFETCH"
 fi
 
 # `R` sinfi: ishlatiladigan har bir resurs turi shu yerda generatsiya qilinadi.

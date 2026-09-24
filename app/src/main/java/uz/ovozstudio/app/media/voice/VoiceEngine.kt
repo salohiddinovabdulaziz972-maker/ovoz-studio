@@ -1,5 +1,7 @@
 package uz.ovozstudio.app.media.voice
 
+import java.io.File
+
 /**
  * Ovoz dvigateli xatolari.
  *
@@ -65,6 +67,19 @@ data class SpeechRequest(
 )
 
 /**
+ * [VoiceEngine.synthesizeToFile] natijasi.
+ *
+ * Nega alohida enum emas, balki shu ikkita holat: xato kodi allaqachon
+ * [VoiceError] da bor, uni takrorlash shart emas.
+ */
+sealed interface SynthesisResult {
+    /** Fayl muvaffaqiyatli yozildi. */
+    data object Done : SynthesisResult
+
+    data class Failed(val error: VoiceError) : SynthesisResult
+}
+
+/**
  * O'qish jarayoni haqidagi xabarlar.
  *
  * [onStarted] har bir bo'lak boshida chaqiriladi va qaysi bo'lak
@@ -122,6 +137,40 @@ interface VoiceEngine {
     /** Matnni o'qishni boshlaydi (yoki davom ettiradi). */
     fun speak(request: SpeechRequest, listener: SpeechListener)
 
+    /**
+     * Matnni **jonli o'qimasdan**, [destination] fayliga (WAV) yozadi.
+     *
+     * Audio-kitob yasashda ishlatiladi: har bir bo'lak alohida faylga
+     * yoziladi, keyin ular ketma-ket qo'shiladi
+     * ([uz.ovozstudio.app.media.merge.AudioMerger]).
+     *
+     * [request.text] uzunligi dvigatelning bir chaqiruvdagi chegarasidan
+     * oshmasligi kerak — [speak] dan farqli, bu yerda bo'laklash
+     * chaqiruvchining zimmasida ([TextChunker]): natija alohida fayllarga
+     * yozilgani uchun bo'laklarni kim ketma-ket chaqirishini bilib turishi
+     * kerak — bu ma'lumot faqat chaqiruvchida bor (u umumiy kitob bo'ylab
+     * jarayon foizini ham shundan hisoblaydi).
+     *
+     * Bir vaqtning o'zida faqat bitta chaqiruv faol bo'lishi mumkin: yangisi
+     * eskisini bekor qiladi (natija fayli tugallanmagan holda qoladi).
+     */
+    fun synthesizeToFile(request: SpeechRequest, destination: File, onResult: (SynthesisResult) -> Unit)
+
+    /**
+     * Bitta chaqiruvga sig'adigan eng ko'p belgi — bo'laklash shu chegara
+     * bo'yicha qilinadi.
+     *
+     * Nega dvigateldan so'raladi. Ilgari chaqiruvchi [TextChunker] ning
+     * qat'iy `DEFAULT_MAX_CHARS` ini ishlatardi, [speak] esa haqiqiy
+     * chegarani — `TextToSpeech.getMaxSpeechInputLength()` ni — hisobga
+     * olardi. Ikkalasi mos kelmasa, chegaradan uzun bo'lak dvigatelga
+     * berilardi va u matnni **jimgina tashlab yuborardi**: kitobning ba'zi
+     * bo'laklari ovozsiz chiqar, hech qanday xato ham ko'rinmasdi.
+     * `getMaxSpeechInputLength()` hamma dvigatellarda bir xil emas, shuning
+     * uchun birlamchi manba — dvigatelning o'zi.
+     */
+    fun maxSynthChars(): Int
+
     /** Qurilmada o'rnatilgan ovoz dvigatellari (tanlangan dvigatel ham ro'yxatda). */
     fun engines(): List<TtsEngineInfo>
 
@@ -134,7 +183,7 @@ interface VoiceEngine {
      */
     fun setVoice(id: String?)
 
-    /** O'qishni to'xtatadi. Keyingi [speak] boshidan boshlanadi. */
+    /** O'qishni (jonli va faylga yozishni) to'xtatadi. Keyingi [speak] boshidan boshlanadi. */
     fun stop()
 
     /** Resurslarni bo'shatadi. Shundan keyin dvigatel ishlamaydi. */

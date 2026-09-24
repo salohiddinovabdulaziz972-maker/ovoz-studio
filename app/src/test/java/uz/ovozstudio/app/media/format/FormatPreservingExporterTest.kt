@@ -38,11 +38,25 @@ class FormatPreservingExporterTest {
         }
     }
 
-    /** 4096 kadrlik bo'lakdan uzunroq — oqim bir necha marta aylanadi. */
+    /** Bitta bo'lakdan uzunroq: oqim to'g'ri ishlashini uzunlikdan mustaqil tekshiradi. */
     private fun ramp(count: Int, limit: Int): IntArray =
         IntArray(count) { i -> ((i * 37) % (2 * limit)) - limit }
 
     private val wavFormat = AudioFormat(AudioContainer.WAV, AudioCodec.PCM, 44_100, 2, 16)
+
+    @Test
+    fun `jarayon foizi oshib boradi va oxirida bir bo'ladi`() {
+        val values = ramp(20_000 * 2, 30_000)
+        val source = writeWav("manba.wav", 44_100, 2, BitDepth.BIT_16, values)
+        val destination = File(folder.root, "natija.wav")
+        val seen = ArrayList<Float>()
+
+        FormatPreservingExporter(api).export(source, wavFormat, destination, onProgress = { seen.add(it) })
+
+        assertTrue(seen.isNotEmpty())
+        assertEquals(1f, seen.last(), 0.0001f)
+        for (i in 1 until seen.size) assertTrue(seen[i] >= seen[i - 1])
+    }
 
     @Test
     fun `wav dan wav ga namunalar aynan oz holida otadi`() {

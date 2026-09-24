@@ -12,13 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -28,7 +30,10 @@ import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
+import uz.ovozstudio.app.ui.common.ParamsGroup
 import uz.ovozstudio.app.ui.common.StatusMessage
+import uz.ovozstudio.app.ui.common.WorkProgress
+import uz.ovozstudio.app.ui.common.a11yGroup
 import uz.ovozstudio.app.ui.common.a11yHeading
 import uz.ovozstudio.app.ui.common.importFailureText
 import uz.ovozstudio.app.ui.common.rememberAnnouncer
@@ -52,6 +57,11 @@ fun MergeScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val announce = rememberAnnouncer()
+
+    // Odatda fayllar tanlangan tartibda qoladi, shuning uchun ro'yxat YOPIQ
+    // boshlanadi — «Birlashtirish» tugmasigacha yo'l fayllar sonidan
+    // qat'i nazar qisqa qoladi.
+    var listExpanded by rememberSaveable { mutableStateOf(false) }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         viewModel.addFiles(uris)
@@ -111,56 +121,65 @@ fun MergeScreen(
         )
 
         if (state.isBusy) {
-            if (state.busy == MergeBusy.MERGING) {
-                LinearProgressIndicator(
-                    progress = { state.progress.coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
-            Text(text = busyText, style = MaterialTheme.typography.bodyMedium)
+            val itemProgress = if (state.busy == MergeBusy.ADDING) state.addingFileProgress else state.progress
+            WorkProgress(label = busyText, progress = itemProgress)
         }
 
         if (state.items.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.merge_list_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.a11yHeading(),
-            )
-            Text(
-                text = stringResource(R.string.merge_format_line, state.formatName),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Text(text = summary, style = MaterialTheme.typography.bodyMedium)
+            Column(modifier = Modifier.a11yGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.merge_list_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.a11yHeading(),
+                )
+                Text(
+                    text = stringResource(R.string.merge_format_line, state.formatName),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(text = summary, style = MaterialTheme.typography.bodyMedium)
+            }
 
-            state.items.forEachIndexed { index, item ->
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = stringResource(R.string.merge_item, index + 1, item.name, spokenTime(item.durationMs)),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    A11yOutlinedButton(
-                        label = stringResource(R.string.merge_move_up),
-                        description = item.name,
-                        onClick = { viewModel.move(item.id, -1) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isBusy && index > 0,
-                    )
-                    A11yOutlinedButton(
-                        label = stringResource(R.string.merge_move_down),
-                        description = item.name,
-                        onClick = { viewModel.move(item.id, 1) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isBusy && index < state.items.size - 1,
-                    )
-                    A11yOutlinedButton(
-                        label = stringResource(R.string.merge_remove),
-                        description = item.name,
-                        onClick = { viewModel.remove(item.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isBusy,
-                    )
+            // Tartibni o'zgartirish har safar kerak emas — fayllar odatda
+            // tanlangan tartibda qoladi. Shuning uchun ro'yxat YOPIQ boshlanadi:
+            // «Birlashtirish» tugmasigacha yo'l fayllar sonidan qat'i nazar qisqa.
+            ParamsGroup(
+                summary = stringResource(R.string.merge_list_collapsed, state.items.size),
+                expanded = listExpanded,
+                onExpandedChange = { listExpanded = it },
+            ) {
+                state.items.forEachIndexed { index, item ->
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = stringResource(
+                                R.string.merge_item,
+                                index + 1,
+                                item.name,
+                                spokenTime(item.durationMs),
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.merge_move_up),
+                            description = item.name,
+                            onClick = { viewModel.move(item.id, -1) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isBusy && index > 0,
+                        )
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.merge_move_down),
+                            description = item.name,
+                            onClick = { viewModel.move(item.id, 1) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isBusy && index < state.items.size - 1,
+                        )
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.merge_remove),
+                            description = item.name,
+                            onClick = { viewModel.remove(item.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isBusy,
+                        )
+                    }
                 }
             }
 

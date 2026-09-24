@@ -92,6 +92,12 @@ data class TrimUiState(
      */
     val revision: Int = 0,
     val busy: TrimBusy = TrimBusy.NONE,
+    /**
+     * [busy] paytidagi jarayon foizi (0…1). `null` — noma'lum (masalan
+     * uzunligini aytmaydigan konteyner): bu holda ekran aniq foizsiz
+     * «ishlayapti» ko'rsatishi kerak.
+     */
+    val progress: Float? = null,
     /** Fayl ochilmagan sababi (ochish tugmasi bosilgandan keyin). */
     val openFailure: ImportFailure? = null,
     val openFailureFormat: String = "",
@@ -147,10 +153,29 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             stopPlayback()
             _state.update {
-                it.copy(busy = TrimBusy.OPENING, openFailure = null, openFailureFormat = "", error = null, savedName = null)
+                it.copy(
+                    busy = TrimBusy.OPENING,
+                    progress = null,
+                    openFailure = null,
+                    openFailureFormat = "",
+                    error = null,
+                    savedName = null,
+                )
             }
             val outcome = withContext(Dispatchers.IO) {
-                runCatching { opener.open(getApplication<Application>(), uri) }
+                var lastPercent = -1
+                runCatching {
+                    opener.open(getApplication<Application>(), uri) { fraction ->
+                        // Har foizda bir marta yangilanadi, har bir dekodlangan
+                        // bo'lakda emas — aks holda holat oqimi soniyasiga
+                        // yuzlab marta chiqardi.
+                        val percent = (fraction * 100).toInt()
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            _state.update { it.copy(progress = fraction) }
+                        }
+                    }
+                }
             }
             when (val opened = outcome.getOrNull()) {
                 is OpenResult.Opened -> startSession(opened)
@@ -159,6 +184,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                     _state.update {
                         it.copy(
                             busy = TrimBusy.NONE,
+                            progress = null,
                             openFailure = opened.reason,
                             openFailureFormat = opened.formatName,
                         )
@@ -167,7 +193,12 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                 null -> {
                     ErrorLog.error("audio.open", "Fayl ochishda kutilmagan xato", outcome.exceptionOrNull())
                     _state.update {
-                        it.copy(busy = TrimBusy.NONE, openFailure = ImportFailure.READ_FAILED, openFailureFormat = "")
+                        it.copy(
+                            busy = TrimBusy.NONE,
+                            progress = null,
+                            openFailure = ImportFailure.READ_FAILED,
+                            openFailureFormat = "",
+                        )
                     }
                 }
             }
@@ -227,8 +258,8 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             fadeInMs = if (start > 0L) EDGE_FADE_MS else 0L,
             fadeOutMs = if (end < current.durationMs) EDGE_FADE_MS else 0L,
         )
-        runEdit(TAG_CUT) { destination ->
-            AudioTrimmer.copyRange(source, destination, start, end, fades)
+        runEdit(TAG_CUT) { destination, onProgress ->
+            AudioTrimmer.copyRange(source, destination, start, end, fades, onProgress = onProgress)
         }
     }
 
@@ -248,12 +279,13 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(error = TrimError.SELECTION_ALL) }
             return
         }
-        runEdit(TAG_DELETE) { destination ->
+        runEdit(TAG_DELETE) { destination, onProgress ->
             AudioTrimmer.deleteRanges(
                 source,
                 destination,
                 listOf(AudioTrimmer.Cut(start, end)),
                 joinFadeMs = JOIN_FADE_MS,
+                onProgress = onProgress,
             )
         }
     }
@@ -286,16 +318,27 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
-            _state.update { it.copy(busy = TrimBusy.PREPARING, error = null, savedName = null) }
+            _state.update { it.copy(busy = TrimBusy.PREPARING, progress = null, error = null, savedName = null) }
             val destination = store.newOutputFile(baseName, mode.suffix, format.container.extension)
             val outcome = withContext(Dispatchers.IO) {
-                runCatching { exporter.export(edited, format, destination) }
+                var lastPercent = -1
+                runCatching {
+                    exporter.export(edited, format, destination) { fraction ->
+                        val percent = (fraction * 100).toInt()
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            _state.update { it.copy(progress = fraction) }
+                        }
+                    }
+                }
             }
             val done = outcome.getOrNull()
             if (done is ExportOutcome.Done && destination.exists()) {
+                store.markOutputReady(destination)
                 _state.update {
                     it.copy(
                         busy = TrimBusy.NONE,
+                        progress = null,
                         result = ResultFile(
                             path = destination.absolutePath,
                             name = destination.name,
@@ -312,7 +355,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                     "Natijani asl formatda yozib bo'lmadi: ${StrictFormat.label(format)}, natija: ${done?.javaClass?.simpleName}",
                     outcome.exceptionOrNull(),
                 )
-                _state.update { it.copy(busy = TrimBusy.NONE, error = TrimError.EXPORT_FAILED) }
+                _state.update { it.copy(busy = TrimBusy.NONE, progress = null, error = TrimError.EXPORT_FAILED) }
             }
         }
     }
@@ -360,6 +403,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         _state.update {
             it.copy(
                 busy = TrimBusy.NONE,
+                progress = null,
                 formatName = StrictFormat.label(opened.origin),
                 openFailure = null,
                 openFailureFormat = "",
@@ -372,14 +416,23 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         refreshFromCurrent()
     }
 
-    private fun runEdit(tag: String, operation: (File) -> WavInfo) {
+    private fun runEdit(tag: String, operation: (File, (Float) -> Unit) -> WavInfo) {
         if (currentFile == null || _state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
-            _state.update { it.copy(busy = TrimBusy.EDITING, error = null, savedName = null) }
+            _state.update { it.copy(busy = TrimBusy.EDITING, progress = null, error = null, savedName = null) }
             val destination = store.newEditFile(tag)
             val result = withContext(Dispatchers.IO) {
-                runCatching { operation(destination) }
+                var lastPercent = -1
+                runCatching {
+                    operation(destination) { fraction ->
+                        val percent = (fraction * 100).toInt()
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            _state.update { it.copy(progress = fraction) }
+                        }
+                    }
+                }
             }
             result.fold(
                 onSuccess = {
@@ -392,14 +445,14 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                     history += destination
                     historyIndex = history.size - 1
                     _state.update {
-                        it.copy(busy = TrimBusy.NONE, result = null, revision = it.revision + 1)
+                        it.copy(busy = TrimBusy.NONE, progress = null, result = null, revision = it.revision + 1)
                     }
                     refreshFromCurrent()
                 },
                 onFailure = { error ->
                     ErrorLog.error("audio.edit", "Tahrirlash bajarilmadi ($tag)", error)
                     runCatching { destination.delete() }
-                    _state.update { it.copy(busy = TrimBusy.NONE, error = TrimError.EDIT_FAILED) }
+                    _state.update { it.copy(busy = TrimBusy.NONE, progress = null, error = TrimError.EDIT_FAILED) }
                 },
             )
         }

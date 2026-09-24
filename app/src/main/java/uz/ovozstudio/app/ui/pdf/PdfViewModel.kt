@@ -77,6 +77,8 @@ data class PdfUiState(
     val busy: PdfBusy = PdfBusy.NONE,
     /** Natijadagi sahifalar soni. */
     val resultPages: Int = 0,
+    /** [busy] paytidagi jarayon foizi (0…1); `null` — noma'lum yoki hali boshlanmagan. */
+    val progress: Float? = null,
     val result: ResultFile? = null,
     val savedName: String? = null,
     val error: PdfError? = null,
@@ -186,24 +188,42 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _state.update {
-                it.copy(busy = PdfBusy.WORKING, error = null, errorToken = "", result = null, savedName = null)
+                it.copy(
+                    busy = PdfBusy.WORKING,
+                    progress = null,
+                    error = null,
+                    errorToken = "",
+                    result = null,
+                    savedName = null,
+                )
             }
             val context = getApplication<Application>()
             val output = store.newOutputFile(baseName, mode.suffix, "pdf")
             val outcome = withContext(Dispatchers.IO) {
+                var lastPercent = -1
+                val onProgress = { done: Int, total: Int ->
+                    val fraction = if (total > 0) done.toFloat() / total else 0f
+                    val percent = (fraction * 100).toInt()
+                    if (percent != lastPercent) {
+                        lastPercent = percent
+                        _state.update { it.copy(progress = fraction) }
+                    }
+                }
                 runCatching {
                     if (mode == PdfMode.CUT) {
-                        PdfPageTools.extract(context, source, selected, output)
+                        PdfPageTools.extract(context, source, selected, output, onProgress)
                     } else {
-                        PdfPageTools.delete(context, source, selected, output)
+                        PdfPageTools.delete(context, source, selected, output, onProgress)
                     }
                 }
             }
 
             if (outcome.isSuccess && output.exists()) {
+                store.markOutputReady(output)
                 _state.update {
                     it.copy(
                         busy = PdfBusy.NONE,
+                        progress = null,
                         resultPages = resultPages,
                         result = ResultFile(
                             path = output.absolutePath,
@@ -217,7 +237,7 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
                 runCatching { output.parentFile?.deleteRecursively() }
                 val failure = outcome.exceptionOrNull()
                 ErrorLog.error("pdf.${mode.name.lowercase()}", "PDF sahifalarini yasab bo'lmadi", failure)
-                _state.update { it.copy(busy = PdfBusy.NONE, error = errorOf(failure)) }
+                _state.update { it.copy(busy = PdfBusy.NONE, progress = null, error = errorOf(failure)) }
             }
         }
     }

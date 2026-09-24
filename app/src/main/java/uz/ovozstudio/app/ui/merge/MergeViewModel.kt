@@ -74,8 +74,10 @@ data class MergeUiState(
     /** Fayl qo'shilayotganda: nechanchi fayl / nechta. */
     val addingCurrent: Int = 0,
     val addingTotal: Int = 0,
-    /** Birlashtirish jarayoni, 0…1. */
-    val progress: Float = 0f,
+    /** Hozir ochilayotgan faylning dekodlanish foizi (0…1). Ro'yxat qo'shilishi yoki formati mos kelmasa `null`. */
+    val addingFileProgress: Float? = null,
+    /** Uzoq ish foizi (0…1): fayl qo'shilayotganda ham, birlashtirilayotganda ham. `null` — noma'lum. */
+    val progress: Float? = null,
     val failures: List<MergeFailure> = emptyList(),
     val result: ResultFile? = null,
     val savedName: String? = null,
@@ -130,10 +132,19 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             for ((index, uri) in uris.withIndex()) {
-                _state.update { it.copy(addingCurrent = index + 1) }
+                _state.update { it.copy(addingCurrent = index + 1, addingFileProgress = null) }
                 val context = getApplication<Application>()
                 val outcome = withContext(Dispatchers.IO) {
-                    runCatching { opener.open(context, uri) }
+                    var lastPercent = -1
+                    runCatching {
+                        opener.open(context, uri) { fraction ->
+                            val percent = (fraction * 100).toInt()
+                            if (percent != lastPercent) {
+                                lastPercent = percent
+                                _state.update { it.copy(addingFileProgress = fraction) }
+                            }
+                        }
+                    }
                 }
                 when (val opened = outcome.getOrNull()) {
                     is OpenResult.Opened -> accept(opened)
@@ -158,7 +169,7 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             }
-            _state.update { it.copy(busy = MergeBusy.NONE) }
+            _state.update { it.copy(busy = MergeBusy.NONE, addingFileProgress = null) }
         }
     }
 
@@ -209,7 +220,7 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _state.update {
-                it.copy(busy = MergeBusy.MERGING, progress = 0f, error = null, result = null, savedName = null)
+                it.copy(busy = MergeBusy.MERGING, progress = null, error = null, result = null, savedName = null)
             }
             val merged = store.newEditFile(TAG_MERGED)
             val output = store.newOutputFile(OUTPUT_NAME, "", format.container.extension)
@@ -233,9 +244,11 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
 
             val exported = outcome.getOrNull()
             if (exported is ExportOutcome.Done && output.exists()) {
+                store.markOutputReady(output)
                 _state.update {
                     it.copy(
                         busy = MergeBusy.NONE,
+                        progress = null,
                         result = ResultFile(
                             path = output.absolutePath,
                             name = output.name,
@@ -256,6 +269,7 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                 _state.update {
                     it.copy(
                         busy = MergeBusy.NONE,
+                        progress = null,
                         error = if (outcome.isSuccess) MergeError.EXPORT_FAILED else MergeError.MERGE_FAILED,
                     )
                 }

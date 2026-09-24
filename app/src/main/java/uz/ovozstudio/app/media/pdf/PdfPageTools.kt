@@ -71,16 +71,32 @@ object PdfPageTools {
     fun pageCount(context: Context, file: File): Int =
         open(context, file).use { document -> document.getNumberOfPages() }
 
-    /** [pages] (1 dan boshlanadi) dan yangi PDF yasaydi: faqat shu sahifalar qoladi. */
+    /**
+     * [pages] (1 dan boshlanadi) dan yangi PDF yasaydi: faqat shu sahifalar qoladi.
+     *
+     * @param onProgress `(tayyor, jami)` — ko'chirilgan va jami sahifa soni.
+     */
     @Throws(IOException::class)
-    fun extract(context: Context, source: File, pages: List<Int>, dest: File) {
-        copyPages(context, source, dest) { pages }
+    fun extract(
+        context: Context,
+        source: File,
+        pages: List<Int>,
+        dest: File,
+        onProgress: (Int, Int) -> Unit = { _, _ -> },
+    ) {
+        copyPages(context, source, dest, onProgress) { pages }
     }
 
     /** [pages] (1 dan boshlanadi) ni olib tashlab, qolganidan yangi PDF yasaydi. */
     @Throws(IOException::class)
-    fun delete(context: Context, source: File, pages: List<Int>, dest: File) {
-        copyPages(context, source, dest) { total -> PageRange.complement(pages, total) }
+    fun delete(
+        context: Context,
+        source: File,
+        pages: List<Int>,
+        dest: File,
+        onProgress: (Int, Int) -> Unit = { _, _ -> },
+    ) {
+        copyPages(context, source, dest, onProgress) { total -> PageRange.complement(pages, total) }
     }
 
     /**
@@ -123,6 +139,7 @@ object PdfPageTools {
         context: Context,
         source: File,
         dest: File,
+        onProgress: (Int, Int) -> Unit,
         select: (Int) -> List<Int>,
     ) {
         var expected = 0
@@ -138,9 +155,10 @@ object PdfPageTools {
             // Manba hujjat natija yozilguncha ochiq turishi shart: sahifa
             // mazmuni saqlash paytida shu yerdan o'qiladi.
             PDDocument().use { output ->
-                for (number in keep) {
+                for ((done, number) in keep.withIndex()) {
                     val imported = output.importPage(document.getPage(number - 1))
                     detach(imported)
+                    onProgress(done + 1, keep.size)
                 }
                 output.save(dest)
             }

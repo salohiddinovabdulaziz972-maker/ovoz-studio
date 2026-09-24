@@ -4,7 +4,7 @@ Android uchun ochiq kodli, **internetsiz** ishlaydigan ilova: audio va PDF
 fayllarni tahrirlash, hujjatlarni o'qish. Ekran o'quvchi (TalkBack) bilan
 ishlash uchun yozilgan; ilova matni sodda o'zbek tilida.
 
-Versiya: **0.2.0**. Litsenziya: **GPL-3.0**.
+Versiya: **0.4.0**. Litsenziya: **GPL-3.0**.
 
 ## Nima qiladi
 
@@ -15,7 +15,8 @@ Versiya: **0.2.0**. Litsenziya: **GPL-3.0**.
 | Audio | bir nechta audioni **birlashtirish** |
 | PDF | belgilangan sahifalarni **kesib olish** — yangi PDF |
 | PDF | belgilangan sahifalarni **o'chirish** — yangi PDF |
-| Hujjat | hujjatni **o'qish**: matn ekranda, ekran o'quvchi bilan yoki ilovaning ovozida (Microsoft Sardor/Madina ham, agar qurilmada bo'lsa) |
+| Hujjat | hujjatni **o'qish**: matn ekranda, ekran o'quvchi bilan yoki ilovaning ovozida (Microsoft Sardor/Madina ham, agar qurilmada bo'lsa); ekran o'chsa ham davom etadi |
+| Hujjat | hujjatni **audio-kitob (MP3) qilib saqlash** — ekrandan chiqib ketilsa yoki telefon qulflansa ham ish orqada davom etadi |
 | Jurnal | **xatolar jurnali**: nima buzilgani yozib boriladi, foydalanuvchi uni ulashishi mumkin |
 
 Boshqa hech narsa yo'q: yozib olish, konvertatsiya, ekvalayzer, shovqin
@@ -83,8 +84,14 @@ yozadi (`filesDir/jurnal/`), shu jumladan kutilmagan to'xtashlarni.
 
 ## Maxfiylik va xavfsizlik
 
-- **Hech qanday ruxsat so'ralmaydi**, `INTERNET` ham yo'q. Fayllar tizim
+- `INTERNET` ruxsati yo'q — ilova internetga chiqmaydi. Fayllar tizim
   tanlagichi orqali olinadi va saqlanadi.
+- To'rtta ruxsat bor, hammasi faqat jonli o'qish yoki audio-kitob yasashni
+  ekran o'chganda ham to'xtatmaslik uchun: `FOREGROUND_SERVICE`,
+  `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `FOREGROUND_SERVICE_MEDIA_PROCESSING`,
+  `POST_NOTIFICATIONS` (faqat jarayon bildirishnomasini ko'rsatish uchun).
+  Boshqa hech qanday ruxsat yo'q — mikrofon, ommaviy xotira, kontaktlar
+  va hokazoga kirish so'ralmaydi.
 - Zaxira nusxa o'chirilgan (`allowBackup=false`).
 - `FileProvider` faqat tayyor natijalar papkasini (`cache/natija/`) ochadi.
 - Ish fayllari kesh papkasida; ilova boshlanganda tozalanadi, natijalar bir kun saqlanadi.
@@ -120,8 +127,10 @@ app/src/main/java/uz/ovozstudio/app/
     dsp/          Resampler
     pdf/          PdfPageTools (PDFBox), PageRange
     doc/          hujjat o'quvchilari, ReadingText, TextQuality
-    voice/        ovoz sintezatori (DeviceTtsEngine, VoiceChoice, VoicePrefs)
-  ui/             home, trim (kesish/o'chirish), merge, pdf, reader, log, nav, common, theme
+    voice/        ovoz sintezatori va audio-kitob (DeviceTtsEngine, VoiceChoice,
+                  VoicePrefs, AudioBookExporter, AudioBookService, KeepAliveService)
+  ui/             home, trim (kesish/o'chirish), merge, pdf, reader, audiobook,
+                  log, nav, common, theme
   util/           vaqt, son formati, Sharing, ResultFiles
 ```
 

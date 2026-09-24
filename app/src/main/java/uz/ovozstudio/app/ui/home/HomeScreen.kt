@@ -45,6 +45,7 @@ fun HomeScreen(
     onPdfCut: () -> Unit,
     onPdfDelete: () -> Unit,
     onReader: () -> Unit,
+    onAudioBook: () -> Unit,
     onLog: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -116,6 +117,11 @@ fun HomeScreen(
         A11yButton(
             label = stringResource(R.string.home_reader),
             onClick = onReader,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_audiobook),
+            onClick = onAudioBook,
             modifier = Modifier.fillMaxWidth(),
         )
 

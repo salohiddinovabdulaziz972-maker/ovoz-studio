@@ -21,6 +21,10 @@ import java.nio.ByteOrder
  *
  * Dekodlash `MediaExtractor` + `MediaCodec` orqali: Android'ning o'zi
  * beradigan yagona yo'l. Qurilmada sinaladi, JVM'da emas.
+ *
+ * Uzun fayl (soatlab yozuv) uchun bu bir necha soniyadan ortiq davom etishi
+ * mumkin, shuning uchun [decode] jarayon foizini beradi: foydalanuvchi
+ * (ayniqsa ekran o'quvchi bilan) ekran «osilib qoldimi» deb o'ylamasligi kerak.
  */
 class AndroidAudioDecoder {
 
@@ -35,10 +39,14 @@ class AndroidAudioDecoder {
     /**
      * [destination] ga WAV yozadi. Manba fayl o'zgartirilmaydi.
      *
-     * Bekor qilish yo'q: import qisqa jarayon va fayl yangi nom bilan
-     * yaratiladi — xato bo'lsa shunchaki qoldirilmaydi.
+     * Bekor qilish yo'q: xato bo'lsa fayl shunchaki qoldirilmaydi, yangi
+     * urinish yangi nom bilan boshlanadi.
+     *
+     * [onProgress] 0…1 oralig'ida, taxminiy: manba konteynerning o'zi
+     * uzunlikni aytmasa (kamdan-kam), chaqirilmaydi — bu holda chaqiruvchi
+     * aniq foizsiz («ishlayapti…») ko'rsatishi kerak.
      */
-    fun decode(source: File, destination: File): Result {
+    fun decode(source: File, destination: File, onProgress: (Float) -> Unit = {}): Result {
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(source.absolutePath)
@@ -59,11 +67,14 @@ class AndroidAudioDecoder {
 
             val input = extractor.getTrackFormat(track.index)
             val mime = input.getString(MediaFormat.KEY_MIME) ?: return Result.Failed(FallbackReason.NO_DECODER)
+            // `0` — «noma'lum»: bunday konteynerda foiz emas, faqat aniq
+            // bo'lmagan «ishlayapti» ko'rsatiladi.
+            val durationUs = input.getLong(MediaFormat.KEY_DURATION, 0L)
             codec = MediaCodec.createDecoderByType(mime)
             codec.configure(input, null, null, 0)
             codec.start()
 
-            return pump(extractor, codec, destination)
+            return pump(extractor, codec, destination, durationUs, onProgress)
         } catch (error: Exception) {
             // `MediaCodec` yaroqsiz yoki qo'llab-quvvatlanmagan oqimda
             // `CodecException`, `IllegalStateException` ham tashlaydi.
@@ -95,7 +106,13 @@ class AndroidAudioDecoder {
      * aks holda aniqlik behuda yo'qolardi (masalan 24-bitli FLAC manba).
      */
     @Throws(IOException::class)
-    private fun pump(extractor: MediaExtractor, codec: MediaCodec, destination: File): Result {
+    private fun pump(
+        extractor: MediaExtractor,
+        codec: MediaCodec,
+        destination: File,
+        durationUs: Long,
+        onProgress: (Float) -> Unit,
+    ): Result {
         val info = MediaCodec.BufferInfo()
         var writer: WavWriter? = null
         var format: AudioFormat? = null
@@ -125,8 +142,13 @@ class AndroidAudioDecoder {
                             codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                             inputDone = true
                         } else {
-                            codec.queueInputBuffer(index, 0, size, extractor.sampleTime, 0)
+                            // Navbatga qo'yilgan namunaning vaqti — o'qilgan
+                            // joyning taxminiy foizi uchun ham ishlatiladi:
+                            // qo'shimcha chaqiruv shart emas.
+                            val timeUs = extractor.sampleTime
+                            codec.queueInputBuffer(index, 0, size, timeUs, 0)
                             extractor.advance()
+                            if (durationUs > 0) onProgress((timeUs.toFloat() / durationUs).coerceIn(0f, 1f))
                         }
                     }
                 }

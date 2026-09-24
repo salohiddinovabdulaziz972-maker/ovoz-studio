@@ -123,6 +123,6 @@ class WavPcmReader(file: File) : Closeable {
 
     private companion object {
         const val READ_FRAMES = 4096
-        const val BUFFER_BYTES = 64 * 1024
+        const val BUFFER_BYTES = 256 * 1024
     }
 }

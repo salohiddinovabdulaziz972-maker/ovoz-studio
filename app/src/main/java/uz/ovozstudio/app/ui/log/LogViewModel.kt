@@ -89,7 +89,13 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     fun exportForShare(): File? {
         val journal = ErrorLog.journal() ?: return null
         val target = store.newOutputFile(SHARE_NAME, "", "txt")
-        return if (journal.exportTo(target)) target else null
+        if (journal.exportTo(target)) {
+            // Jurnal ham natija: belgisiz qolsa, [WorkStore.sweep] uni keyingi
+            // ishga tushishda o'chirib yuborardi.
+            store.markOutputReady(target)
+            return target
+        }
+        return null
     }
 
     /** Butun jurnalni foydalanuvchi tanlagan joyga ([uri]) yozadi. */
@@ -98,8 +104,12 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
             val ok = withContext(Dispatchers.IO) {
                 val journal = ErrorLog.journal()
                 val temp = store.newOutputFile(SHARE_NAME, "", "txt")
-                journal != null && journal.exportTo(temp) &&
+                val ok = journal != null && journal.exportTo(temp) &&
                     ResultFiles.copyTo(getApplication<Application>(), temp, uri)
+                // Nusxa ko'chirilgach manba kerak emas; qolsa esa faqat belgili
+                // fayl qoladi — ya'ni [WorkStore.sweep] uni chala deb o'chirmaydi.
+                if (ok) store.markOutputReady(temp)
+                ok
             }
             _state.update {
                 it.copy(notice = if (ok) LogNotice.SAVED else LogNotice.SAVE_FAILED)

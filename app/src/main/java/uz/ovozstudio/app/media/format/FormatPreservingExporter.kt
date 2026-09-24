@@ -66,6 +66,7 @@ class FormatPreservingExporter(
         sourceFormat: AudioFormat,
         destination: File,
         override: AudioFormat? = null,
+        onProgress: (Float) -> Unit = {},
     ): ExportOutcome {
         val target = when (val decision = FormatSupport.resolve(sourceFormat, apiLevel, override)) {
             is ExportDecision.Fallback ->
@@ -90,7 +91,7 @@ class FormatPreservingExporter(
                 ?: return ExportOutcome.Unsupported(sourceFormat, FallbackReason.NO_ENCODER)
 
             encoder.use { sink ->
-                val frames = pump(reader, sink)
+                val frames = pump(reader, sink, onProgress)
                 sink.finish()
                 return ExportOutcome.Done(destination, actual, frames)
             }
@@ -115,22 +116,32 @@ class FormatPreservingExporter(
         else -> extraEncoder?.invoke(target, destination)
     }
 
-    /** Namunalarni oqim bilan o'tkazadi — butun fayl xotiraga yuklanmaydi. */
+    /**
+     * Namunalarni oqim bilan o'tkazadi — butun fayl xotiraga yuklanmaydi.
+     *
+     * [onProgress] shu yerda muhim: MP3 va FLAC kodlashi sof Java'da ketadi
+     * (`MediaCodec` emas) va uzun faylda bir necha o'nlab soniya davom
+     * etishi mumkin — foizsiz bu «osilib qoldi» bo'lib ko'rinardi.
+     */
     @Throws(IOException::class)
-    private fun pump(reader: WavPcmReader, sink: AudioEncoder): Long {
+    private fun pump(reader: WavPcmReader, sink: AudioEncoder, onProgress: (Float) -> Unit): Long {
         val buffer = IntArray(CHUNK_FRAMES * reader.format.channels)
-        var total = 0L
+        val total = reader.info.frames.coerceAtLeast(1L)
+        var done = 0L
         while (true) {
             val frames = reader.read(buffer, CHUNK_FRAMES)
             if (frames <= 0) break
             sink.write(buffer, frames)
-            total += frames
+            done += frames
+            onProgress((done.toFloat() / total).coerceIn(0f, 1f))
         }
-        return total
+        return done
     }
 
     private companion object {
-        const val CHUNK_FRAMES = 4096
+        // 4096 edi: uzun faylda millionlab kichik chaqiruv degani. Boshqa
+        // audio tsikllari bilan bir xil o'lchamga keltirildi.
+        const val CHUNK_FRAMES = 65_536
         const val DEFAULT_BIT_DEPTH = 16
     }
 }

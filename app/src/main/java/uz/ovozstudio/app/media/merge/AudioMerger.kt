@@ -33,8 +33,8 @@ object AudioMerger {
     /** Birlashgan fayl parametrlari. */
     data class Target(val sampleRate: Int, val channels: Int, val bitDepth: BitDepth)
 
-    private const val CHUNK_FRAMES = 16_384
-    private const val EXACT_CHUNK_FRAMES = 4_096
+    private const val CHUNK_FRAMES = 65_536
+    private const val EXACT_CHUNK_FRAMES = 65_536
 
     /**
      * Natija parametrlarini manbalardan tanlaydi.

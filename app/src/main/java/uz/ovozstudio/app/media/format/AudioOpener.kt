@@ -53,8 +53,13 @@ class AudioOpener(store: WorkStore, private val apiLevel: Int) {
 
     private val importer = AndroidAudioImporter(store)
 
-    fun open(context: Context, uri: Uri): OpenResult =
-        when (val outcome = importer.import(context, uri)) {
+    /**
+     * [onProgress] 0…1: WAV manbada (qayta kodlash yo'q) va uzunligi
+     * noma'lum faylda chaqirilmasligi mumkin — chaqiruvchi bunday holda
+     * aniq bo'lmagan «ishlayapti» holatini ko'rsatishi kerak.
+     */
+    fun open(context: Context, uri: Uri, onProgress: (Float) -> Unit = {}): OpenResult =
+        when (val outcome = importer.import(context, uri, onProgress)) {
             is ImportOutcome.Rejected ->
                 OpenResult.Refused(outcome.reason, displayName = importer.displayName(context, uri))
             is ImportOutcome.Ready -> check(outcome)

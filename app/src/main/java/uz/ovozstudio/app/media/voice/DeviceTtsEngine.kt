@@ -7,6 +7,7 @@ import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
+import java.io.File
 import java.util.Locale
 
 /**
@@ -58,12 +59,26 @@ class DeviceTtsEngine(
 
     private var listener: SpeechListener? = null
 
+    /**
+     * Faylga sintez qilish holati. Bir vaqtda faqat bitta bo'lishi mumkin —
+     * shuning uchun navbat emas, bitta callback yetarli.
+     */
+    private var fileCallback: ((SynthesisResult) -> Unit)? = null
+    private var fileUtteranceId: String? = null
+    private var fileDestination: File? = null
+    private var fileCounter = 0
+
     /** Tayyorlash tugaganda chaqiriladigan callback (bir marta). */
     private var pendingInit: ((VoiceError?) -> Unit)? = null
 
     private val progress = object : UtteranceProgressListener() {
 
         override fun onStart(utteranceId: String?) {
+            if (utteranceId != null && utteranceId.startsWith(FILE_PREFIX)) { // faylga yozishda boshlanish e'lon qilinmaydi
+                // Faqat "aytiladigan" rejimda ahamiyatsiz: ayni damda kutilayotgan
+                // so'z bo'lagi bo'lsa ham, fayl yozuvi uni boshlab yubormaydi.
+                return
+            }
             val i = chunkIndex(utteranceId) ?: return
             main.post {
                 val current = chunks
@@ -74,6 +89,10 @@ class DeviceTtsEngine(
         }
 
         override fun onDone(utteranceId: String?) {
+            if (utteranceId != null && utteranceId.startsWith(FILE_PREFIX)) {
+                main.post { finishFile(utteranceId, SynthesisResult.Done) }
+                return
+            }
             val i = chunkIndex(utteranceId) ?: return
             main.post {
                 if (i + 1 < chunks.size) {
@@ -88,10 +107,18 @@ class DeviceTtsEngine(
 
         @Deprecated("Eski imzo — yangisi pastda", ReplaceWith("onError(utteranceId, errorCode)"))
         override fun onError(utteranceId: String?) {
+            if (utteranceId != null && utteranceId.startsWith(FILE_PREFIX)) {
+                main.post { finishFile(utteranceId, SynthesisResult.Failed(VoiceError.SPEAK_FAILED)) }
+                return
+            }
             reportFailure()
         }
 
         override fun onError(utteranceId: String?, errorCode: Int) {
+            if (utteranceId != null && utteranceId.startsWith(FILE_PREFIX)) {
+                main.post { finishFile(utteranceId, SynthesisResult.Failed(VoiceError.SPEAK_FAILED)) }
+                return
+            }
             reportFailure()
         }
     }
@@ -216,12 +243,51 @@ class DeviceTtsEngine(
         speakChunk(0)
     }
 
+    override fun synthesizeToFile(request: SpeechRequest, destination: File, onResult: (SynthesisResult) -> Unit) {        val tts = engine
+        if (tts == null || !ready) {
+            onResult(SynthesisResult.Failed(VoiceError.NOT_AVAILABLE))
+            return
+        }
+        if (request.text.isBlank()) {
+            onResult(SynthesisResult.Failed(VoiceError.EMPTY_TEXT))
+            return
+        }
+
+        applyVoice(tts, request)
+        tts.setSpeechRate(request.rate.coerceIn(MIN_RATE, MAX_RATE))
+        tts.setPitch(request.pitch.coerceIn(MIN_RATE, MAX_RATE))
+
+        // Eski faylga yozish (bo'lsa) hali tugallanmagan deb hisoblanadi:
+        // uning callback'i endi chaqirilmaydi, fayli esa chala qoladi —
+        // buni chaqiruvchi (bitta vaqtda bittadan chaqirgani uchun) kutmaydi.
+        fileCallback = onResult
+        val utteranceId = "$FILE_PREFIX${fileCounter++}"
+        fileUtteranceId = utteranceId
+        fileDestination = destination
+
+        val started = tts.synthesizeToFile(request.text, Bundle(), destination, utteranceId)
+        if (started != TextToSpeech.SUCCESS) {
+            finishFile(utteranceId, SynthesisResult.Failed(VoiceError.SPEAK_FAILED))
+        }
+    }
+
     override fun stop() {
         engine?.stop()
         listener = null
         chunks = emptyList()
         index = 0
+        cancelFile()
     }
+
+    /**
+     * Jonli [speak] dan farqli — u yerda ataylab kichikroq chegara olinadi
+     * (bo'lak ikki daqiqadan uzoq o'qilib, «to'xtat» tugmasini foydasiz
+     * qilmasligi uchun). Faylga yozishda bunday cheklov yo'q: audio-kitob
+     * bo'lagini to'xtatish degani yo'q, shuning uchun chegara to'liq
+     * ishlatiladi — bo'laklar kamroq, qo'shish tezroq.
+     */
+    override fun maxSynthChars(): Int = TextToSpeech.getMaxSpeechInputLength()
+
 
     override fun release() {
         stop()
@@ -279,6 +345,43 @@ class DeviceTtsEngine(
         }
     }
 
+    /**
+     * Faylga yozish tugadi (natijasidan qat'i nazar) — faqat hozirgi kutilayotgan
+     * chaqiruv uchun; eskisidan kelgan kechikkan xabar shu tarzda e'tiborsiz
+     * qoladi (identifikator allaqachon almashtirilgan bo'ladi).
+     */
+    private fun finishFile(utteranceId: String, result: SynthesisResult) {
+        // Tasdiqlash **shu yerda** — chaqiruvchining oqimida. Ilgari tekshiruv
+        // to'g'ridan-to'g'ri `UtteranceProgressListener` ichida, ya'ni TTS
+        // binder oqimida bajarilardi: `fileUtteranceId` ga u yerdan o'qilardi,
+        // yozilardi esa asosiy oqimdan. ARM'da bu xotira to'siqsiz ko'rinishi
+        // mumkin — eskirgan `null` o'qilib, tugash xabari jimgina tashlab
+        // yuborilardi, `synthesizeOne` esa abadiy osilib qolardi: eksport bir
+        // foizda qotib qolar, na xato, na taraqqiyot.
+        if (utteranceId != fileUtteranceId) return // eskirgan xabar — e'tiborsiz
+        val callback = fileCallback ?: return
+        fileCallback = null
+        fileUtteranceId = null
+        fileDestination = null
+        callback(result)
+    }
+
+    /** Kutilayotgan faylga yozishni bekor qiladi ([stop] yoki [release] chaqirilganda). */
+    private fun cancelFile() {
+        val destination = fileDestination
+        val callback = fileCallback
+        fileCallback = null
+        fileUtteranceId = null
+        fileDestination = null
+        // `finishFile` orqali emas: bu yerda tasdiq shart emas — chaqiruvchi
+        // o'zi bekor qilmoqda, kechikkan tugash xabari esa yuqoridagi
+        // tozalashdan keyin mos kelmaydi va jimgina tushib qoladi.
+        callback?.invoke(SynthesisResult.Failed(VoiceError.SPEAK_FAILED))
+        // Chala fayl qolib ketmasin: yarim yozilgan audio "tayyor" deb
+        // ulanib qolishi mumkin edi.
+        if (destination != null) runCatching { destination.delete() }
+    }
+
     private fun utteranceId(index: Int): String = "$UTTERANCE_PREFIX$index"
 
     private fun chunkIndex(utteranceId: String?): Int? {
@@ -288,6 +391,7 @@ class DeviceTtsEngine(
 
     private companion object {
         const val UTTERANCE_PREFIX = "ovozstudio:chunk:"
+        const val FILE_PREFIX = "ovozstudio:file:"
 
         /** Tezlik va balandlikning ruxsat etilgan chegarasi. */
         const val MIN_RATE = 0.5f

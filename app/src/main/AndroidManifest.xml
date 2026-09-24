@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- HECH QANDAY RUXSAT SO'RALMAYDI. Fayllar tizimning o'z tanlagichi
-         orqali olinadi va saqlanadi (Storage Access Framework): foydalanuvchi
-         faqat o'zi tanlagan faylga ilova kirishini ko'radi. Mikrofon,
-         ommaviy xotira, bildirishnoma va INTERNET ruxsati yo'q — ilova
-         internetga chiqa olmaydi, ya'ni fayllar telefondan tashqariga
-         chiqib ketishi texnik jihatdan mumkin emas. -->
+    <!-- Ilova internetga chiqmaydi (INTERNET ruxsati yo'q) va fayllarni
+         faqat foydalanuvchi tanlagan joydan oladi/saqlaydi (Storage Access
+         Framework) — mikrofon yoki ommaviy xotiraga kirish shart emas.
+         Quyidagi to'rtta ruxsat FAQAT ekran o'chganda ham o'qish/audio-kitob
+         yasashni to'xtatmaslik uchun kerak (pastdagi izohga qarang); ular
+         hech qanday shaxsiy ma'lumotga kirish bermaydi. -->
+
+    <!-- Jonli o'qish va audio-kitob yasash — ikkalasi ham foreground xizmat
+         orqali ketadi: Android fondagi (ekran o'chgan yoki boshqa ilova
+         ustida) jarayonni istalgan payt, ayniqsa batareya tejash rejimida,
+         o'chirib qo'yishi mumkin; foreground xizmat + bildirishnoma tizimga
+         «bu ish muhim, hozir o'chirmang» deydi. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <!-- Foreground xizmat doimiy bildirishnoma ko'rsatishi SHART (tizim
+         talabi); buni ko'rsatish uchun Android 13+ da shu ruxsat kerak.
+         Berilmasa ham ish davom etadi — faqat bildirishnoma ko'rinmaydi
+         (`AudioBookService.notify` buni kutadi). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Android 11 (API 30) dan boshlab ilova o'zi ko'rmaydigan xizmatlarni
          so'ray olmaydi. Ovoz sintezatori — aynan shunday tashqi xizmat:
@@ -59,6 +73,25 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Jonli o'qish paytida jarayonni tirik saqlaydi (o'zi hech narsa
+             o'qimaydi). Qarang: `media/voice/KeepAliveService.kt`. -->
+        <service
+            android:name=".media.voice.KeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Hujjatni MP3 audio-kitobga aylantirish ishining o'zi shu yerda
+             ketadi. Qarang: `media/voice/AudioBookService.kt`. -->
+        <!-- `stopWithTask="false"`: foydalanuvchi ilovani so'nggi vazifalar
+             ro'yxatidan surib tashlasa ham eksport davom etadi. Aynan shu
+             holat uchun xizmat alohida ajratilgan — surib tashlash ishni
+             yarim yo'lda uzib, chala MP3 qoldirardi. -->
+        <service
+            android:name=".media.voice.AudioBookService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProcessing"
+            android:stopWithTask="false" />
     </application>
 
 </manifest>

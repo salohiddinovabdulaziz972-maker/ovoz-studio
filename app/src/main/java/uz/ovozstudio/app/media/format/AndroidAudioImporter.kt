@@ -53,7 +53,7 @@ class AndroidAudioImporter(private val store: WorkStore) {
      * Nusxa majburiy: `OpenDocument` bergan ruxsat doimiy emas, jarayon
      * qayta ishga tushsa havola o'qilmas bo'lib qolardi.
      */
-    fun import(context: Context, uri: Uri): ImportOutcome {
+    fun import(context: Context, uri: Uri, onProgress: (Float) -> Unit = {}): ImportOutcome {
         val displayName = displayName(context, uri)
         val extension = displayName.substringAfterLast('.', "").ifEmpty { "audio" }
         val copy = store.newSourceFile(extension)
@@ -73,7 +73,7 @@ class AndroidAudioImporter(private val store: WorkStore) {
             return ImportOutcome.Rejected(ImportFailure.READ_FAILED)
         }
 
-        val outcome = open(copy, displayName)
+        val outcome = open(copy, displayName, onProgress)
         // Nusxa faqat ochilgan fayl uchun kerak. Rad etilgan fayl papkada
         // qolib ketsa, har bir xato urinish diskda iz qoldirardi.
         if (outcome is ImportOutcome.Rejected) copy.delete()
@@ -83,7 +83,7 @@ class AndroidAudioImporter(private val store: WorkStore) {
     /**
      * Allaqachon diskda turgan faylni ochadi. Fayl o'zgartirilmaydi.
      */
-    fun open(source: File, displayName: String = source.name): ImportOutcome {
+    fun open(source: File, displayName: String = source.name, onProgress: (Float) -> Unit = {}): ImportOutcome {
         val detected = try {
             AudioFormatDetector.detect(source)
         } catch (error: IOException) {
@@ -98,7 +98,7 @@ class AndroidAudioImporter(private val store: WorkStore) {
             return openWav(source, detected, displayName)
         }
 
-        return decodeToWav(source, detected, displayName)
+        return decodeToWav(source, detected, displayName, onProgress)
     }
 
     /** WAV manba: hech qanday qayta kodlash yo'q. */
@@ -137,12 +137,17 @@ class AndroidAudioImporter(private val store: WorkStore) {
     }
 
     /** Siqilgan manba: WAV ga ochiladi, asl nusxa joyida qoladi. */
-    private fun decodeToWav(source: File, detected: DetectedFormat, displayName: String): ImportOutcome {
+    private fun decodeToWav(
+        source: File,
+        detected: DetectedFormat,
+        displayName: String,
+        onProgress: (Float) -> Unit,
+    ): ImportOutcome {
         // Nom `manba-mp3-20260917-…` ko'rinishida bo'ladi: xato bo'lsa
         // qaysi fayldan chiqqanini fayl nomidan ham ko'rish mumkin.
         val target = store.newEditFile("ochilgan-${detected.container.extension}")
 
-        return when (val result = AndroidAudioDecoder().decode(source, target)) {
+        return when (val result = AndroidAudioDecoder().decode(source, target, onProgress)) {
             is AndroidAudioDecoder.Result.Failed -> {
                 target.delete()
                 ImportOutcome.Rejected(ImportFailure.NO_DECODER)

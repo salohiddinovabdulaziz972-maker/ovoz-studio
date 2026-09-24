@@ -15,7 +15,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-
 /**
  * Ekran o'quvchi uchun yordamchi qatlam.
  *
@@ -79,6 +78,17 @@ private fun Modifier.a11yDescription(label: String, description: String?): Modif
 
 /** Ekran sarlavhasi — TalkBack «sarlavha» sifatida e'lon qiladi. */
 fun Modifier.a11yHeading(): Modifier = semantics { heading() }
+
+/**
+ * Bir nechta qatorni TalkBack uchun BITTA to'xtash nuqtasiga birlashtiradi.
+ *
+ * Faqat o'zaro bog'liq, faqat o'qiladigan (tugmasiz) matnlar uchun: masalan
+ * fayl nomi + format + uzunlik — bittalab suryapti desa besh marta emas, bir
+ * marta to'xtaydi va hammasini ketma-ket eshitadi. Ichida tugma yoki boshqa
+ * amal bo'lsa ishlatilmaydi — birlashtirilgan guruh ichidagi tugma alohida
+ * bosib bo'lmaydigan holga kelardi.
+ */
+fun Modifier.a11yGroup(): Modifier = semantics(mergeDescendants = true) {}
 
 /**
  * Ovozi bilan e'lon qilish.

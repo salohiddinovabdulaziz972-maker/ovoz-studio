@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,6 +28,7 @@ import uz.ovozstudio.app.media.pdf.PdfPageText
 import uz.ovozstudio.app.media.pdf.PdfPageTools
 import uz.ovozstudio.app.media.pdf.PdfPasswordException
 import uz.ovozstudio.app.media.voice.DeviceTtsEngine
+import uz.ovozstudio.app.media.voice.KeepAliveService
 import uz.ovozstudio.app.media.voice.SpeechChunk
 import uz.ovozstudio.app.media.voice.SpeechListener
 import uz.ovozstudio.app.media.voice.SpeechRequest
@@ -128,6 +131,22 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         prepareEngine(prefs.enginePackage)
+
+        // Ekran o'chganda ham jonli o'qish davom etishi uchun: qaysi yo'l bilan
+        // to'xtagan/bo'lganidan qat'i nazar (pauza, hujjat tugashi, xato) —
+        // `speaking` holatining o'zi kuzatiladi, shuning uchun bitta joy
+        // hammasini qamrab oladi, har bir to'xtash nuqtasini alohida eslab
+        // yurish shart emas.
+        viewModelScope.launch {
+            state.map { it.speaking }.distinctUntilChanged().collect { speaking ->
+                val context = getApplication<Application>()
+                if (speaking) {
+                    KeepAliveService.start(context, state.value.documentName)
+                } else {
+                    KeepAliveService.stop(context)
+                }
+            }
+        }
     }
 
     // --- hujjat ---
@@ -516,6 +535,12 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         engine?.release()
         engine = null
         store.clearWork()
+        // Xavfsizlik uchun: `viewModelScope` shu yerda tugaydi, shuning uchun
+        // yuqoridagi kuzatuvchi (agar `speaking = true` bo'lsa ham) endi hech
+        // qachon ishlamaydi. Aks holda bildirishnoma va xizmat abadiy
+        // ishlab qolib ketardi — ekran butunlay yopilganda (masalan bosh
+        // ekranga qaytilganda) bu yerda aniq to'xtatiladi.
+        KeepAliveService.stop(getApplication<Application>())
     }
 
     private companion object {

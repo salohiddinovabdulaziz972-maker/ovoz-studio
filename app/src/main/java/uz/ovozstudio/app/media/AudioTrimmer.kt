@@ -93,7 +93,12 @@ object AudioTrimmer {
      */
     data class Cut(val startMs: Long, val endMs: Long)
 
-    private const val CHUNK_FRAMES = 16_384
+    // 64 KB IO buferiga mos kelsin deb 16 384 edi; katta fayllarda
+    // (soatlab yozuv) bu millionlab kichik o'qish/yozish chaqiruvi
+    // degani edi. 65 536 kadr — stereo 32-bit float bufer uchun ~512 KB,
+    // qurilma xotirasiga sezilarli og'irlik solmaydi, chaqiruvlar sonini
+    // esa to'rt baravar kamaytiradi.
+    private const val CHUNK_FRAMES = 65_536
 
     /**
      * [source] faylning [startMs] … [endMs] oralig'ini [dest] ga yozadi.

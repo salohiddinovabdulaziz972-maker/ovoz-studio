@@ -201,7 +201,7 @@ class WavWriter(
     companion object {
         /** Kanonik 44 baytli PCM WAV sarlavhasi. */
         const val HEADER_SIZE = 44
-        private const val BUFFER_BYTES = 64 * 1024
+        private const val BUFFER_BYTES = 256 * 1024
         private const val SHORT_MAX = 32_767f
         private const val INT24_MAX = 8_388_607f
     }

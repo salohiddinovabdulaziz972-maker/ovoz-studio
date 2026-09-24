@@ -68,6 +68,30 @@ class WorkStore(context: Context, scope: String) {
         return File(folder, name)
     }
 
+    /**
+     * Natija tayyor bo'lgach chaqiriladi — fayl yoniga "tayyor" belgisi qo'yiladi.
+     *
+     * Nega kerak. Uzoq ish jarayon o'lishi bilan uzilib qolishi mumkin (tizim
+     * xotirani bo'shatdi, foydalanuvchi ilovani surib tashladi) — u holda na
+     * tozalash, na xato xabari ishlamaydi, chala fayl esa joyida qoladi.
+     * Faylning o'zi bu holatda aldamchi: o'lchandi — MP3 ning birinchi uchdan
+     * bir qismi yozilgan bo'lsa ham u **yaroqli, o'ynaladigan** fayl bo'lib
+     * chiqadi (yarim yozilgan MP3 ham to'g'ri sarlavha bilan o'ynaladi).
+     * Ya'ni foydalanuvchi to'liq kitob
+     * deb o'ylab, yarim kitobni ulashib yuborishi mumkin edi.
+     *
+     * Bundan keyin "tayyor" degan savolga javob faylning o'zi beradi: belgi
+     * bor — tayyor. [sweep] belgisiz natijani darhol o'chiradi, ya'ni chala
+     * fayl bir kun yashab qolmaydi.
+     */
+    fun markOutputReady(file: File) {
+        runCatching { File(file.parentFile, file.name + READY_SUFFIX).createNewFile() }
+    }
+
+    /** Natija haqiqatan tugallanganmi — [markOutputReady] qo'ygan belgi bo'yicha. */
+    fun isOutputReady(file: File): Boolean =
+        File(file.parentFile, file.name + READY_SUFFIX).exists()
+
     /** Oraliq fayllarni tozalaydi. [keep] berilsa, o'sha fayl qoladi. */
     fun clearEdits(keep: File? = null) {
         editsDirectory.listFiles()?.forEach { file ->
@@ -146,6 +170,9 @@ class WorkStore(context: Context, scope: String) {
         private const val MAX_NAME_CHARS = 60
         private const val DAY_MS = 24L * 60 * 60 * 1000
 
+        /** "Tayyor" belgisining qo'shimchasi: `ovoz-kesilgan.mp3.tayyor`. */
+        private const val READY_SUFFIX = ".tayyor"
+
         /**
          * Eski fayllarni tozalaydi.
          *
@@ -161,8 +188,44 @@ class WorkStore(context: Context, scope: String) {
         fun sweep(context: Context, workMaxAgeMs: Long = 0L, outputMaxAgeMs: Long = DAY_MS) {
             val cache = context.applicationContext.cacheDir
             purge(File(cache, ROOT_NAME), workMaxAgeMs)
-            purge(File(cache, OUTPUTS_NAME), outputMaxAgeMs)
+            val outputs = File(cache, OUTPUTS_NAME)
+            purge(outputs, outputMaxAgeMs)
+            discardUnfinished(outputs)
         }
+
+        /**
+         * Belgisiz natijalarni — ya'ni jarayon o'limi tufayli chala qolganlarini —
+         * darhol o'chiradi.
+         *
+         * Belgi fayllari (`*.tayyor`) esa har doim o'chadi: ular faylning o'zi
+         * bilan birga yashaydi, [purge] esa faqat eski fayllarni ko'radi, ya'ni
+         * bugun yasalgan natijaning belgisi bir kundan keyin yolg'iz qolib
+         * ketardi.
+         */
+        private fun discardUnfinished(outputs: File) {
+            if (!outputs.isDirectory) return
+            for (file in outputs.walkBottomUp()) {
+                if (file.name.endsWith(READY_SUFFIX)) {
+                    runCatching { file.delete() }
+                    continue
+                }
+                if (!file.isFile) continue
+                // Chala fayl: natija o'zi, lekin belgisi yo'q.
+                if (hasOutputExtension(file) && !isReady(file)) runCatching { file.delete() }
+            }
+        }
+
+        private fun isReady(file: File): Boolean = File(file.parentFile, file.name + READY_SUFFIX).exists()
+
+        /**
+         * Belgini faqat **natija fayllaridan** talab qilamiz. Papkada yotgan
+         * boshqa hamma narsa (masalan boshqa ekranning vaqtinchalik fayli)
+         * o'z tartibida yashaydi — bu tekshiruv unga aralashmaydi.
+         */
+        private fun hasOutputExtension(file: File): Boolean =
+            OUTPUT_EXTENSIONS.any { file.name.endsWith(".$it", ignoreCase = true) }
+
+        private val OUTPUT_EXTENSIONS = listOf("mp3", "wav", "flac", "m4a", "aac", "ogg", "opus", "pdf", "txt")
 
         private fun purge(base: File, maxAgeMs: Long) {
             if (!base.isDirectory) return

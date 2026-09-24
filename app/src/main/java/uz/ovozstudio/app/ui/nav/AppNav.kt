@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import uz.ovozstudio.app.ui.audiobook.AudioBookScreen
 import uz.ovozstudio.app.ui.home.HomeScreen
 import uz.ovozstudio.app.ui.log.LogScreen
 import uz.ovozstudio.app.ui.merge.MergeScreen
@@ -25,6 +26,7 @@ object Routes {
     const val PDF_CUT = "pdf_cut"
     const val PDF_DELETE = "pdf_delete"
     const val READER = "reader"
+    const val AUDIOBOOK = "audiobook"
     const val LOG = "log"
 }
 
@@ -45,6 +47,7 @@ fun AppNav() {
                 onPdfCut = { navController.navigate(Routes.PDF_CUT) },
                 onPdfDelete = { navController.navigate(Routes.PDF_DELETE) },
                 onReader = { navController.navigate(Routes.READER) },
+                onAudioBook = { navController.navigate(Routes.AUDIOBOOK) },
                 onLog = { navController.navigate(Routes.LOG) },
             )
         }
@@ -71,6 +74,10 @@ fun AppNav() {
 
         composable(Routes.READER) {
             ReaderScreen(onBack = back)
+        }
+
+        composable(Routes.AUDIOBOOK) {
+            AudioBookScreen(onBack = back)
         }
 
         composable(Routes.LOG) {

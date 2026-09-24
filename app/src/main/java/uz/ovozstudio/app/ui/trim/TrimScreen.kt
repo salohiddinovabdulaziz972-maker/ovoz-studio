@@ -11,13 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -27,8 +29,11 @@ import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
+import uz.ovozstudio.app.ui.common.ParamsGroup
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.TimeInput
+import uz.ovozstudio.app.ui.common.WorkProgress
+import uz.ovozstudio.app.ui.common.a11yGroup
 import uz.ovozstudio.app.ui.common.a11yHeading
 import uz.ovozstudio.app.ui.common.fileSummary
 import uz.ovozstudio.app.ui.common.importFailureMessage
@@ -53,6 +58,12 @@ fun TrimScreen(
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val announce = rememberAnnouncer()
+
+    // Parametrlar (boshlanish/tugash vaqti) YOPIQ boshlanadi: standart tanlov —
+    // butun fayl — aksariyat foydalanuvchiga yetarli, shuning uchun bosh holatda
+    // faqat xulosa va bitta tugma ko'rinadi ("Kesib olish" tugmasigacha yo'l
+    // qisqa bo'lsin). Kengaytirilgan holat ekran aylanganda ham saqlanadi.
+    var paramsExpanded by rememberSaveable { mutableStateOf(false) }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) viewModel.open(uri)
@@ -128,13 +139,15 @@ fun TrimScreen(
         )
 
         if (state.isBusy) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            Text(text = busyText, style = MaterialTheme.typography.bodyMedium)
+            WorkProgress(label = busyText, progress = state.progress)
         }
 
         val info = state.info
         if (info != null) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.a11yGroup(),
+            ) {
                 Text(
                     text = stringResource(R.string.audio_file_name, state.fileName),
                     style = MaterialTheme.typography.bodyLarge,
@@ -153,61 +166,60 @@ fun TrimScreen(
                 )
             }
 
-            Text(
-                text = stringResource(R.string.trim_selection_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.a11yHeading(),
+            val paramsSummary = stringResource(
+                R.string.trim_params_summary,
+                TimeFormat.format(startMs),
+                TimeFormat.format(endMs),
+                spokenTime((endMs - startMs).coerceAtLeast(0)),
             )
-
-            TimeInput(
-                label = stringResource(R.string.trim_start_label),
-                parts = state.startParts,
-                onPartsChange = viewModel::setStart,
-                isError = !state.startParts.isEmpty && state.startParts.toMillisOrNull() == null,
-                enabled = !state.isBusy,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            TimeInput(
-                label = stringResource(R.string.trim_end_label),
-                parts = state.endParts,
-                onPartsChange = viewModel::setEnd,
-                isError = !state.endParts.isEmpty && state.endParts.toMillisOrNull() == null,
-                enabled = !state.isBusy,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            ParamsGroup(
+                summary = paramsSummary,
+                expanded = paramsExpanded,
+                onExpandedChange = { paramsExpanded = it },
+            ) {
                 Text(
-                    text = stringResource(
-                        R.string.trim_selection_range,
-                        TimeFormat.format(startMs),
-                        TimeFormat.format(endMs),
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = stringResource(R.string.trim_selection_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.a11yHeading(),
                 )
+
+                TimeInput(
+                    label = stringResource(R.string.trim_start_label),
+                    parts = state.startParts,
+                    onPartsChange = viewModel::setStart,
+                    isError = !state.startParts.isEmpty && state.startParts.toMillisOrNull() == null,
+                    enabled = !state.isBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                TimeInput(
+                    label = stringResource(R.string.trim_end_label),
+                    parts = state.endParts,
+                    onPartsChange = viewModel::setEnd,
+                    isError = !state.endParts.isEmpty && state.endParts.toMillisOrNull() == null,
+                    enabled = !state.isBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
                 Text(
-                    text = stringResource(
-                        R.string.trim_duration_a11y,
-                        spokenTime((endMs - startMs).coerceAtLeast(0)),
-                    ),
+                    text = paramsSummary,
                     style = MaterialTheme.typography.bodyMedium,
                 )
-            }
 
-            if (state.isPlaying) {
-                A11yOutlinedButton(
-                    label = stringResource(R.string.trim_stop),
-                    onClick = { viewModel.stopPlayback() },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else {
-                A11yOutlinedButton(
-                    label = stringResource(R.string.trim_play),
-                    onClick = { viewModel.playSelection() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !state.isBusy && endMs > startMs,
-                )
+                if (state.isPlaying) {
+                    A11yOutlinedButton(
+                        label = stringResource(R.string.trim_stop),
+                        onClick = { viewModel.stopPlayback() },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    A11yOutlinedButton(
+                        label = stringResource(R.string.trim_play),
+                        onClick = { viewModel.playSelection() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isBusy && endMs > startMs,
+                    )
+                }
             }
 
             // Bitta amal tugmasi: rejimga qarab «kesib olish» yoki «o'chirish».

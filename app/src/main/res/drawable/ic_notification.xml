@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <!--
+      Bildirishnoma belgisi: to'lqin shaklidagi besh ustun (ilova belgisi
+      bilan bir xil g'oya). Android bildirishnoma belgisi bitta rangli
+      (oq, shaffof fon ustida) bo'lishi shart — tizim o'zi holatga qarab
+      ranglaydi, shuning uchun bu yerda hech qanday rang o'zgaruvchisi yo'q.
+    -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,10 L6,10 L6,14 L4,14 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8,7 L10,7 L10,17 L8,17 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,4 L14,4 L14,20 L12,20 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M16,7 L18,7 L18,17 L16,17 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M20,10 L22,10 L22,14 L20,14 Z" />
+</vector>

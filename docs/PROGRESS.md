@@ -5,6 +5,118 @@ o'chirilgan imkoniyatlar (yozib olish, konvertor, ekvalayzer, shovqin, tezlik,
 stem, teglar, ko'p yo'lli aralashtirish, audio-kitob) haqida edi; ular endi
 ilovada yo'q.
 
+## 0.4.0 — audio-kitob (MP3) va ekran o'chganda to'xtamaslik
+
+Egasining talabi: kitobni MP3 audio-kitob qilib saqlash imkoni yo'q edi —
+qo'shildi. Ekran o'chganda jonli o'qish to'xtab qolardi — endi to'xtamaydi.
+Buning uchun **yangi ruxsatlar** kerak bo'ldi (egasi tasdiqladi).
+
+### Nima qo'shildi
+- **Ovoz dvigateliga faylga yozish imkoniyati** (`VoiceEngine.synthesizeToFile`,
+  `DeviceTtsEngine`): matnni jonli o'qimasdan, WAV fayliga yozadi.
+- **`AudioBookExporter`**: hujjatni MP3 audio-kitobga aylantiruvchi asosiy
+  mantiq — abzatslarni bo'lib ovozga o'giradi, ketma-ket qo'shadi
+  (`AudioMerger`), MP3 ga kodlaydi (`Mp3Encoder`, nutq uchun 64 kbit/s).
+- **`AudioBookService`**: eksportning o'zi shu yerda ketadi — ViewModel yoki
+  ekran emas. Foydalanuvchi ekrandan chiqib ketsa, telefonni qulflasa ham
+  ish davom etadi; bildirishnomada foiz va bosqich (ovozga o'girish → 
+  qo'shish → MP3) ko'rinadi, bekor qilish tugmasi bilan.
+- **`KeepAliveService`**: jonli o'qishda (`ReaderViewModel`) ekran o'chganda
+  jarayon o'chirilib qolmasligi uchun — hech qanday ovoz mantig'i yo'q,
+  faqat bildirishnoma orqali «bu ish muhim» deydi. `ReaderViewModel`ning
+  `speaking` holatiga reaktiv ulangan: qaysi yo'l bilan to'xtaganidan
+  qat'i nazar (pauza, hujjat tugashi, xato, ekrandan butunlay chiqish)
+  xizmat to'g'ri to'xtaydi.
+- **Yangi ekran**: bosh ekrandan «Hujjatni audio-kitob qilish (MP3)» —
+  hujjat tanlanadi, ovoz/dvigatel/tezlik tanlanadi, natija saqlanadi yoki
+  ulashiladi.
+
+### Yangi ruxsatlar (manifestga qo'shildi)
+`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`,
+`FOREGROUND_SERVICE_MEDIA_PROCESSING`, `POST_NOTIFICATIONS`. Bularsiz
+Android ekran o'chganda yoki ilova fonga tushganda jarayonni o'chirib
+qo'yishi mumkin edi. Boshqa hech qanday ruxsat qo'shilmadi — fayllar hali
+ham faqat tizim tanlagichi orqali olinadi/saqlanadi.
+
+### Tekshiruv
+Bu safar ham kompilyator yo'q edi. Qo'shimcha: 207 til kaliti × 4 til (mos),
+417+134 funksiya chaqiruvi, 18 `enum`/`when` bloki. Tekshiruv jarayonida
+ikkita haqiqiy xato topildi va tuzatildi (ikkalasi ham shu safar yozilgan
+yangi kodda): `continuation.resume(...)` dan keyin ortiqcha bo'sh figurali
+qavs (sintaksis xatosi) va `resume` uchun import yetishmasligi. Bundan
+tashqari, `job.cancel()` chaqirilganda coroutine mexanizmi tashlaydigan
+haqiqiy `CancellationException` avval "xato" deb noto'g'ri ushlanardi —
+endi "bekor qilindi" sifatida to'g'ri ushlanadi. Bitta yolg'on signal ham
+chiqdi (tekshiruv skriptining o'zida): companion-object ichidagi
+`AudioBookService.cancel(context)` chaqiruvi `AudioBookViewModel.cancel()`
+bilan adashtirilgan — kodda xato emas, tekshiruv skriptining cheklovi.
+
+### Hali qilinmagan
+- Qurilmada sinov: foreground xizmat, TalkBack bilan yurish, uzun kitobni
+  to'liq audio-kitob qilish.
+- Audio-kitob ekranida bildirishnoma ruxsati so'ralishi (hozir tizim o'zi
+  so'raydi, lekin ilova birinchi marta ochilganda tushuntirish yo'q).
+
+## 0.3.0 — tezlik, jarayon foizi, ekran o'quvchi uchun qisqaroq yo'l
+
+Egasining talabi: katta audio fayllarda ish sekin ketyapti — tezlashtirilsin;
+barcha uzoq ish foiz bilan ko'rsatilsin (ekran o'quvchi bilan ham qulay
+bo'lsin); kesish/o'chirish/birlashtirishda qo'shimcha parametrlar (vaqt
+maydonlari) bitta joyga yig'ilsin — hozir «tugatish» tugmasigacha juda ko'p
+tugma orqali o'tish kerak.
+
+### Tezlik
+- Kesish, o'chirish, birlashtirish va WAV o'qish/yozish bo'lagi 16 384 dan
+  65 536 kadrga oshirildi (4 baravar kamroq o'qish/yozish chaqiruvi);
+  WAV IO buferi 64 dan 256 KB ga.
+- **Asl formatga qaytarish** (`FormatPreservingExporter`) bo'lagi 4096 dan
+  65 536 ga oshirildi — bu eng katta topilma edi: MP3/FLAC kabi sof Java'da
+  ketadigan kodlash bosqichi eng sekin joy, lekin bo'lagi eng kichik edi.
+
+### Jarayon foizi (hammasi endi bor)
+- Dekodlash (`AndroidAudioDecoder`) — avval umuman yo'q edi, endi
+  `MediaExtractor`ning o'qilgan vaqtidan hisoblanadi.
+- Import zanjiri (`AndroidAudioImporter` → `AudioOpener`) shu foizni ekranga
+  yetkazadi.
+- Kesish/o'chirish (`TrimViewModel`), birlashtirish — fayl qo'shish va
+  birlashtirishning o'zi (`MergeViewModel`), asl formatga qaytarish
+  (ikkalasida ham) — barchasi foiz beradi.
+- PDF sahifalarini kesib olish/o'chirish (`PdfPageTools.extract/delete`) —
+  sahifa-sahifa foiz.
+- Yangi `WorkProgress` (`ui/common`): foiz ekranda uzluksiz ko'rinadi, TalkBack'ga
+  esa faqat har 10 foizda bir marta e'lon qilinadi — aks holda «1%...2%...3%...»
+  bilan boshqa hech narsani eshittirmas edi.
+
+### Ekran o'quvchi uchun qisqaroq yo'l
+- Yangi `ParamsGroup` (`ui/common`): qo'shimcha parametrlar (vaqt maydonlari,
+  fayllar tartibi) YOPIQ boshlanadi — faqat xulosa va bitta «O'zgartirish»
+  tugmasi. Standart holatda (butun faylni kesish/o'chirish, fayllar qo'shilgan
+  tartibda) foydalanuvchi «tugatish» tugmasigacha 2-3 to'xtash bilan yetadi,
+  avvalgi 10+ o'rniga.
+- Kesish/o'chirish ekranida: boshlanish/tugash vaqti maydonlari va «Eshitish»
+  tugmasi shu guruh ichida.
+- Birlashtirish ekranida: fayllar ro'yxati (nom + Yuqoriga/Pastga/Olib
+  tashlash — fayl sonига qarab o'sadigan) shu guruh ichida; format va
+  umumiy uzunlik esa doim ko'rinadi.
+- Yangi `a11yGroup()` (`ui/common/A11y.kt`): bir necha qatorni (fayl nomi,
+  format, uzunlik) TalkBack uchun bitta to'xtash nuqtasiga birlashtiradi.
+
+### Tekshiruv
+Bu safar ham kompilyator yo'q edi. Qo'shimcha tekshirilgan: 181 til kaliti ×
+4 til (mos), 373+119 funksiya chaqiruvi, 17 `enum`/`when` bloki — hammasi
+avvalgidek toza. Yangi fayllar (`ParamsGroup.kt`, `ProgressBar.kt`) shu
+tekshiruvlarga kiritildi.
+
+### Hali qilinmagan (keyingi bosqich, egasi tasdiqladi)
+- **Hujjatni MP3 audio-kitob qilib eksport qilish** — hozir faqat jonli
+  o'qish bor (TTS bilan ekranda), faylga saqlash yo'q.
+- **Ekran o'chganda o'qish/eksport to'xtamasligi** — buning uchun fon xizmati
+  (foreground service) va bitta yangi ruxsat guruhi kerak: bildirishnoma
+  (`POST_NOTIFICATIONS`) va fon ijro/qayta ishlash
+  (`FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `FOREGROUND_SERVICE_MEDIA_PROCESSING`).
+  Bu ilovaning «hech qanday ruxsat so'ralmaydi» qoidasini o'zgartiradi —
+  egasi buni bilib tasdiqladi.
+
 ## 0.2.0 — nima o'zgardi
 
 Egasining talabi: ilovada **faqat** audioni kesib olish, o'chirish,
