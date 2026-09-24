@@ -54,7 +54,10 @@ class AudioPlayer {
      */
     fun seekTo(ms: Long) {
         val media = player ?: return
-        runCatching { media.seekTo(ms.coerceAtLeast(0).toInt()) }
+        val target = ms.coerceAtLeast(0).toInt()
+        // Xato yiqitmaydi, lekin jurnalda qoladi: sakrash ishlamasa sabab shu.
+        runCatching { media.seekTo(target) }
+            .onFailure { ErrorLog.error("audio.player", "Belgilangan joyga o'tib bo'lmadi: $target ms", it) }
     }
 
     /** Joriy pozitsiya (millisoniya); pleyer yo'q bo'lsa 0. */

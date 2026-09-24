@@ -79,8 +79,10 @@ object AudioMerger {
         }
         val target = targetOf(infos)
 
+        // Kutilgan hajm faqat FOIZ uchun: `Long` ko'paytmasi 2 Gb kadrda
+        // toshib ketardi, shuning uchun avval `Long` ga o'tkaziladi.
         var expected = 0L
-        for (info in infos) expected += info.frames * target.sampleRate / info.sampleRate
+        for (info in infos) expected += info.frames * target.sampleRate.toLong() / info.sampleRate
         val totalFrames = maxOf(1L, expected)
 
         val writer = WavWriter(dest, target.sampleRate, target.channels, target.bitDepth)
@@ -113,14 +115,18 @@ object AudioMerger {
                         info.bitsPerSample == target.bitDepth.bits
 
                     val before = done
+                    // Ishlangan kadrlar soni kutilganidan oshib ketishi mumkin
+                    // (yaxlitlash har bir faylda bir kadrga surib turadi).
+                    // `before + frames` ni `done` dan ajratib hisoblaganda
+                    // foiz 1 dan oshib, `coerceIn` uni 100% da ushlab qolardi
+                    // va ko'rsatkich hech qachon oxiriga yetmasdi.
+                    val onFrames: (Long) -> Unit = { frames ->
+                        onProgress(((before + frames).toFloat() / totalFrames).coerceIn(0f, 1f))
+                    }
                     done += if (exact) {
-                        copyExact(writer, input, target.channels) { frames ->
-                            onProgress(((before + frames).toFloat() / totalFrames).coerceIn(0f, 1f))
-                        }
+                        copyExact(writer, input, target.channels, onFrames)
                     } else {
-                        copyConverted(writer, input, target.channels) { frames ->
-                            onProgress(((before + frames).toFloat() / totalFrames).coerceIn(0f, 1f))
-                        }
+                        copyConverted(writer, input, target.channels, onFrames)
                     }
                 } finally {
                     converted?.delete()
@@ -129,6 +135,9 @@ object AudioMerger {
         } finally {
             writer.close()
         }
+        // Oxirgi foiz har doim aniq 100% bo'ladi: yaxlitlash tufayli tsikl
+        // 99% da tugashi mumkin edi va ko'rsatkich «tugamadi»dek tuyulardi.
+        onProgress(1f)
         return WavFile.readInfo(dest)
     }
 

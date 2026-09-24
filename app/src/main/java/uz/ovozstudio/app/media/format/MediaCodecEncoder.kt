@@ -5,6 +5,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.os.Build
+import uz.ovozstudio.app.log.ErrorLog
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -143,6 +144,7 @@ class MediaCodecEncoder(
     override fun finish() {
         if (finished) return
         finished = true
+        var failed = false
         try {
             val index = codec.dequeueInputBuffer(TIMEOUT_US)
             if (index >= 0) {
@@ -153,6 +155,9 @@ class MediaCodecEncoder(
                 )
             }
             drain(endOfStream = true)
+        } catch (error: Throwable) {
+            failed = true
+            throw error
         } finally {
             runCatching { codec.stop() }
             codec.release()
@@ -160,6 +165,12 @@ class MediaCodecEncoder(
             runCatching { muxer?.release() }
             runCatching { adtsOut?.flush() }
             runCatching { adtsOut?.close() }
+            // Muxer boshlanmagan bo'lsa konteyner yaroqsiz: `stop()` uni
+            // yakunlamaydi, fayl esa bo'sh `moov` bilan qolib ketardi.
+            // Bunday natija saqlanmasligi kerak — o'chiramiz.
+            if (failed && muxer != null && !muxerStarted) {
+                runCatching { file.delete() }
+            }
         }
     }
 
@@ -172,11 +183,23 @@ class MediaCodecEncoder(
      */
     @Throws(IOException::class)
     private fun drain(endOfStream: Boolean) {
+        // Oxirida kodlovchi EOS bayrog'ini bermay "hali tayyor emas" deb
+        // turaversa, tsikl abadiy aylanib qolardi (yagona chiqish — EOS
+        // bayrog'i). Shuning uchun ketma-ket bo'sh urinishlar sanaladi.
+        var stalls = 0
         while (true) {
             val index = codec.dequeueOutputBuffer(bufferInfo, TIMEOUT_US)
             when {
                 index == MediaCodec.INFO_TRY_AGAIN_LATER -> {
                     if (!endOfStream) return
+                    stalls++
+                    if (stalls >= MAX_EOS_STALLS) {
+                        ErrorLog.error(
+                            "audio.encode",
+                            "Kodlovchi tugash bayrog'ini bermadi: $MAX_EOS_STALLS urinishdan keyin to'xtatildi",
+                        )
+                        return
+                    }
                 }
 
                 index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> readOutputFormat(codec.outputFormat)
@@ -245,5 +268,8 @@ class MediaCodecEncoder(
 
         /** Nechta bo'sh urinishdan keyin kodlovchi buzuq deb hisoblanadi. */
         private const val MAX_STALLS = 200
+
+        /** Tugashda kodlovchi "tayyor emas" deb turavergan holat chegarasi. */
+        private const val MAX_EOS_STALLS = 200
     }
 }

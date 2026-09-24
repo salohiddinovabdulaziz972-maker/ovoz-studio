@@ -5,6 +5,7 @@ import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
+import uz.ovozstudio.app.log.ErrorLog
 import kotlin.math.roundToInt
 
 /**
@@ -136,7 +137,15 @@ class WavWriter(
             // Sarlavha yopish xato bergan taqdirda ham to'g'rilanadi: yozilgan
             // qism eshitilishi kerak. Sarlavha kattaroq bo'lib qolsa,
             // `WavFile` uni haqiqiy fayl hajmigacha qisqartirib o'qiydi.
-            patchHeader()
+            if (!patchHeader()) {
+                // 4 GB dan katta: sarlavhaga sig'madi, fayl ochilmaydi.
+                // Jimgina qoldirmasdan o'chiramiz va sababini yozamiz.
+                ErrorLog.error(
+                    "wav.yozish",
+                    "Natija 4 GB dan oshdi, sarlavhani yozib bo'lmadi: ${file.name}",
+                )
+                runCatching { file.delete() }
+            }
         }
     }
 
@@ -159,16 +168,23 @@ class WavWriter(
         out.write(header)
     }
 
-    /** Fayl yopilgandan keyin RIFF va data o'lchamlarini haqiqiy qiymatga keltiradi. */
-    private fun patchHeader() {
+    /**
+     * Fayl yopilgandan keyin RIFF va data o'lchamlarini haqiqiy qiymatga keltiradi.
+     *
+     * `false` — hajm 4 GB dan oshdi, sarlavhaga sig'maydi. Bunday fayl
+     * nol o'lchamli sarlavha bilan qolib, ochilmaydi; chaqiruvchi uni
+     * saqlamasligi kerak.
+     */
+    private fun patchHeader(): Boolean {
         val dataSize = framesWritten * bytesPerFrame
-        if (dataSize > Int.MAX_VALUE) return // 4 GB dan katta WAV qo'llab-quvvatlanmaydi
+        if (dataSize > Int.MAX_VALUE) return false
         RandomAccessFile(file, "rw").use { raf ->
             raf.seek(4)
             raf.write(intLe(HEADER_SIZE - 8 + dataSize.toInt()))
             raf.seek(40)
             raf.write(intLe(dataSize.toInt()))
         }
+        return true
     }
 
     private fun intLe(value: Int): ByteArray = byteArrayOf(

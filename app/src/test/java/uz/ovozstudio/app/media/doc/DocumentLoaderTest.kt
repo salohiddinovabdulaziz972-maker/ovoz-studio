@@ -47,9 +47,14 @@ class DocumentLoaderTest {
         val epub = bytes(0x50, 0x4B, 0x03, 0x04) + "META-INF/container.xml".toByteArray()
         assertEquals(DocumentFormat.EPUB, DocumentLoader.formatOf("file.bin", epub))
 
-        // Imzo ham, kengaytma ham yo'q: aniqlanmaydi — bu xato emas,
-        // chaqiruvchi tushunarli xabar beradi.
-        assertNull(DocumentLoader.formatOf("file.bin", "Salom".toByteArray()))
+        // Kengaytmasi noma'lum, lekin ichi oddiy matn: kitoblar shunday
+        // ham tarqaladi (`.bin`, kengaytmasiz) — shuning uchun matn deb
+        // tan olinadi.
+        assertEquals(DocumentFormat.TXT, DocumentLoader.formatOf("file.bin", "Salom".toByteArray()))
+
+        // Ikkilik fayl esa matnga o'xshamaydi va aniqlanmaydi — bu xato
+        // emas, chaqiruvchi tushunarli xabar beradi.
+        assertNull(DocumentLoader.formatOf("file.bin", bytes(0x00, 0x01, 0x02, 0x03, 0x00)))
     }
 
     @Test

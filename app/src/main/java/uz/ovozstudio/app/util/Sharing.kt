@@ -3,6 +3,7 @@ package uz.ovozstudio.app.util
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import uz.ovozstudio.app.log.ErrorLog
 import androidx.core.content.FileProvider
 import java.io.File
 
@@ -45,7 +46,12 @@ object Sharing {
             if (context !is Activity) chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
             true
-        }.getOrDefault(false)
+        }.getOrElse { error ->
+            // Xato faqat ekranga chiqmaydi, jurnalga ham tushishi kerak:
+            // aks holda ulashish nega ishlamaganini keyin bilib bo'lmaydi.
+            ErrorLog.error("share", "Faylni ulashib bo'lmadi: ${file.name}", error)
+            false
+        }
     }
 
     // MP3 fayl uchun tur. Umumiy «audio» turidan aniqroq: qabul qiluvchi

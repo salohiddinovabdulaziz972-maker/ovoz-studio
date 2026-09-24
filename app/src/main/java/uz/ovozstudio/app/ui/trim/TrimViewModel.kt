@@ -369,7 +369,8 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             val ok = withContext(Dispatchers.IO) {
                 ResultFiles.copyTo(getApplication<Application>(), File(result.path), uri)
             }
-            if (!ok) ErrorLog.error("audio.save", "Faylni tanlangan joyga yozib bo'lmadi")
+            // Xato jurnalga `ResultFiles.copyTo` ichida yoziladi — bu yerda
+            // takrorlanmaydi, aks holda bitta xato ikki marta tushardi.
             _state.update {
                 it.copy(
                     busy = TrimBusy.NONE,
@@ -461,6 +462,21 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private fun refreshFromCurrent() {
         val file = currentFile ?: return
         val info = runCatching { WavFile.readInfo(file) }.getOrNull()
+        if (info == null) {
+            // Fayl o'qilmadi: ekran `info` bo'yicha chiziladi, ya'ni barcha
+            // boshqaruv tugmalari yo'qolib, fayl ochilmagandek ko'rinardi —
+            // sabab esa aytilmasdi. Xatoni jurnalga yozamiz va ko'rsatamiz.
+            ErrorLog.error("kesish.ochish", "Tahrir natijasini o'qib bo'lmadi: ${file.name}")
+            _state.update {
+                it.copy(
+                    busy = TrimBusy.NONE,
+                    progress = null,
+                    info = null,
+                    error = TrimError.EDIT_FAILED,
+                )
+            }
+            return
+        }
         _state.update {
             it.copy(
                 fileName = baseName,
@@ -468,7 +484,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                 // Har bir amaldan keyin tanlov butun faylni qamrab oladi:
                 // eski raqam yangi fayl uzunligiga to'g'ri kelmasligi mumkin.
                 startParts = TimeParts.fromMillis(0),
-                endParts = TimeParts.fromMillis(info?.durationMs ?: 0L),
+                endParts = TimeParts.fromMillis(info.durationMs),
                 canUndo = historyIndex > 0,
             )
         }

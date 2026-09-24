@@ -1,5 +1,6 @@
 package uz.ovozstudio.app.media.doc
 
+import uz.ovozstudio.app.log.ErrorLog
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -103,8 +104,35 @@ object DocumentLoader {
         val byName = DocumentFormat.ofExtension(name)
         if (byName != null) return byName
         if (header == null) return null
-        if (startsWith(header, ZIP_MAGIC)) return zipKind(header)
-        return null
+        if (startsWith(header, ZIP_MAGIC)) {
+            val kind = zipKind(header)
+            // EPUB ham, ODT ham bir xil ZIP: imzo kesimida ajralmasa,
+            // arxiv ro'yxatidan aniqlanadi. Aks holda `.bin` nomi bilan
+            // kelgan kitob «noma'lum format» bo'lib qaytardi.
+            if (kind != null) return kind
+            return zipKindOf(File(name))
+        }
+        // Kengaytmasi noma'lum bo'lib, ichi ZIP ham, PDF/RTF ham emas.
+        // Kitoblar ko'pincha shunday tarqaladi (`.bin`, kengaytmasiz), va
+        // imzo bo'yicha matnga o'xshasa — shuni tan olish kerak.
+        return if (looksLikeTextBytes(header)) DocumentFormat.TXT else null
+    }
+
+    /**
+     * Fayl tanlagichdan kelgan nom bo'yicha aniqlaydi: avval kengaytma,
+     * keyin **ichidagi baytlar**.
+     *
+     * Bu [formatOf] ning qulay ko'rinishi — kengaytmasi yolg'on bo'lgan
+     * fayl (Telegram'dan `.bin` bo'lib kelgan DOCX, `.txt` nomli PDF)
+     * shu yerda to'g'ri o'qiladi.
+     */
+    fun formatOf(file: File, fallbackName: String): DocumentFormat? {
+        val header = readHeader(file) ?: return null
+        return formatOf(fallbackName, header) ?: run {
+            val byName = DocumentFormat.ofExtension(file.name)
+            if (byName != null) byName
+            else if (looksLikeTextBytes(header)) DocumentFormat.TXT else null
+        }
     }
 
     /**
@@ -222,6 +250,9 @@ object DocumentLoader {
             }
         }
     } catch (error: Exception) {
+        // Arxiv ochilmadi — tashqi qator xulosani keyin o'zi chiqaradi,
+        // lekin sabab shu yerda yo'qolib qolmasin.
+        ErrorLog.error("hujjat.sniff", "Arxiv turini aniqlab bo'lmadi: ${file.name}", error)
         null
     }
 
@@ -236,6 +267,11 @@ object DocumentLoader {
      */
     fun looksLikeText(file: File): Boolean {
         val header = readHeader(file) ?: return false
+        return looksLikeTextBytes(header)
+    }
+
+    /** [looksLikeText] ning o'zagi — sarlavha allaqachon o'qilgan holat uchun. */
+    private fun looksLikeTextBytes(header: ByteArray): Boolean {
         if (header.isEmpty()) return false
         if (header.size >= 2) {
             val first = header[0].toInt() and 0xFF
@@ -255,6 +291,7 @@ object DocumentLoader {
     private fun readHeader(file: File): ByteArray? = try {
         FileInputStream(file).use { input -> readUpTo(input, SNIFF_BYTES) }
     } catch (error: Exception) {
+        ErrorLog.error("hujjat.header", "Fayl boshini o'qib bo'lmadi: ${file.name}", error)
         null
     }
 

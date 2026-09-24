@@ -38,6 +38,7 @@ done
 
 MAIN=(
     app/src/main/java/uz/ovozstudio/app/log/ErrorJournal.kt
+    app/src/main/java/uz/ovozstudio/app/log/ErrorLog.kt
     app/src/main/java/uz/ovozstudio/app/media/AudioTrimmer.kt
     app/src/main/java/uz/ovozstudio/app/media/BitDepth.kt
     app/src/main/java/uz/ovozstudio/app/media/WavFile.kt
@@ -140,7 +141,19 @@ done
 
 rm -rf "$OUT" && mkdir -p "$OUT"
 
-"$KOTLINC" -cp "$JARS/junit.jar:$JARS/hamcrest.jar:$JUMP3R" -jvm-target 17 -nowarn \
+# Android sinflari (Context, Build, Log) JVM'da yo'q. Ularning o'rnini
+# bosuvchi yupqa qatlam shu yerda yig'iladi: jurnal nuqtasi (`ErrorLog`)
+# sinovdan o'tishi uchun, ilova mantiqini Android'siz tekshirish mumkin
+# bo'lsin. Stublar faqat sinov uchun — APK'ga tushmaydi.
+STUBS="$ROOT/bin/android-stub"
+rm -rf "$STUBS" && mkdir -p "$STUBS"
+"$KOTLINC" -jvm-target 17 -nowarn -d "$STUBS" bin/android-stub-src > /tmp/superlisa/kotlinc-stub.log 2>&1 || {
+    grep -v "jansi\|UnsatisfiedLink\|^java.lang\|^[[:space:]]*at \|osinfo" \
+        /tmp/superlisa/kotlinc-stub.log >&2
+    exit 1
+}
+
+"$KOTLINC" -cp "$STUBS:$JARS/junit.jar:$JARS/hamcrest.jar:$JUMP3R" -jvm-target 17 -nowarn \
     -d "$OUT" "${MAIN[@]}" "${TESTS[@]}" > /tmp/superlisa/kotlinc.log 2>&1 || {
     # jansi shovqinini olib tashlab, haqiqiy xatolarni ko'rsatamiz
     grep -v "jansi\|UnsatisfiedLink\|^java.lang\|^[[:space:]]*at \|osinfo" \
@@ -148,5 +161,5 @@ rm -rf "$OUT" && mkdir -p "$OUT"
     exit 1
 }
 
-java -cp "$OUT:$STDLIB:$JARS/junit.jar:$JARS/hamcrest.jar:$JUMP3R" org.junit.runner.JUnitCore \
+java -cp "$OUT:$STUBS:$STDLIB:$JARS/junit.jar:$JARS/hamcrest.jar:$JUMP3R" org.junit.runner.JUnitCore \
     "${CLASSES[@]}"

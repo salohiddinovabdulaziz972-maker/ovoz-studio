@@ -3,6 +3,7 @@ package uz.ovozstudio.app.util
 import android.content.Context
 import android.net.Uri
 import java.io.File
+import uz.ovozstudio.app.log.ErrorLog
 
 /**
  * Tayyor faylni foydalanuvchi tanlagan joyga nusxalash.
@@ -31,6 +32,9 @@ object ResultFiles {
             true
         }
     } catch (error: Exception) {
+        // Sabab jurnalga tushadi: xato ekranda ham ko'rinadi, lekin fayl
+        // nomi va tizim xabari faqat shu yerda qoladi.
+        ErrorLog.error("fayl.saqlash", "Natijani tanlangan joyga yozib bo'lmadi: ${source.name}", error)
         false
     }
 }

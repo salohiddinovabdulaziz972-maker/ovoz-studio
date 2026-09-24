@@ -82,6 +82,14 @@ data class MergeUiState(
     val result: ResultFile? = null,
     val savedName: String? = null,
     val error: MergeError? = null,
+    /**
+     * Har bir qo'shish urinishida oshadi.
+     *
+     * Ekran e'lonni shu songa bog'laydi: fayl rad etilib ro'yxat o'zgarmasa
+     * (masalan 4-fayl formati mos kelmadi), son o'zgarmaydi va e'lon umuman
+     * bo'lmay qolardi.
+     */
+    val revision: Int = 0,
 ) {
     val isBusy: Boolean get() = busy != MergeBusy.NONE
 
@@ -129,6 +137,7 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                     error = null,
                     result = null,
                     savedName = null,
+                    revision = it.revision + 1,
                 )
             }
             for ((index, uri) in uris.withIndex()) {
@@ -226,21 +235,26 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
             val output = store.newOutputFile(OUTPUT_NAME, "", format.container.extension)
 
             val outcome = withContext(Dispatchers.IO) {
-                runCatching {
-                    var lastPercent = -1
-                    AudioMerger.merge(items.map { it.wav }, merged, store.editsDirectory) { progress ->
-                        // Ekran har bir foizda bir marta yangilanadi, har bir bo'lakda emas.
-                        val percent = (progress * 100).toInt()
-                        if (percent != lastPercent) {
-                            lastPercent = percent
-                            _state.update { it.copy(progress = progress) }
+                try {
+                    runCatching {
+                        var lastPercent = -1
+                        AudioMerger.merge(items.map { it.wav }, merged, store.editsDirectory) { progress ->
+                            // Ekran har bir foizda bir marta yangilanadi, har bir bo'lakda emas.
+                            val percent = (progress * 100).toInt()
+                            if (percent != lastPercent) {
+                                lastPercent = percent
+                                _state.update { it.copy(progress = progress) }
+                            }
                         }
+                        exporter.export(merged, format, output)
                     }
-                    exporter.export(merged, format, output)
+                } finally {
+                    // Bog'lanish uzilib qolsa ham (ViewModel tozalanadi) oraliq
+                    // fayl qolib ketmasligi kerak: u bir necha yuz megabayt.
+                    runCatching { merged.delete() }
                 }
             }
 
-            runCatching { merged.delete() }
 
             val exported = outcome.getOrNull()
             if (exported is ExportOutcome.Done && output.exists()) {

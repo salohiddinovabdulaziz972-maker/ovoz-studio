@@ -29,7 +29,17 @@ object Routes {
 @Composable
 fun AppNav() {
     val navController = rememberNavController()
-    val back: () -> Unit = { navController.popBackStack() }
+    // `popBackStack()` `false` qaytaradi, agar orqaga qaytadigan joy
+    // qolmagan bo'lsa (masalan konfiguratsiya o'zgarishidan keyin
+    // yo'naltiruvchi qayta qurilgan). O'sha holatda tizimning «orqaga»
+    // tugmasi ilovani yopadi — tugma esa jimgina hech narsa qilmasdan
+    // qolardi. Shuning uchun zaxira: stek bo'sh bo'lsa — chiqamiz.
+    val back: () -> Unit = {
+        if (!navController.popBackStack()) navController.navigate(Routes.HOME) {
+            popUpTo(Routes.HOME) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
 
     // Har bir ekran o'z ViewModel'iga ega, u ekran yopilganda tozalanadi:
     // ochiq audio va vaqtinchalik fayllar shu bilan birga ketadi.

@@ -79,7 +79,12 @@ class Mp3Encoder(
 
         if (format.bitrate != null) {
             flags.VBR = VbrMode.vbr_off
-            flags.brate = (format.bitrate / 1000).coerceIn(MIN_BITRATE_KBPS, MAX_BITRATE_KBPS)
+            // MP3 bitreyti ixtiyoriy son emas, standart zinapoya: LAME
+            // ro'yxatda yo'q qiymatni eng yaqin pastdagisiga tushiradi va
+            // sarlavhadagi da'vo bilan faylning haqiqiy bitreyti ajralib
+            // qolardi. Zinapoya bitta joyda — `CodecRates` da.
+            val preferred = CodecRates.mp3Bitrate(format.sampleRate, format.bitrate)
+            flags.brate = (preferred / 1000).coerceIn(MIN_BITRATE_KBPS, MAX_BITRATE_KBPS)
         } else {
             flags.VBR = VbrMode.vbr_default
             flags.VBR_q = VBR_QUALITY

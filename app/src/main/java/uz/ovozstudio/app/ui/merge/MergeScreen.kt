@@ -80,12 +80,18 @@ fun MergeScreen(
         MergeBusy.MERGING -> stringResource(R.string.merge_busy_merging)
         MergeBusy.SAVING -> stringResource(R.string.audio_busy_saving)
     }
-    LaunchedEffect(busyText) {
+    // Kalit — bandlik turi, matnning o'zi emas: `merge_busy_adding` har bir
+    // faylda o'zgaradi, matn kalit bo'lsa raqam har faylda ovozda takrorlanadi
+    // va oldingi e'lonni bosib ketadi.
+    LaunchedEffect(state.busy) {
         if (busyText.isNotEmpty()) announce(busyText)
     }
 
     val summary = stringResource(R.string.merge_summary, state.items.size, spokenTime(state.totalDurationMs))
-    LaunchedEffect(state.items.size) {
+    // Kalitga `revision` ham kiradi: fayl rad etilib ro'yxat o'zgarmasa
+    // (masalan 4-fayl mos kelmadi), son o'zgarmaydi va e'lon umuman
+    // bo'lmay qolardi. `revision` har bir urinishda oshadi.
+    LaunchedEffect(state.items.size, state.revision) {
         if (state.items.isNotEmpty()) announce(summary)
     }
 

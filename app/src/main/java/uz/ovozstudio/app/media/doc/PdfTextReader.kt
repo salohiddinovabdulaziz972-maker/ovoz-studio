@@ -292,9 +292,14 @@ object PdfTextReader {
                         "PDF dagi shrift (Type0) uchun ToUnicode jadvali yo'q — matnni o'qib bo'lmaydi"
                     )
                 }
+                // Kod kengligi Type0 bo'lsa ham har doim 2 emas: ToUnicode
+                // jadvalidagi `bfchar` yozuvi bir baytli kod berishi mumkin
+                // (`<00> <0410>`). Kenglik jadvalning o'zidan olinadi —
+                // aks holda butun matn ikki barobar surilib ketardi.
+                val width = cmap?.width ?: if (composite) 2 else 1
                 fonts[obj.number] = Font(
                     composite = composite,
-                    bytesPerCode = cmap?.width ?: if (composite) 2 else 1,
+                    bytesPerCode = width,
                     cmap = cmap?.map,
                 )
             }
@@ -526,12 +531,22 @@ object PdfTextReader {
         /** Kodlarni belgilarga aylantiradi: avval `ToUnicode`, keyin Lotin-1. */
         private fun decode(codes: IntArray, font: Font?): String {
             val cmap = font?.cmap
-            if (font != null && font.bytesPerCode == 2) {
+            val width = font?.bytesPerCode ?: 1
+            if (width > 1) {
                 val builder = StringBuilder()
                 var i = 0
-                while (i + 1 < codes.size) {
-                    cmap?.get((codes[i] shl 8) or codes[i + 1])?.let { builder.append(it) }
-                    i += 2
+                while (i + width <= codes.size) {
+                    var code = 0
+                    for (b in 0 until width) code = (code shl 8) or (codes[i + b] and 0xFF)
+                    val mapped = cmap?.get(code)
+                    if (mapped != null) {
+                        builder.append(mapped)
+                    } else if (width == 2) {
+                        // Jadvalda yo'q — kod UTF-16 birligi sifatida o'qiladi
+                        // (aks holda belgi butunlay yo'qolardi).
+                        builder.append(code.toChar())
+                    }
+                    i += width
                 }
                 return builder.toString()
             }

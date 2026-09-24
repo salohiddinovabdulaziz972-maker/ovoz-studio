@@ -131,7 +131,10 @@ object Resampler {
                     }
 
                     writer.write(out, 1)
-                    val percent = ((j + 1) * 100 / outFrames).toInt()
+                    // `Int` ko'paytmasi ~21,4 million kadrda toshib ketadi,
+                    // ya'ni 44,1 kHz da ~8 daqiqalik fayldan boshlab foiz
+                    // manfiy bo'lib qolardi. `Long` da hisoblanadi.
+                    val percent = ((j + 1) * 100L / outFrames).toInt()
                     if (percent != reported) {
                         reported = percent
                         onProgress(percent / 100f)

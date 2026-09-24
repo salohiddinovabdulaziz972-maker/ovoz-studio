@@ -6,6 +6,7 @@ import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.security.MessageDigest
+import uz.ovozstudio.app.log.ErrorLog
 
 /**
  * FLAC (Free Lossless Audio Codec) kodlovchi — sof Kotlin, tashqi kutubxonasiz.
@@ -135,14 +136,25 @@ class FlacEncoder(
     override fun finish() {
         check(!finished) { "Kodlovchi allaqachon yopilgan" }
         finished = true
+        var failed = false
         try {
             if (pendingFrames > 0) writeFrame(pendingFrames)
             pendingFrames = 0
             out.seek(STREAMINFO_OFFSET.toLong())
             out.write(streamInfo())
+        } catch (error: Throwable) {
+            failed = true
+            throw error
         } finally {
-            out.close()
-            this.close()
+            runCatching { out.close() }
+            // Yarim yozilgan FLAC — buzuq fayl: STREAMINFO nolda qolgan,
+            // MD5 ham, namunalar soni ham noto'g'ri, `flac -t` uni rad
+            // etadi. Uni saqlab qolishdan ko'ra o'chirgan ma'qul —
+            // MediaCodec kodlovchisi ham shunday qiladi.
+            if (failed) {
+                ErrorLog.error("audio.flac", "FLAC faylini yozib bo'lmadi: ${file.name}", null)
+                runCatching { file.delete() }
+            }
         }
     }
 
