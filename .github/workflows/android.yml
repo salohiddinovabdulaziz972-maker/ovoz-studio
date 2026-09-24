@@ -14,7 +14,7 @@ name: Android APK
 # Qo'lda yuritish ham mumkin: GitHub'ning «Actions» bo'limidan.
 # Qo'lda yuritish tugmasi.
 #
-# Ovoz Studio build trigger 2026-09-24: MediaStore saqlash va papkadan tanlash.
+# Triggersiz yig'ish yuri (2): @hide konstanta tuzatilgandan keyin.
 on:
   workflow_dispatch:
   push:
