@@ -62,7 +62,8 @@ object AudioBookExporter {
     class Cancelled : IOException("Bekor qilindi")
 
     /** Sof matn uchun bitta ovoz chaqiruvi ishlamadi. */
-    class SynthesisFailedException(val error: VoiceError) : IOException("Sintez bajarilmadi: $error")
+    class SynthesisFailedException(val error: VoiceError, detail: String? = null) :
+        IOException("Sintez bajarilmadi: ${detail ?: error}")
 
     /**
      * @param paragraphs o'qiladigan matn, abzatslarga bo'lingan (masalan
@@ -93,7 +94,17 @@ object AudioBookExporter {
                 if (isCancelled()) throw Cancelled()
                 val chunkFile = File(work, "bolak-$index.wav")
                 val result = synthesizeOne(engine, SpeechRequest(text = text, rate = rate), chunkFile)
-                if (result is SynthesisResult.Failed) throw SynthesisFailedException(result.error)
+                if (result is SynthesisResult.Failed) {
+                    // Bo'lak haqidagi ma'lumot xato bilan birga yuqoriga
+                    // ketadi: jurnalda faqat «SPEAK_FAILED» turgani uchun
+                    // sababni aniqlab bo'lmasdi. Eng ehtimolli sabab —
+                    // sintezator o'zi bo'lakka bo'lishni uddalay olmagan
+                    // katta bo'lak; buni faqat uzunlik ko'rsatadi.
+                    throw SynthesisFailedException(
+                        result.error,
+                        "bo'lak ${index + 1}/${texts.size}, ${text.length} belgi: ${result.error}",
+                    )
+                }
                 chunkFiles.add(chunkFile)
                 onProgress(
                     Progress(
