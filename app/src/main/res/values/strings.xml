@@ -183,6 +183,7 @@
     <string name="audiobook_background_note">Ekranni yopsangiz yoki telefonni qulflasangiz ham ish davom etadi. Tugagach bildirishnomada ko\'rinadi.</string>
     <string name="audiobook_error_failed">Audio-kitob yasab bo\'lmadi. Xotirada joy yetarli ekanini tekshiring.</string>
     <string name="audiobook_error_cancelled">Audio-kitob yasash bekor qilindi.</string>
+    <string name="audiobook_error_not_started">Audio-kitob yasash boshlanmadi. Boshqa ish ketayotgan bo\'lishi mumkin — biroz kutib, yana urinib ko\'ring.</string>
     <string name="notif_channel_reading">Hujjatni o\'qish</string>
     <string name="notif_reading_title">Hujjat o\'qilmoqda</string>
     <string name="notif_reading_text">Ekranni yopishingiz mumkin — o\'qish davom etadi.</string>

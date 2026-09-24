@@ -250,4 +250,5 @@ private fun AudioBookError.messageRes(): Int = when (this) {
     AudioBookError.VOICE_MISSING -> R.string.reader_error_voice_missing
     AudioBookError.FAILED -> R.string.audiobook_error_failed
     AudioBookError.CANCELLED -> R.string.audiobook_error_cancelled
+    AudioBookError.NOT_STARTED -> R.string.audiobook_error_not_started
 }

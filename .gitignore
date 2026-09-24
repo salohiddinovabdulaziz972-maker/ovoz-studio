@@ -24,3 +24,6 @@ keystore.properties
 # Tekshiruv skriptlarining vaqtinchalik chiqishi
 __pycache__/
 *.pyc
+
+# Yig'ilgan APK'lar repoga tushmaydi — ular CI artefakti sifatida tarqatiladi.
+*.apk

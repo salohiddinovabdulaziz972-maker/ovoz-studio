@@ -9,9 +9,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.log.ErrorLog
 import uz.ovozstudio.app.media.WorkStore
@@ -49,6 +51,14 @@ enum class AudioBookError {
     VOICE_MISSING,
     FAILED,
     CANCELLED,
+
+    /**
+     * Ish umuman boshlanmadi: xizmat uni qabul qilmadi.
+     *
+     * [CANCELLED] dan farqi shu — bu yerda hech narsa boshlanmagan, ya'ni
+     * foydalanuvchi nol foiz va jimgina qotib qolgan ekran ko'rmaydi.
+     */
+    NOT_STARTED,
 }
 
 data class AudioBookUiState(
@@ -182,6 +192,10 @@ class AudioBookViewModel(application: Application) : AndroidViewModel(applicatio
             return
         }
         val destination = store.newOutputFile(baseName, "-audiokitob", "mp3")
+        // Qabul qilingan ishlar sonini **chaqiruvdan oldin** eslab qolamiz:
+        // faqat o'sha paytdagi qiymatga tayanib, haqiqatan yangi ish
+        // qabul qilinganini ajratamiz.
+        val before = AudioBookService.state.value.acceptedCount
         AudioBookService.start(
             getApplication(),
             AudioBookRequest(
@@ -195,6 +209,28 @@ class AudioBookViewModel(application: Application) : AndroidViewModel(applicatio
             ),
         )
         _state.update { it.copy(error = null, result = null) }
+
+        // Ish haqiqatan qabul qilindimi — javobni kutamiz.
+        //
+        // Nega kerak. Xizmat band bo'lsa `start` hech nima qilmaydi
+        // (`if (_state.value.running) return`), ya'ni ekranda nol foiz qotib
+        // qoladi: tugma bosilgan, natija yo'q, xato ham yo'q. Foydalanuvchi
+        // uchun bu «ilova ishlamayapti» degani — aynan shu holat shikoyatga
+        // sabab bo'lgan.
+        //
+        // Tekshiruv **hisoblagich** bo'yicha, holat bayroqlari bo'yicha emas:
+        // `running` juda qisqa ishda darhol `false` bo'lib qolardi, eski
+        // `outcome` esa kechagi urinishdan qolgan bo'lishi mumkin — ikkalasi
+        // ham ekranni «boshlanmadi» deb xato xulosa chiqarishga undaydi.
+        viewModelScope.launch {
+            val accepted = withTimeoutOrNull(ACCEPT_TIMEOUT_MS) {
+                AudioBookService.state.first { it.acceptedCount > before }
+            }
+            if (accepted == null) {
+                ErrorLog.error("audiobook.start", "Xizmat ishni qabul qilmadi (band yoki javob bermadi)")
+                _state.update { it.copy(error = AudioBookError.NOT_STARTED) }
+            }
+        }
     }
 
     fun cancel() = AudioBookService.cancel(getApplication())
@@ -348,5 +384,8 @@ class AudioBookViewModel(application: Application) : AndroidViewModel(applicatio
         const val SCOPE = "audiokitob"
         const val DEFAULT_NAME = "hujjat"
         const val COPY_BUFFER = 256 * 1024
+
+        /** Ish qabul qilinishini kutish chegarasi — undan keyin xato ko'rsatiladi. */
+        const val ACCEPT_TIMEOUT_MS = 3_000L
     }
 }

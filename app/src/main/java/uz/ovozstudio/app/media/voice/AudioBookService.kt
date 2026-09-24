@@ -62,6 +62,19 @@ data class AudioBookState(
     /** Joriy bosqichning foizi (0…1). */
     val progress: Float = 0f,
     val outcome: AudioBookOutcome? = null,
+    /**
+     * Qabul qilingan ishlar soni — **faqat o'sadi**.
+     *
+     * Nega hisoblagich, `running` bayrog'i emas. Ekran «ish boshlandimi?»
+     * degan savolga javob kutganda `running` yaroqsiz: u ish tugashi bilan
+     * `false` ga qaytadi, ya'ni juda qisqa ishda (yoki allaqachon tugab
+     * bo'lgan ishda) ekran «boshlanmadi» deb xato xulosa chiqarardi. Bundan
+     * tashqari xizmat qabul qilolmasa ham eski `outcome` (masalan o'tgan
+     * urinishdan qolgan "bekor qilindi") joyida qolib, tekshiruvni
+     * aldaydi. Hisoblagich ikkala tuzoqdan ham qutqaradi: ekran o'z ishidan
+     * **oldin** raqamni eslab qoladi, keyin shu raqam oshganini kutadi.
+     */
+    val acceptedCount: Long = 0,
 )
 
 /**
@@ -375,6 +388,17 @@ class AudioBookService : Service() {
         fun start(context: Context, request: AudioBookRequest) {
             if (_state.value.running) return
             pendingRequest = request
+            // So'rov qabul qilindi, deb **shu yerda** belgilaymiz. Buni
+            // `onStartCommand` ichida qilish kech bo'lardi: xizmat chaqiruvni
+            // qabul qilib, lekin `pendingRequest` ni o'qishga ulgurmasidan
+            // to'xtab qolishi mumkin (masalan tizim `stopSelf` dan keyin
+            // jarayonni o'ldirsa) — u holda ekran abadiy kutib qolardi.
+            // Hisoblagichni oshirish esa eng birinchi qadam: shu paytdan
+            // boshlab «boshlanmadi» xulosasi faqat ish haqiqatan tugab,
+            // natijasi bo'lganda chiqadi.
+            _state.update {
+                it.copy(running = true, documentName = request.documentName, acceptedCount = it.acceptedCount + 1)
+            }
             ContextCompat.startForegroundService(context, Intent(context, AudioBookService::class.java))
         }
 

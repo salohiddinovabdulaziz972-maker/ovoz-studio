@@ -182,6 +182,7 @@
     <string name="audiobook_background_note">Работа продолжится, даже если вы закроете экран или заблокируете телефон. По завершении появится уведомление.</string>
     <string name="audiobook_error_failed">Не удалось создать аудиокнигу. Проверьте, достаточно ли места в памяти.</string>
     <string name="audiobook_error_cancelled">Создание аудиокниги отменено.</string>
+    <string name="audiobook_error_not_started">Создание аудиокниги не запустилось. Возможно, идёт другая задача — подождите немного и попробуйте снова.</string>
     <string name="notif_channel_reading">Чтение документа</string>
     <string name="notif_reading_title">Идёт чтение документа</string>
     <string name="notif_reading_text">Можно закрыть экран — чтение продолжится.</string>
