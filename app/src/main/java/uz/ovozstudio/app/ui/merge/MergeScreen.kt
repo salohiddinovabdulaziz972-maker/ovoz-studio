@@ -64,6 +64,8 @@ fun MergeScreen(
     var listExpanded by rememberSaveable { mutableStateOf(false) }
 
     val picker = rememberLauncherForActivityResult(DocumentPicker.OpenDocuments) { uris ->
+        // Ro'yxat tartibini foydalanuvchi boshqaradi; tanlagichdan kelgan
+        // tartib saqlanadi — pastdagi tugmalar bilan keyin o'zgartirsa bo'ladi.
         viewModel.addFiles(uris)
     }
 

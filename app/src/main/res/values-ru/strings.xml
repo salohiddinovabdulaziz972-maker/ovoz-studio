@@ -15,7 +15,7 @@
     <string name="time_unit_millis">мс</string>
     <string name="time_input_invalid">Проверьте время: минуты и секунды 0–59, миллисекунды 0–999</string>
     <string name="home_title">Ovoz Studio</string>
-    <string name="home_subtitle">Редактирование аудио и PDF, чтение документов.</string>
+    <string name="home_subtitle">Редактирование аудио и PDF: обрезка, удаление, объединение.</string>
     <string name="home_section_audio">Аудио</string>
     <string name="home_section_pdf">PDF-файлы</string>
     <string name="home_section_other">Прочее</string>
@@ -53,6 +53,11 @@
     <string name="trim_intro_cut">Отметьте нужный фрагмент файла. Останется только он, остальное будет удалено. Исходный файл не изменится.</string>
     <string name="trim_intro_delete">Отметьте ненужный фрагмент файла. Он будет удалён, остальные части соединятся. Исходный файл не изменится.</string>
     <string name="trim_file_duration">Длительность файла: %1$s</string>
+    <!-- Uch bosqichli ish: har bir qadam sarlavha bilan belgilanadi,
+         ekran o'quvchisi sarlavhadan sarlavhaga sakray oladi. -->
+    <string name="trim_step1_heading">Шаг 1 — Отметьте фрагмент</string>
+    <string name="trim_step2_heading">Шаг 2 — Подготовка результата</string>
+    <string name="trim_step3_heading">Шаг 3 — Сохранение на устройство</string>
     <string name="trim_selection_title">Отметьте фрагмент</string>
     <string name="trim_start_label">Время начала</string>
     <string name="trim_end_label">Время окончания</string>

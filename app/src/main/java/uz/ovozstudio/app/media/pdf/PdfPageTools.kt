@@ -16,8 +16,17 @@ import java.io.IOException
 /** PDF ochish uchun parol kerak. Ilova parol so'ramaydi: bunday fayl ochilmaydi. */
 class PdfPasswordException : IOException("PDF parol bilan himoyalangan")
 
-/** Fayl muallifi sahifalarni ajratib olishni taqiqlagan (PDF ruxsat bayrog'i). */
-class PdfNoPermissionException : IOException("PDF himoyalangan: sahifalarni ajratishga ruxsat yo'q")
+/**
+ * Faylda «sahifalarni ajratish mumkin emas» bayrog'i turibdi, lekin hujjat
+ * parolsiz ochildi.
+ *
+ * Bayroq hurmat qilinadi, ammo bu **xato emas**: foydalanuvchi shunchaki
+ * natija olinmasligini bilib tursin. Shu sababli alohida tur ajratilgan —
+ * u ekranda tushunarli sabab bo'lib chiqadi, jurnalda esa «buzuq fayl»
+ * degan taassurot qoldirmaydi.
+ */
+class PdfNoPermissionException :
+    IOException("PDF himoyalangan: sahifalarni ajratishga ruxsat yo'q")
 
 /** Bitta sahifaning matni. [number] — 1 dan boshlanadigan tartib raqami. */
 class PdfPageText(val number: Int, val text: String)

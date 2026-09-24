@@ -15,7 +15,7 @@
     <string name="time_unit_millis">миллисония</string>
     <string name="time_input_invalid">Вақтни текширинг: дақиқа ва сония 0–59, миллисония 0–999</string>
     <string name="home_title">Овоз Студио</string>
-    <string name="home_subtitle">Аудио ва PDF файлларни таҳрирлаш, ҳужжатларни ўқиш.</string>
+    <string name="home_subtitle">Аудио ва PDF файлларни таҳрирлаш: кесиб олиш, ўчириш, бирлаштириш.</string>
     <string name="home_section_audio">Аудио</string>
     <string name="home_section_pdf">PDF файллар</string>
     <string name="home_section_other">Бошқа</string>
@@ -53,6 +53,11 @@
     <string name="trim_intro_cut">Файлнинг керакли қисмини белгиланг. Фақат шу қисм қолади, қолгани олиб ташланади. Асл файл ўзгармайди.</string>
     <string name="trim_intro_delete">Файлнинг кераксиз қисмини белгиланг. У ўчирилади, қолган қисмлар бирлашади. Асл файл ўзгармайди.</string>
     <string name="trim_file_duration">Файл узунлиги: %1$s</string>
+    <!-- Uch bosqichli ish: har bir qadam sarlavha bilan belgilanadi,
+         ekran o'quvchisi sarlavhadan sarlavhaga sakray oladi. -->
+    <string name="trim_step1_heading">1-босқич — Қисмни белгиланг</string>
+    <string name="trim_step2_heading">2-босқич — Натижани тайёрлаш</string>
+    <string name="trim_step3_heading">3-босқич — Қурилмага сақлаш</string>
     <string name="trim_selection_title">Қисмни белгиланг</string>
     <string name="trim_start_label">Бошланиш вақти</string>
     <string name="trim_end_label">Тугаш вақти</string>

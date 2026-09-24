@@ -51,7 +51,7 @@ fun PdfScreen(
     val context = LocalContext.current
     val announce = rememberAnnouncer()
 
-    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenDocument) { uri ->
+    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenAny) { uri ->
         if (uri != null) viewModel.open(uri)
     }
 

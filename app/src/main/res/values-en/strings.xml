@@ -15,7 +15,7 @@
     <string name="time_unit_millis">ms</string>
     <string name="time_input_invalid">Check the time: 0–59 for min and sec, 0–999 for ms</string>
     <string name="home_title">Ovoz Studio</string>
-    <string name="home_subtitle">Edit audio and PDF files, read documents.</string>
+    <string name="home_subtitle">Edit audio and PDF files: cut, delete, merge.</string>
     <string name="home_section_audio">Audio</string>
     <string name="home_section_pdf">PDF files</string>
     <string name="home_section_other">Other</string>
@@ -53,6 +53,11 @@
     <string name="trim_intro_cut">Mark the part of the file you need. Only that part stays; the rest is removed. The original file is not changed.</string>
     <string name="trim_intro_delete">Mark the part of the file you do not need. It is removed and the remaining parts are joined. The original file is not changed.</string>
     <string name="trim_file_duration">File length: %1$s</string>
+    <!-- Uch bosqichli ish: har bir qadam sarlavha bilan belgilanadi,
+         ekran o'quvchisi sarlavhadan sarlavhaga sakray oladi. -->
+    <string name="trim_step1_heading">Step 1 — Mark the part</string>
+    <string name="trim_step2_heading">Step 2 — Prepare the result</string>
+    <string name="trim_step3_heading">Step 3 — Save to device</string>
     <string name="trim_selection_title">Mark the part</string>
     <string name="trim_start_label">Start time</string>
     <string name="trim_end_label">End time</string>

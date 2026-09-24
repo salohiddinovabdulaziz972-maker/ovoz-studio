@@ -113,12 +113,22 @@ object MediaSaver {
      * MediaStore yozuvidagi ko'rinadigan joy — foydalanuvchiga aytish uchun.
      * Ba'zi provayderlar bu ustunni bermaydi, o'shanda `null`.
      */
+    /**
+     * Saqlangan faylning qurilmadagi manzili — aytish uchun.
+     *
+     * `RELATIVE_PATH` MediaStore'da oxirida qiya chiziq bilan turadi
+     * (`Music/Ovoz Studio/`), shuning uchun qismlar bo'sh bo'lmaganlari
+     * olinadi va orasiga bitta `/` qo'yiladi: `Music/Ovoz Studio/8-bob.mp3`,
+     * `Music/Ovoz Studio//8-bob.mp3` emas.
+     */
     private fun locationOf(context: Context, uri: Uri): String? = runCatching {
         val columns = arrayOf(MediaStore.MediaColumns.RELATIVE_PATH, MediaStore.MediaColumns.DISPLAY_NAME)
         context.contentResolver.query(uri, columns, null, null, null)?.use { cursor ->
             if (!cursor.moveToFirst()) return@use null
             val path = columns.indices
                 .mapNotNull { index -> if (cursor.isNull(index)) null else cursor.getString(index) }
+                .map { it.trim('/') }
+                .filter { it.isNotEmpty() }
                 .joinToString("/")
             path.ifEmpty { null }
         }

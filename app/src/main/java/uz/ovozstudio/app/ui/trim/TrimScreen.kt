@@ -185,6 +185,15 @@ fun TrimScreen(
                 )
             }
 
+            // Uch bosqichli ish. Har bir bosqich o'z sarlavhasi bilan turadi,
+            // shuning uchun ekran o'quvchisi bilan yurganda foydalanuvchi
+            // qaysi qadamda ekanini va yana nechta qadam qolganini biladi.
+            Text(
+                text = stringResource(R.string.trim_step1_heading),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.a11yHeading(),
+            )
+
             val paramsSummary = stringResource(
                 R.string.trim_params_summary,
                 TimeFormat.format(startMs),
@@ -261,9 +270,13 @@ fun TrimScreen(
             )
 
             Text(
-                text = stringResource(R.string.trim_result_title),
+                text = stringResource(R.string.trim_step2_heading),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.a11yHeading(),
+            )
+            Text(
+                text = stringResource(R.string.trim_result_title),
+                style = MaterialTheme.typography.bodyLarge,
             )
             Text(
                 text = stringResource(R.string.trim_result_note, state.formatName),
@@ -291,6 +304,11 @@ fun TrimScreen(
                         Formatter.formatShortFileSize(context, result.sizeBytes),
                     ),
                     style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = stringResource(R.string.trim_step3_heading),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.a11yHeading(),
                 )
                 A11yButton(
                     label = stringResource(R.string.trim_save),
