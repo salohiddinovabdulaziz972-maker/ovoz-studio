@@ -70,7 +70,7 @@
     <string name="trim_result_ready">Готово: %1$s (%2$s)</string>
     <string name="trim_save">Сохранить на устройство</string>
     <string name="trim_share">Поделиться</string>
-    <string name="trim_saved">Сохранено: %1$s</string>
+    <string name="trim_saved">Сохранено: %2$s</string>
     <string name="trim_error_selection_empty">Время начала должно быть раньше времени окончания.</string>
     <string name="trim_error_selection_all">Нельзя удалить весь файл. Отметьте только ненужный фрагмент.</string>
     <string name="trim_error_nothing_to_undo">Нет действий для отмены.</string>

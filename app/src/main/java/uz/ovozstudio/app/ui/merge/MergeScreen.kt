@@ -3,7 +3,6 @@ package uz.ovozstudio.app.ui.merge
 import android.content.Context
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
+import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.ParamsGroup
@@ -63,16 +63,11 @@ fun MergeScreen(
     // qat'i nazar qisqa qoladi.
     var listExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenDocuments) { uris ->
         viewModel.addFiles(uris)
     }
 
     val result = state.result
-    val saver = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(result?.mimeType ?: DEFAULT_MIME),
-    ) { uri ->
-        if (uri != null) viewModel.saveTo(uri)
-    }
 
     val busyText = when (state.busy) {
         MergeBusy.NONE -> ""
@@ -214,7 +209,7 @@ fun MergeScreen(
             )
             A11yButton(
                 label = stringResource(R.string.trim_save),
-                onClick = { saver.launch(result.name) },
+                onClick = { viewModel.save() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isBusy,
             )
@@ -249,7 +244,7 @@ fun MergeScreen(
 
         state.savedName?.let { name ->
             StatusMessage(
-                message = stringResource(R.string.trim_saved, name),
+                message = stringResource(R.string.trim_saved, name, state.savedTo ?: name),
                 onDismiss = { viewModel.clearSaved() },
             )
         }
@@ -257,7 +252,6 @@ fun MergeScreen(
 }
 
 /** «Saqlash» oynasi uchun zaxira tur: natija hali yo'q paytda ham kontrakt yaratilishi kerak. */
-private const val DEFAULT_MIME = "audio/*"
 
 /**
  * Bitta rad etilgan fayl haqidagi xabar. [Context] orqali: matn ro'yxat

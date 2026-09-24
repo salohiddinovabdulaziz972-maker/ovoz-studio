@@ -29,7 +29,7 @@ import uz.ovozstudio.app.media.format.ImportFailure
 import uz.ovozstudio.app.media.format.OpenResult
 import uz.ovozstudio.app.media.format.StrictFormat
 import uz.ovozstudio.app.ui.common.ResultFile
-import uz.ovozstudio.app.util.ResultFiles
+import uz.ovozstudio.app.util.MediaSaver
 import uz.ovozstudio.app.util.TimeParts
 import java.io.File
 
@@ -104,6 +104,8 @@ data class TrimUiState(
     val result: ResultFile? = null,
     /** Tayyor fayl saqlangan bo'lsa — uning nomi. */
     val savedName: String? = null,
+    /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
+    val savedTo: String? = null,
     val error: TrimError? = null,
 ) {
     val isOpen: Boolean get() = info != null
@@ -210,7 +212,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearOpenFailure() = _state.update { it.copy(openFailure = null, openFailureFormat = "") }
-    fun clearSaved() = _state.update { it.copy(savedName = null) }
+    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null) }
 
     /** Tanlangan oraliqning boshlanishi (ms). Kiritilmagan bo'lsa — 0. */
     fun selectionStartMs(state: TrimUiState = _state.value): Long =
@@ -360,23 +362,36 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Tayyor faylni foydalanuvchi tanlagan joyga ([uri]) nusxalaydi. */
-    fun saveTo(uri: Uri) {
+    /**
+     * Tayyor faylni qurilmaning umumiy papkasiga **bitta bosishda** yozadi.
+     *
+     * Alohida «Fayl sifatida saqlash» oynasi yo'q: u har saqlashda joy tanlash
+     * va nom tasdiqlashni talab qilardi. Audio fayllar `Music`, hujjatlar
+     * `Documents` papkasiga tushadi.
+     */
+    fun save() {
         val result = _state.value.result ?: return
         if (_state.value.isBusy) return
         viewModelScope.launch {
             _state.update { it.copy(busy = TrimBusy.SAVING, error = null) }
-            val ok = withContext(Dispatchers.IO) {
-                ResultFiles.copyTo(getApplication<Application>(), File(result.path), uri)
+            val outcome = withContext(Dispatchers.IO) {
+                MediaSaver.save(
+                    getApplication(),
+                    File(result.path),
+                    result.name,
+                    result.mimeType,
+                    isAudio = true,
+                )
             }
-            // Xato jurnalga `ResultFiles.copyTo` ichida yoziladi — bu yerda
+            // Xato jurnalga `MediaSaver` ichida yoziladi — bu yerda
             // takrorlanmaydi, aks holda bitta xato ikki marta tushardi.
             _state.update {
-                it.copy(
-                    busy = TrimBusy.NONE,
-                    savedName = if (ok) result.name else null,
-                    error = if (ok) null else TrimError.SAVE_FAILED,
-                )
+                when (outcome) {
+                    is MediaSaver.Result.Saved ->
+                        it.copy(busy = TrimBusy.NONE, savedName = result.name, savedTo = outcome.display, error = null)
+                    is MediaSaver.Result.Failed ->
+                        it.copy(busy = TrimBusy.NONE, savedName = null, savedTo = null, error = TrimError.SAVE_FAILED)
+                }
             }
         }
     }

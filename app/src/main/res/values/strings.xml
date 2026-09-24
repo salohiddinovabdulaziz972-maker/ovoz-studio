@@ -71,7 +71,7 @@
     <string name="trim_result_ready">Tayyor: %1$s (%2$s)</string>
     <string name="trim_save">Qurilmaga saqlash</string>
     <string name="trim_share">Ulashish</string>
-    <string name="trim_saved">Saqlandi: %1$s</string>
+    <string name="trim_saved">Saqlandi: %2$s</string>
     <string name="trim_error_selection_empty">Boshlanish vaqti tugash vaqtidan oldin bo\'lishi kerak.</string>
     <string name="trim_error_selection_all">Butun faylni o\'chirib bo\'lmaydi. Faqat keraksiz qismni belgilang.</string>
     <string name="trim_error_nothing_to_undo">Bekor qilinadigan amal yo\'q.</string>

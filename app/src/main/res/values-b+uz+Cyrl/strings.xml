@@ -70,7 +70,7 @@
     <string name="trim_result_ready">Тайёр: %1$s (%2$s)</string>
     <string name="trim_save">Қурилмага сақлаш</string>
     <string name="trim_share">Улашиш</string>
-    <string name="trim_saved">Сақланди: %1$s</string>
+    <string name="trim_saved">Сақланди: %2$s</string>
     <string name="trim_error_selection_empty">Бошланиш вақти тугаш вақтидан олдин бўлиши керак.</string>
     <string name="trim_error_selection_all">Бутун файлни ўчириб бўлмайди. Фақат кераксиз қисмни белгиланг.</string>
     <string name="trim_error_nothing_to_undo">Бекор қилинадиган амал йўқ.</string>

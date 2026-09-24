@@ -70,7 +70,7 @@
     <string name="trim_result_ready">Ready: %1$s (%2$s)</string>
     <string name="trim_save">Save to device</string>
     <string name="trim_share">Share</string>
-    <string name="trim_saved">Saved: %1$s</string>
+    <string name="trim_saved">Saved: %2$s</string>
     <string name="trim_error_selection_empty">The start time must be before the end time.</string>
     <string name="trim_error_selection_all">The whole file cannot be deleted. Mark only the part you do not need.</string>
     <string name="trim_error_nothing_to_undo">There is nothing to undo.</string>

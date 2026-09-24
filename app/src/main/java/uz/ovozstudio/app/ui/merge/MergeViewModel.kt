@@ -24,7 +24,7 @@ import uz.ovozstudio.app.media.format.OpenResult
 import uz.ovozstudio.app.media.format.StrictFormat
 import uz.ovozstudio.app.media.merge.AudioMerger
 import uz.ovozstudio.app.ui.common.ResultFile
-import uz.ovozstudio.app.util.ResultFiles
+import uz.ovozstudio.app.util.MediaSaver
 import java.io.File
 
 /** Ro'yxatdagi bitta fayl: ochilgan va birlashtirishga tayyor. */
@@ -81,6 +81,8 @@ data class MergeUiState(
     val failures: List<MergeFailure> = emptyList(),
     val result: ResultFile? = null,
     val savedName: String? = null,
+    /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
+    val savedTo: String? = null,
     val error: MergeError? = null,
     /**
      * Har bir qo'shish urinishida oshadi.
@@ -291,29 +293,48 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Tayyor faylni foydalanuvchi tanlagan joyga ([uri]) nusxalaydi. */
-    fun saveTo(uri: Uri) {
+    /**
+     * Natijani qurilmaning umumiy papkasiga **bitta bosishda** yozadi.
+     * Alohida «Fayl sifatida saqlash» oynasi yo'q.
+     */
+    fun save() {
         val result = _state.value.result ?: return
         if (_state.value.isBusy) return
         viewModelScope.launch {
             _state.update { it.copy(busy = MergeBusy.SAVING, error = null) }
-            val ok = withContext(Dispatchers.IO) {
-                ResultFiles.copyTo(getApplication<Application>(), File(result.path), uri)
-            }
-            if (!ok) ErrorLog.error("merge.save", "Faylni tanlangan joyga yozib bo'lmadi")
-            _state.update {
-                it.copy(
-                    busy = MergeBusy.NONE,
-                    savedName = if (ok) result.name else null,
-                    error = if (ok) null else MergeError.SAVE_FAILED,
+            val outcome = withContext(Dispatchers.IO) {
+                MediaSaver.save(
+                    getApplication(),
+                    File(result.path),
+                    result.name,
+                    result.mimeType,
+                    isAudio = true,
                 )
+            }
+            // Sabab `MediaSaver` ichida jurnalga yoziladi — bu yerda
+            // takrorlanmaydi, aks holda bitta xato ikki marta tushardi.
+            _state.update {
+                when (outcome) {
+                    is MediaSaver.Result.Saved -> it.copy(
+                        busy = MergeBusy.NONE,
+                        savedName = result.name,
+                        savedTo = outcome.display,
+                        error = null,
+                    )
+                    is MediaSaver.Result.Failed -> it.copy(
+                        busy = MergeBusy.NONE,
+                        savedName = null,
+                        savedTo = null,
+                        error = MergeError.SAVE_FAILED,
+                    )
+                }
             }
         }
     }
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearFailures() = _state.update { it.copy(failures = emptyList()) }
-    fun clearSaved() = _state.update { it.copy(savedName = null) }
+    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null) }
 
     // --- yordamchi ---
 

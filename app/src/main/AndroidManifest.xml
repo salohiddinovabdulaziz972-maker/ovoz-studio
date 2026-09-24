@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Ilova internetga chiqmaydi (INTERNET ruxsati yo'q) va fayllarni
-         faqat foydalanuvchi tanlagan joydan oladi/saqlaydi (Storage Access
-         Framework) — mikrofon yoki ommaviy xotiraga kirish shart emas.
-         Shu sabab bu yerda hech qanday ruxsat so'ralmaydi. -->
+    <!-- Ilova internetga chiqmaydi (INTERNET ruxsati yo'q). Fayllar ochiq
+         `ACTION_OPEN_DOCUMENT` orqali o'qiladi — buning uchun ruxsat kerak
+         emas: foydalanuvchi tanlagan fayl ilovaga o'sha zahoti ochiladi.
+
+         Natija esa MediaStore orqali qurilmaning umumiy papkasiga yoziladi.
+         Android 10 (API 29) va undan yuqorisida ilova o'zi yaratgan yozuvni
+         ruxsatsiz yozadi — shuning uchun bu ruxsat faqat eski tizimlar
+         uchun e'lon qilingan. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <!-- Zaxira nusxa (bulut va `adb backup`) O'CHIRILGAN. Ilova foydalanuvchining
          shaxsiy fayllari (audio, PDF, hujjat) bilan ishlaydi — ular o'z-o'zidan

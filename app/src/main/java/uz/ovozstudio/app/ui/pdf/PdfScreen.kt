@@ -2,7 +2,6 @@ package uz.ovozstudio.app.ui.pdf
 
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
+import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.StatusMessage
@@ -51,13 +51,8 @@ fun PdfScreen(
     val context = LocalContext.current
     val announce = rememberAnnouncer()
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenDocument) { uri ->
         if (uri != null) viewModel.open(uri)
-    }
-    val saver = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/pdf"),
-    ) { uri ->
-        if (uri != null) viewModel.saveTo(uri)
     }
 
     // Uzoq ish boshlanganda ovozda aytiladi: ekran o'quvchi foydalanuvchisi
@@ -157,7 +152,7 @@ fun PdfScreen(
             )
             A11yButton(
                 label = stringResource(R.string.trim_save),
-                onClick = { saver.launch(result.name) },
+                onClick = { viewModel.save() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isBusy,
             )
@@ -184,7 +179,7 @@ fun PdfScreen(
 
         state.savedName?.let { name ->
             StatusMessage(
-                message = stringResource(R.string.trim_saved, name),
+                message = stringResource(R.string.trim_saved, name, state.savedTo ?: name),
                 onDismiss = { viewModel.clearSaved() },
             )
         }

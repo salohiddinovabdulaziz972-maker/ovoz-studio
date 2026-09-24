@@ -2,7 +2,6 @@ package uz.ovozstudio.app.ui.trim
 
 import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +25,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
+import uz.ovozstudio.app.util.MediaSaver
+import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.pm.PackageManager
+import android.Manifest
 import uz.ovozstudio.app.ui.common.A11yButton
+import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.ParamsGroup
@@ -65,16 +70,30 @@ fun TrimScreen(
     // qisqa bo'lsin). Kengaytirilgan holat ekran aylanganda ham saqlanadi.
     var paramsExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenAudio) { uri ->
         if (uri != null) viewModel.open(uri)
     }
 
-    // «Saqlash» oynasining fayl turi natijaga qarab o'zgaradi (MP3, M4A, WAV…).
+    // «Saqlash» oynasi yo'q: tugma bosilishi bilan fayl qurilmaning
+    // papkasiga yoziladi (bitta bosish). Fayl turi natijaga qarab o'zgaradi.
     val result = state.result
-    val saver = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(result?.mimeType ?: DEFAULT_MIME),
-    ) { uri ->
-        if (uri != null) viewModel.saveTo(uri)
+
+    // Android 9 va undan pastda MediaStore'ga yozish uchun ruxsat kerak.
+    // So'rov javobidan qat'i nazar saqlashga urinamiz: rad etilsa xato
+    // jurnalga tushadi va ekranda ko'rinadi — foydalanuvchi tugmani ikkinchi
+    // marta bosib qolmasin deb, javobni kutib turmaymiz.
+    val permission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { viewModel.save() }
+
+    val saveResult: () -> Unit = {
+        if (MediaSaver.needsLegacyPermission &&
+            ContextCompat.checkSelfPermission(context, WRITE_PERMISSION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permission.launch(WRITE_PERMISSION)
+        } else {
+            viewModel.save()
+        }
     }
 
     // Uzoq ish boshlanganda ovozda aytiladi: ekran o'quvchi foydalanuvchisi
@@ -275,7 +294,7 @@ fun TrimScreen(
                 )
                 A11yButton(
                     label = stringResource(R.string.trim_save),
-                    onClick = { saver.launch(result.name) },
+                    onClick = saveResult,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !state.isBusy,
                 )
@@ -311,7 +330,7 @@ fun TrimScreen(
 
         state.savedName?.let { name ->
             StatusMessage(
-                message = stringResource(R.string.trim_saved, name),
+                message = stringResource(R.string.trim_saved, name, state.savedTo ?: name),
                 onDismiss = { viewModel.clearSaved() },
             )
         }
@@ -319,7 +338,6 @@ fun TrimScreen(
 }
 
 /** «Saqlash» oynasi uchun zaxira tur: natija hali yo'q paytda ham kontrakt yaratilishi kerak. */
-private const val DEFAULT_MIME = "audio/*"
 
 @Composable
 private fun TrimError.message(): String = stringResource(
@@ -332,3 +350,6 @@ private fun TrimError.message(): String = stringResource(
         TrimError.SAVE_FAILED -> R.string.trim_error_save_failed
     },
 )
+
+/** Android 9 va pastda MediaStore'ga yozish uchun so'raladigan ruxsat. */
+private const val WRITE_PERMISSION = android.Manifest.permission.WRITE_EXTERNAL_STORAGE

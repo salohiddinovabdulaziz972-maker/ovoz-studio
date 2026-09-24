@@ -19,7 +19,7 @@ import uz.ovozstudio.app.media.pdf.PdfNoPermissionException
 import uz.ovozstudio.app.media.pdf.PdfPageTools
 import uz.ovozstudio.app.media.pdf.PdfPasswordException
 import uz.ovozstudio.app.ui.common.ResultFile
-import uz.ovozstudio.app.util.ResultFiles
+import uz.ovozstudio.app.util.MediaSaver
 import java.io.File
 import java.io.IOException
 
@@ -81,6 +81,8 @@ data class PdfUiState(
     val progress: Float? = null,
     val result: ResultFile? = null,
     val savedName: String? = null,
+    /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
+    val savedTo: String? = null,
     val error: PdfError? = null,
     /** Sahifalar ro'yxatidagi muammoli bo'lak (xabarda ko'rsatiladi). */
     val errorToken: String = "",
@@ -160,7 +162,7 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
     fun setPages(text: String) = _state.update { it.copy(pagesText = text) }
 
     fun clearError() = _state.update { it.copy(error = null, errorToken = "") }
-    fun clearSaved() = _state.update { it.copy(savedName = null) }
+    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null) }
 
     /** Tanlangan sahifalar bo'yicha yangi PDF yasaydi. */
     fun apply(mode: PdfMode) {
@@ -242,22 +244,41 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Tayyor faylni foydalanuvchi tanlagan joyga ([uri]) nusxalaydi. */
-    fun saveTo(uri: Uri) {
+    /**
+     * Natijani qurilmaning umumiy papkasiga **bitta bosishda** yozadi.
+     * Alohida «Fayl sifatida saqlash» oynasi yo'q.
+     */
+    fun save() {
         val result = _state.value.result ?: return
         if (_state.value.isBusy) return
         viewModelScope.launch {
             _state.update { it.copy(busy = PdfBusy.SAVING, error = null, errorToken = "") }
-            val ok = withContext(Dispatchers.IO) {
-                ResultFiles.copyTo(getApplication<Application>(), File(result.path), uri)
-            }
-            if (!ok) ErrorLog.error("pdf.save", "PDF ni tanlangan joyga yozib bo'lmadi")
-            _state.update {
-                it.copy(
-                    busy = PdfBusy.NONE,
-                    savedName = if (ok) result.name else null,
-                    error = if (ok) null else PdfError.SAVE_FAILED,
+            val outcome = withContext(Dispatchers.IO) {
+                MediaSaver.save(
+                    getApplication(),
+                    File(result.path),
+                    result.name,
+                    PDF_MIME,
+                    isAudio = false,
                 )
+            }
+            // Sabab `MediaSaver` ichida jurnalga yoziladi — bu yerda
+            // takrorlanmaydi, aks holda bitta xato ikki marta tushardi.
+            _state.update {
+                when (outcome) {
+                    is MediaSaver.Result.Saved -> it.copy(
+                        busy = PdfBusy.NONE,
+                        savedName = result.name,
+                        savedTo = outcome.display,
+                        error = null,
+                    )
+                    is MediaSaver.Result.Failed -> it.copy(
+                        busy = PdfBusy.NONE,
+                        savedName = null,
+                        savedTo = null,
+                        error = PdfError.SAVE_FAILED,
+                    )
+                }
             }
         }
     }
