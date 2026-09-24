@@ -33,9 +33,9 @@ import uz.ovozstudio.app.ui.common.rememberAnnouncer
 /**
  * Bosh ekran: ilovaning barcha imkoniyatlari bitta ro'yxatda.
  *
- * Ro'yxat qisqa (yetti tugma), shuning uchun ekran o'quvchi foydalanuvchisi
- * hammasini bir yo'la ko'radi. Bo'limlar sarlavhali: TalkBack sarlavhadan
- * sarlavhaga sakray oladi.
+ * Ro'yxat qisqa, shuning uchun ekran o'quvchi foydalanuvchisi hammasini bir
+ * yo'la ko'radi. Bo'limlar sarlavhali: TalkBack sarlavhadan sarlavhaga sakray
+ * oladi.
  */
 @Composable
 fun HomeScreen(
@@ -44,8 +44,6 @@ fun HomeScreen(
     onAudioMerge: () -> Unit,
     onPdfCut: () -> Unit,
     onPdfDelete: () -> Unit,
-    onReader: () -> Unit,
-    onAudioBook: () -> Unit,
     onLog: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -106,22 +104,6 @@ fun HomeScreen(
         A11yButton(
             label = stringResource(R.string.home_pdf_delete),
             onClick = onPdfDelete,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Text(
-            text = stringResource(R.string.home_section_documents),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.a11yHeading(),
-        )
-        A11yButton(
-            label = stringResource(R.string.home_reader),
-            onClick = onReader,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        A11yButton(
-            label = stringResource(R.string.home_audiobook),
-            onClick = onAudioBook,
             modifier = Modifier.fillMaxWidth(),
         )
 

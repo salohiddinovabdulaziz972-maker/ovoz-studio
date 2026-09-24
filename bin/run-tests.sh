@@ -75,10 +75,6 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/format/WavPcmReader.kt
     app/src/main/java/uz/ovozstudio/app/media/merge/AudioMerger.kt
     app/src/main/java/uz/ovozstudio/app/media/pdf/PageRange.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/ScriptDetector.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/TextChunker.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/VoiceChoice.kt
-    app/src/main/java/uz/ovozstudio/app/media/voice/VoiceEngine.kt
     app/src/main/java/uz/ovozstudio/app/settings/About.kt
     app/src/main/java/uz/ovozstudio/app/settings/AppLanguage.kt
     app/src/main/java/uz/ovozstudio/app/util/LocalizedNumber.kt
@@ -109,9 +105,6 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/format/StrictFormatTest.kt
     app/src/test/java/uz/ovozstudio/app/media/merge/AudioMergerTest.kt
     app/src/test/java/uz/ovozstudio/app/media/pdf/PageRangeTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/voice/ScriptDetectorTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/voice/TextChunkerTest.kt
-    app/src/test/java/uz/ovozstudio/app/media/voice/VoiceChoiceTest.kt
     app/src/test/java/uz/ovozstudio/app/settings/LanguageMatchTest.kt
     app/src/test/java/uz/ovozstudio/app/util/LocalizedNumberTest.kt
     app/src/test/java/uz/ovozstudio/app/util/TimeFormatTest.kt
