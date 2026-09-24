@@ -213,7 +213,13 @@ class AudioBookService : Service() {
                 runCatching { request.destination.delete() }
                 _state.update { it.copy(running = false, outcome = AudioBookOutcome.Cancelled) }
             } catch (error: Throwable) {
-                ErrorLog.error("audiobook.export", "Audio-kitob yasalmadi", error)
+                // Xato jurnalga **sababi bilan** tushadi. Ilgari bu yerda faqat
+                // istisno matni bor edi, sintez xatosida esa u «Sintez
+                // bajarilmadi: SPEAK_FAILED» dan iborat: qaysi bo'lak, qancha
+                // belgi, sintezator qanday kod bilan qaytardi — hech biri
+                // ko'rinmasdi. Jurnal foydalanuvchi qo'lida, ya'ni bu yozuv
+                // yagona dalil; usiz har bir shikoyat «ko'r» qoladi.
+                ErrorLog.error("audiobook.export", "Audio-kitob yasalmadi: ${failureDetail(error)}", error)
                 runCatching { request.destination.delete() }
                 _state.update {
                     it.copy(running = false, outcome = AudioBookOutcome.Failed(error.message ?: error.javaClass.simpleName))
@@ -346,6 +352,19 @@ class AudioBookService : Service() {
         Intent(this, AudioBookService::class.java).setAction(ACTION_CANCEL),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
+
+    /**
+     * Xatoning jurnalga tushadigan qisqa izohi.
+     *
+     * Maqsad — foydalanuvchi yuborgan jurnaldan sababni **o'qib** tushunish;
+     * shuning uchun matn qisqa, lekin qaror chiqarish uchun yetarli: qaysi
+     * chaqiruv uzilgani (bo'lak raqami va uzunligi) va sintezator qanday kod
+     * qaytargani.
+     */
+    private fun failureDetail(error: Throwable): String = when (error) {
+        is AudioBookExporter.SynthesisFailedException -> error.message ?: error.javaClass.simpleName
+        else -> error.message ?: error.javaClass.simpleName
+    }
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
