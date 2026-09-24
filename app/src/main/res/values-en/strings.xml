@@ -180,7 +180,7 @@
     <string name="audiobook_progress">%1$s</string>
     <string name="audiobook_cancel">Cancel</string>
     <string name="audiobook_background_note">The work continues even if you close this screen or lock the phone. You\'ll see a notification when it\'s done.</string>
-    <string name="audiobook_error_failed">Could not create the audiobook. Check that there is enough free storage.</string>
+    <string name="audiobook_error_failed">Could not create the audiobook. The voice engine failed to read the text — try another voice or engine.</string>
     <string name="audiobook_error_cancelled">Creating the audiobook was cancelled.</string>
     <string name="audiobook_error_not_started">Could not start making the audiobook. Another task may be running — wait a moment and try again.</string>
     <string name="notif_channel_reading">Reading a document</string>

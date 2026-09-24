@@ -180,7 +180,7 @@
     <string name="audiobook_progress">%1$s</string>
     <string name="audiobook_cancel">Бекор қилиш</string>
     <string name="audiobook_background_note">Экранни ёпсангиз ёки телефонни қулфласангиз ҳам иш давом этади. Тугагач билдиришномада кўринади.</string>
-    <string name="audiobook_error_failed">Аудио-китоб ясаб бўлмади. Хотирада жой етарли эканини текширинг.</string>
+    <string name="audiobook_error_failed">Аудио-китоб ясаб бўлмади. Овоз синтезатори матнни ўқиб бера олмади — бошқа овоз ёки двигател танлаб, яна уриниб кўринг.</string>
     <string name="audiobook_error_cancelled">Аудио-китоб ясаш бекор қилинди.</string>
     <string name="audiobook_error_not_started">Аудио-китоб ясаш бошланмади. Бошқа иш кетаётган бўлиши мумкин — бироз кутиб, яна уриниб кўринг.</string>
     <string name="notif_channel_reading">Ҳужжатни ўқиш</string>
