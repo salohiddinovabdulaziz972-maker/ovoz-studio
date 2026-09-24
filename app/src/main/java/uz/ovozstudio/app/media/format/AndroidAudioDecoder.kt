@@ -156,8 +156,13 @@ class AndroidAudioDecoder {
                 when (val index = codec.dequeueOutputBuffer(info, TIMEOUT_US)) {
                     MediaCodec.INFO_TRY_AGAIN_LATER -> Unit
 
+                    // Chiqish formati o'zgargani «bufer berdi» degani emas.
+                    // Ilgari shu shox `progressed` ni ko'tarardi va `stalls`
+                    // nolga qaytardi; dekoder esa chiqish buferini umuman
+                    // bermasa, tsikl cheksiz aylanib qolardi. Har aylanishda
+                    // faqat formati o'zgarib turadigan buzuq fayl importni
+                    // «abadiy ishlayapti» holatiga olib kelardi.
                     MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                        progressed = true
                         val output = codec.outputFormat
                         floatOutput = isFloat(output)
                         channels = output.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
@@ -184,6 +189,18 @@ class AndroidAudioDecoder {
                 stalls = if (progressed) 0 else stalls + 1
                 if (stalls > MAX_STALLS) throw IOException("Dekoder $MAX_STALLS urinishdan keyin ham javob bermadi")
             }
+        } catch (error: IllegalStateException) {
+            // Ba'zi qurilmalarda (jumladan Samsung SM-A716S, Android 13)
+            // MediaCodec oxirgi buferni `releaseOutputBuffer` paytida
+            // `IllegalStateException` bilan yiqitadi: dekoder allaqachon
+            // ishdan chiqqan, lekin qo'lda olingan namunalar to'liq yozilgan.
+            // Buferlarni tashlab yuborish — natijani yo'qotish demak.
+            // Shuning uchun yozilgan qism saqlanadi: fayl to'liq bo'lmasa
+            // ham, foydalanuvchida ishlaydigan audio qoladi.
+            ErrorLog.info(
+                "audio.decode",
+                "Dekoder oxirida yiqildi, yozilgan qism saqlandi: $frames freym",
+            )
         } finally {
             runCatching { writer?.close() }
         }

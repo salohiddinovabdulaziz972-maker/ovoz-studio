@@ -42,7 +42,7 @@
     <string name="audio_busy_preparing">Готовится результат. Подождите…</string>
     <string name="audio_busy_saving">Сохранение…</string>
     <string name="audio_error_unknown_format">Это не аудиофайл или формат неизвестен.</string>
-    <string name="audio_error_no_decoder">Не удалось открыть файл. Файл повреждён или этот формат не поддерживается устройством.</string>
+    <string name="audio_error_no_decoder">Не удалось открыть файл. Собственный декодер устройства не справился — файл может быть повреждён или устройство не поддерживает этот формат.</string>
     <string name="audio_error_read_failed">Не удалось прочитать файл. Попробуйте ещё раз.</string>
     <string name="audio_error_empty">В файле нет звука.</string>
     <string name="audio_error_bit_depth">Этот WAV-файл не 16- и не 24-битный. С таким файлом работать нельзя.</string>

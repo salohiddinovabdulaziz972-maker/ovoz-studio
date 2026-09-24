@@ -42,7 +42,7 @@
     <string name="audio_busy_preparing">Натижа тайёрланмоқда. Кутинг…</string>
     <string name="audio_busy_saving">Сақланмоқда…</string>
     <string name="audio_error_unknown_format">Бу файл аудио эмас ёки формати номаълум.</string>
-    <string name="audio_error_no_decoder">Файлни очиб бўлмади. Файл бузилган ёки бу формат қурилмада қўллаб-қувватланмайди.</string>
+    <string name="audio_error_no_decoder">Файл очилмади. Қурилманинг ўз декодери бу файлни бера олмади — файл бузилган бўлиши ёки бу формат қурилмада қўллаб-қувватланмаслиги мумкин.</string>
     <string name="audio_error_read_failed">Файлни ўқиб бўлмади. Қайта уриниб кўринг.</string>
     <string name="audio_error_empty">Файлда овоз йўқ.</string>
     <string name="audio_error_bit_depth">Бу WAV файл 16 ёки 24 битли эмас. Бундай файл билан ишлаб бўлмайди.</string>

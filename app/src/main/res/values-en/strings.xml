@@ -42,7 +42,7 @@
     <string name="audio_busy_preparing">Preparing the result. Please wait…</string>
     <string name="audio_busy_saving">Saving…</string>
     <string name="audio_error_unknown_format">This is not an audio file, or its format is unknown.</string>
-    <string name="audio_error_no_decoder">Could not open the file. It may be damaged, or the device does not support this format.</string>
+    <string name="audio_error_no_decoder">Could not open the file. The device\'s own decoder could not handle it — the file may be damaged, or the device may not support this format.</string>
     <string name="audio_error_read_failed">Could not read the file. Please try again.</string>
     <string name="audio_error_empty">The file contains no audio.</string>
     <string name="audio_error_bit_depth">This WAV file is neither 16-bit nor 24-bit. It cannot be edited.</string>
