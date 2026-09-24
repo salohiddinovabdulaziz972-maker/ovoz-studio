@@ -3,6 +3,7 @@ package uz.ovozstudio.app.ui.common
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import uz.ovozstudio.app.util.DeviceFolders
@@ -26,7 +27,7 @@ object DocumentPicker {
         private val base = ActivityResultContracts.OpenDocument()
 
         override fun createIntent(context: Context, input: Array<String>): Intent =
-            DeviceFolders.withInitial(context, base.createIntent(context, input), DeviceFolders.audio(context))
+            base.createIntent(context, input).putExtra(DocumentsContract.EXTRA_INITIAL_URI, DeviceFolders.audio)
 
         override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
             base.parseResult(resultCode, intent)
@@ -37,11 +38,8 @@ object DocumentPicker {
         private val base = ActivityResultContracts.OpenDocument()
 
         override fun createIntent(context: Context, input: Array<String>): Intent =
-            DeviceFolders.withInitial(
-                context,
-                base.createIntent(context, input),
-                DeviceFolders.documents(context),
-            )
+            base.createIntent(context, input)
+                .putExtra(DocumentsContract.EXTRA_INITIAL_URI, DeviceFolders.documents)
 
         override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
             base.parseResult(resultCode, intent)
@@ -52,11 +50,8 @@ object DocumentPicker {
         private val base = ActivityResultContracts.OpenMultipleDocuments()
 
         override fun createIntent(context: Context, input: Array<String>): Intent =
-            DeviceFolders.withInitial(
-                context,
-                base.createIntent(context, input),
-                DeviceFolders.documents(context),
-            )
+            base.createIntent(context, input)
+                .putExtra(DocumentsContract.EXTRA_INITIAL_URI, DeviceFolders.documents)
 
         override fun parseResult(resultCode: Int, intent: Intent?): List<Uri> =
             base.parseResult(resultCode, intent)

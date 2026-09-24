@@ -1,86 +1,73 @@
 package uz.ovozstudio.app.util
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.MediaStore
-import android.util.Log
 import uz.ovozstudio.app.log.ErrorLog
 
 /**
- * Fayl tanlash oynasini qurilmaning **audio** yoki **hujjatlar** papkasida
- * ochadi.
+ * Fayl tanlash oynasi qurilmaning **audio** yoki **hujjatlar** bo'limidan
+ * ochilishi uchun boshlang'ich manzil.
  *
- * Nima uchun kerak: `OpenDocument` oynasi o'zi tanlagan joydan boshlanadi —
- * ko'pincha «Oxirgi fayllar» yoki bulut. Ko'zi ojiz foydalanuvchi uchun bu
- * har safar papkalar ichida qo'lda yurish degani. `EXTRA_INITIAL_URI` esa
- * oynani to'g'ridan-to'g'ri kerakli papkaga olib boradi.
+ * Nima uchun kerak: `ACTION_OPEN_DOCUMENT` oynasi o'zi tanlagan joydan
+ * boshlanadi — ko'pincha «Oxirgi fayllar» yoki bulut. Ko'zi ojiz
+ * foydalanuvchi uchun bu har safar papkalar ichida qo'lda yurish degani.
+ * `EXTRA_INITIAL_URI` oynani kerakli joyga olib boradi.
  *
- * Papkani topib bo'lmasa (ba'zi qurilmalarda `ExternalStorageProvider`
- * boshqacha nomlanadi) shunchaki URI berilmaydi: oyna odatdagi joyidan
- * ochiladi. Bu xato emas — shuning uchun foydalanuvchiga xabar berilmaydi,
- * faqat jurnalga yoziladi.
+ * Manzil faqat **ko'rinishni** boshlaydi: foydalanuvchi baribir istagan
+ * joyidan fayl tanlay oladi, ilovaga esa faqat u tanlagan fayl ochiladi.
+ * Shu sababli hech qanday ruxsat so'ralmaydi.
+ *
+ * Manzilni topib bo'lmasa (ba'zi qurilmalarda ichki xotira provayderi
+ * boshqacha nomlanadi) hech narsa qo'shilmaydi: oyna odatdagi joyidan
+ * ochiladi. Bu xato emas, shuning uchun foydalanuvchi bezovta qilinmaydi —
+ * sabab jurnalga yoziladi.
  */
 object DeviceFolders {
 
     private const val TAG = "papka"
 
-    /** Audio fayllar uchun boshlang'ich joy (MediaStore audio papkasi). */
-    fun audio(context: Context): Uri? = runCatching {
-        initialUri(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI)
-    }.onFailure { ErrorLog.error(TAG, "Audio papkasi topilmadi", it) }.getOrNull()
-
-    /** Hujjatlar uchun boshlang'ich joy (`Documents` papkasi). */
-    fun documents(context: Context): Uri? = runCatching {
-        val authority = DocumentsContract.EXTERNAL_STORAGE_PROVIDER_AUTHORITY
-        val root = DocumentsContract.buildRootUri(authority, DOCUMENTS_ROOT_ID)
-        // Ildiz topilmasa zaxira: butun xotira ildizi.
-        if (context.contentResolver.query(root, null, null, null, null)?.use { it.count > 0 } == true) {
-            DocumentsContract.buildDocumentUri(authority, "$DOCUMENTS_ROOT_ID:Documents")
-        } else {
-            DocumentsContract.buildRootUri(authority, PRIMARY_ROOT_ID)
-        }
-    }.onFailure { ErrorLog.error(TAG, "Hujjatlar papkasi topilmadi", it) }.getOrNull()
-
-    /** Intent ichidagi `EXTRA_INITIAL_URI` — tanlash oynasi shu joydan ochiladi. */
-    private fun initialUri(uri: Uri): Uri = uri
+    /**
+     * Ichki xotira provayderi nomi.
+     *
+     * Konstantani `DocumentsContract` dan olish mumkin emas: u `@hide`,
+     * ya'ni Android 15 SDK stub'ida yo'q va Gradle kompilyatsiyasi uni
+     * topmay yiqiladi. Nom esa barqaror — ichki xotira provayderi shu
+     * manzilda turadi.
+     */
+    private const val STORAGE_AUTHORITY = "com.android.externalstorage.documents"
 
     /**
-     * `ActivityResultContracts` yaratgan xom niyatga boshlang'ich joyni
-     * qo'shadi. `Intent.ACTION_OPEN_DOCUMENT` ning rasmiy qo'shimchasi shu,
-     * shuning uchun tanlash oynasi o'zgarishsiz qoladi.
+     * Rasmiy hujjatlar manzili: `content://com.android.externalstorage.documents/root/primary`.
+     *
+     * `/root/<id>` shakli `DocumentsContract.buildRootUri` bilan yasaladi va
+     * tizim fayl tanlagichi uni to'g'ri ochadi; `/document/...` shakli ba'zi
+     * qurilmalarda jimgina e'tiborsiz qoldiriladi.
      */
-    fun withInitial(context: Context, intent: Intent, folder: Uri?): Intent {
-        if (folder == null) return intent
-        return intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, folder)
-    }
+    val documents: Uri = DocumentsContract.buildRootUri(STORAGE_AUTHORITY, PRIMARY_ROOT_ID)
 
     /**
-     * Tizim fayl boshqaruvchisini shu papkada ochishga urinadi.
-     * Ochilmadi — `false`.
+     * Audio manzili.
+     *
+     * Rasmiy audio manzil bu MediaStore audio kolleksiyasi: provayder nomi
+     * `media` bilan boshlanadi, shuning uchun tizim fayl tanlagichi "faqat
+     * ichki" rejimini qo'llamaydi va manzil ochiq qoladi. `Music` papkasi
+     * ichida boshlanadi.
      */
-    fun openInFileManager(context: Context, folder: Uri): Boolean {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(folder, DocumentsContract.Document.MIME_TYPE_DIR)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        return try {
-            context.startActivity(intent)
-            true
-        } catch (error: ActivityNotFoundException) {
-            ErrorLog.info(TAG, "Fayl boshqaruvchisi yo'q: ${folder}")
-            false
-        }
-    }
+    val audio: Uri = DocumentsContract.buildDocumentUri(
+        MediaStore.AUTHORITY,
+        "$PRIMARY_ROOT_ID:${android.os.Environment.DIRECTORY_MUSIC}",
+    )
 
-    private const val DOCUMENTS_ROOT_ID = "com.android.externalstorage.documents"
-    private const val PRIMARY_ROOT_ID = "primary"
+    /** Foydalanuvchiga tushunarli joy nomi — saqlash joyini aytish uchun. */
+    fun describe(uri: Uri): String = uri.toString()
 
     init {
-        // Logcat'da bu sinf ishlatilganini ko'rish uchun (bo'sh init — ataylab).
-        Log.isLoggable(TAG, Log.DEBUG)
+        // Bu manzillar yaroqli ekanini jimgina tekshirib qo'yamiz: noto'g'ri
+        // URI butun tanlash oynasini ishlamay qoldirishi mumkin.
+        ErrorLog.info(TAG, "Audio manzili: $audio")
     }
+
+    private const val PRIMARY_ROOT_ID = "primary"
 }
