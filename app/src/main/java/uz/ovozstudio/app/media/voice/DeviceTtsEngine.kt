@@ -282,11 +282,11 @@ class DeviceTtsEngine(
     /**
      * Jonli [speak] dan farqli — u yerda ataylab kichikroq chegara olinadi
      * (bo'lak ikki daqiqadan uzoq o'qilib, «to'xtat» tugmasini foydasiz
-     * qilmasligi uchun). Faylga yozishda bunday cheklov yo'q: audio-kitob
-     * bo'lagini to'xtatish degani yo'q, shuning uchun chegara to'liq
-     * ishlatiladi — bo'laklar kamroq, qo'shish tezroq.
+     * qilmasligi uchun). Faylga yozishda bunday cheklov yo'q: sintez
+     * orqaga qaytarib bo'lmaydi va foydalanuvchi kutishni boshlashdan oldin
+     * ko'radi, shuning uchun chegara [SYNTH_CHARS] gacha ko'tariladi.
      */
-    override fun maxSynthChars(): Int = TextToSpeech.getMaxSpeechInputLength()
+    override fun maxSynthChars(): Int = minOf(SYNTH_CHARS, TextToSpeech.getMaxSpeechInputLength())
 
 
     override fun release() {
@@ -396,5 +396,27 @@ class DeviceTtsEngine(
         /** Tezlik va balandlikning ruxsat etilgan chegarasi. */
         const val MIN_RATE = 0.5f
         const val MAX_RATE = 2.0f
+
+        /**
+         * Faylga sintez qilinadigan bitta bo'lakning eng katta hajmi.
+         *
+         * Nega tizim chegarasidan ([TextToSpeech.getMaxSpeechInputLength],
+         * odatda 4000) **kattaroq**. Sintezator bo'lakni tayyorlash uchun har
+         * chaqiruvda qo'shimcha ish qiladi, ya'ni umumiy vaqt chaqiruvlar
+         * soniga bog'liq. 4000 dan 30000 ga o'tish chaqiruvlar sonini sakkiz
+         * barobar kamaytiradi — kitob esa shu nisbatda tezroq yasaladi.
+         *
+         * Xavfsizlik ikki tomondan ta'minlangan. Birinchidan, bu chegara
+         * **texnik** emas: u yerda uzun matnni bo'laklarga bo'lish sintezator
+         * ichida o'zi bor, ya'ni matn to'liq o'qiladi. Ikkinchidan, natija
+         * jimgina chala qolmaydi — `synthesizeToFile` holat qaytaradi, u esa
+         * [synthesizeToFile] ichida xatoga aylanadi va ekranga `FAILED` bo'lib
+         * yetib boradi. Ya'ni sinovsiz kattalashtirishning eng yomon oqibati —
+         * «juda katta bo'ldi» degan xato, jim qolgan yarim kitob emas.
+         *
+         * Pastdagi `minOf` chegarani **hech qachon** tizim chegarasidan
+         * oshirmaydi: qurilmada u 2000 bo'lsa, bo'lak 2000 bo'lib qoladi.
+         */
+        const val SYNTH_CHARS = 30_000
     }
 }
