@@ -115,3 +115,5 @@ jobs:
           name: ovozstudio-release-apk
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+<!-- aapt2 escape tuzatishi -->
