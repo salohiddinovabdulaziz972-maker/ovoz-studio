@@ -5,11 +5,18 @@ name: Android APK
 # Nega `push` olib tashlandi. Har bir push'da yig'ish odatiy hol edi, lekin
 # loyiha hozir sinov bosqichida: o'zgarishlar ko'p, ularning har biri uchun
 # yig'indi yasash bekorga resurs sarflaydi va shovqin ko'paytiradi.
-# Shuning uchun avtomatik ishga tushirish o'chirildi — kerak bo'lganda
-# GitHub'ning «Actions» bo'limidan yoki `gh workflow run` bilan qo'lda
-# yuritiladi. Qaytarish uchun `workflow_dispatch` yoniga `push:` qo'shiladi.
+# Shuning uchun avtomatik ishga tushirish o'chirildi — faqat shu faylning
+# o'zi o'zgarganda ishga tushadi (`paths`). Bu ataylab: shu faylni tahrir
+# qilib push qilish — yig'ishni boshlashning ishonchli yo'li, chunki
+# qo'lda yuritish (`gh workflow run`) uchun tokenimizda `actions:write`
+# huquqi yo'q (HTTP 403). Oddiy kod push'i yig'indi yasamaydi.
+#
+# Qo'lda yuritish ham mumkin: GitHub'ning «Actions» bo'limidan.
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/android.yml"
 
 # Ish uchun faqat o'qish huquqi kerak: kodni yozmaydi, reliz yaratmaydi.
 permissions:
