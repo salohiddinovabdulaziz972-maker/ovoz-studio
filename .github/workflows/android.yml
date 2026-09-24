@@ -12,6 +12,9 @@ name: Android APK
 # huquqi yo'q (HTTP 403). Oddiy kod push'i yig'indi yasamaydi.
 #
 # Qo'lda yuritish ham mumkin: GitHub'ning «Actions» bo'limidan.
+# Qo'lda yuritish tugmasi.
+#
+# Ovoz Studio build trigger 2026-09-24: MediaStore saqlash va papkadan tanlash.
 on:
   workflow_dispatch:
   push:
