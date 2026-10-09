@@ -24,9 +24,8 @@ name: Android
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
 #
-# Yuri (4): kompilyatsiya xatolari tuzatildi — TrimViewModel maydonlari,
-# PdfMergeScreen matni va uch til faylidagi kalitlar. Tahrir faqat yig'ishni
-# qo'zg'atish uchun.
+# Yuri (5): v0.6.0 — surish, tezlik/balandlik, oxirgi fayllar va ekran o'chmasligi qo'shildi. Tahrir faqat yig'ishni qo'zg'atish uchun.
+
 on:
   workflow_dispatch:
   push:
