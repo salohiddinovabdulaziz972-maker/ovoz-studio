@@ -71,6 +71,9 @@ enum class TrimError {
 
     /** Tayyor faylni tanlangan joyga nusxalab bo'lmadi. */
     SAVE_FAILED,
+
+    /** Eshitish uchun o'chirilgan qismlardan nusxa tayyorlab bo'lmadi. */
+    REMOVED_PREVIEW_FAILED,
 }
 
 /** Hozir bajarilayotgan uzoq ish. */
@@ -84,6 +87,15 @@ data class TrimUiState(
     val endParts: TimeParts = TimeParts(),
     val isPlaying: Boolean = false,
     val playPositionMs: Long = 0L,
+    /**
+     * O'chirilgan qismlar eshittirilmoqda (asl fayldagidek). Belgilangan
+     * qismni eshitishdan ([isPlaying]) alohida: foydalanuvchi ikkovini
+     * bir vaqtda kutmasin, ekran qaysi biri ketayotganini aniq aytsin.
+     */
+    val isPlayingRemoved: Boolean = false,
+    val playRemovedPositionMs: Long = 0L,
+    /** O'chirilgan qism eshittirish uchun tayyor (bir marta tayyorlanadi). */
+    val removedPreviewReady: Boolean = false,
     val canUndo: Boolean = false,
     /**
      * Tahrir yoki bekor qilish har bajarilganda bittaga ortadi. Ekran shu
@@ -111,6 +123,16 @@ data class TrimUiState(
     val isOpen: Boolean get() = info != null
     val isBusy: Boolean get() = busy != TrimBusy.NONE
     val durationMs: Long get() = info?.durationMs ?: 0L
+
+    /**
+     * Tahrir natijasida o'chirilgan (yoki kesib olingan) oraliqlar bormi.
+     * Bo'lmasa bo'lim umuman ko'rinmaydi — bo'sh tugma ekran o'quvchi
+     * foydalanuvchisini chalg'itadi.
+     */
+    val removedRangesAvailable: Boolean = false,
+
+    /** Eshitish uchun yig'ilgan qismning uzunligi (ms); tayyor bo'lmasa 0. */
+    val removedPreviewDurationMs: Long = 0L,
 }
 
 /**
@@ -132,6 +154,12 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private val exporter = FormatPreservingExporter(Build.VERSION.SDK_INT, AndroidAudioEncoders::open)
     private val player = AudioPlayer()
 
+    /**
+     * «O'chirilgan qismlarni eshitish» uchun alohida pleyer: asosiy pleyer
+     * bilan bir vaqtda ishlashi mumkin, shuning uchun aralashmaydi.
+     */
+    private val removedPlayer = AudioPlayer()
+
     /** Tahrirlash zanjiri: har bir element — to'liq WAV fayl. */
     private val history = mutableListOf<File>()
     private var historyIndex = -1
@@ -142,6 +170,15 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private var baseName = ""
 
     private var playTicker: Job? = null
+    private var removedTicker: Job? = null
+
+    /**
+     * O'chirilgan qismlardan yasalgan vaqtinchalik WAV. Har tahrirdan keyin
+     * yangilanadi: fayl mazmuni o'zgargan bo'lsa, eski tayyorlama yaroqsiz.
+     */
+    private var removedPreview: File? = null
+    /** Kesilgan yoki o'chirilgan oraliqlar (asl fayl vaqtida, ms). */
+    private val removedRanges = mutableListOf<AudioTrimmer.Cut>()
 
     private val _state = MutableStateFlow(TrimUiState())
     val state: StateFlow<TrimUiState> = _state.asStateFlow()
@@ -154,8 +191,15 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
+            stopRemovedPlayback()
+            removedRanges.clear()
+            removedPreview?.delete()
+            removedPreview = null
             _state.update {
                 it.copy(
+                    removedPreviewReady = false,
+                    removedRangesAvailable = false,
+                    removedPreviewDurationMs = 0L,
                     busy = TrimBusy.OPENING,
                     progress = null,
                     openFailure = null,
@@ -243,6 +287,74 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(isPlaying = false) }
     }
 
+    /**
+     * O'chirilgan (yoki kesib olingan) qismlardan eshitish uchun nusxa
+     * tayyorlaydi.
+     *
+     * Nima uchun nusxa: natija faylida bu qismlar allaqachon yo'q, asl
+     * faylda esa ular kerakli joyda emas — oraliqlar alohida-alohida
+     * yotadi. Shuning uchun ular ketma-ket bitta vaqtinchalik WAV ga
+     * yoziladi va shu fayl eshittiriladi. Uzunlik qisqa (odatda bir necha
+     * o'n soniya), tayyorlash bir zumda bo'ladi.
+     */
+    fun prepareRemovedPreview() {
+        val source = currentFile ?: return
+        val ranges = removedRanges.toList()
+        if (ranges.isEmpty() || _state.value.isBusy) return
+
+        viewModelScope.launch {
+            stopRemovedPlayback()
+            _state.update { it.copy(busy = TrimBusy.EDITING, progress = null, error = null) }
+            val destination = store.newEditFile(TAG_REMOVED)
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching {
+                    AudioTrimmer.extractRanges(source, destination, ranges) { fraction ->
+                        _state.update { it.copy(progress = fraction) }
+                    }
+                }
+            }
+            val failure = outcome.exceptionOrNull()
+            if (failure != null) {
+                runCatching { destination.delete() }
+                ErrorLog.error(TAG_REMOVED, "O'chirilgan qismlarni tayyorlab bo'lmadi", failure)
+                _state.update {
+                    it.copy(busy = TrimBusy.NONE, progress = null, error = TrimError.REMOVED_PREVIEW_FAILED)
+                }
+                return@launch
+            }
+            removedPreview = destination
+            val durationMs = withContext(Dispatchers.IO) {
+                runCatching { WavFile.readInfo(destination).durationMs }.getOrDefault(0L)
+            }
+            _state.update {
+                it.copy(
+                    busy = TrimBusy.NONE,
+                    progress = null,
+                    removedPreviewReady = true,
+                    removedPreviewDurationMs = durationMs,
+                    error = null,
+                )
+            }
+        }
+    }
+
+    /** Tayyorlangan o'chirilgan qismlarni boshidan oxirigacha eshitadi. */
+    fun playRemovedPreview() {
+        val file = removedPreview ?: return
+        if (_state.value.isPlayingRemoved) return
+        stopPlayback()
+        removedPlayer.onFinished = { stopRemovedTicker() }
+        _state.update { it.copy(isPlayingRemoved = true, playRemovedPositionMs = 0L, error = null) }
+        removedPlayer.play(file)
+        startRemovedTicker()
+    }
+
+    fun stopRemovedPlayback() {
+        removedPlayer.stop()
+        stopRemovedTicker()
+        _state.update { it.copy(isPlayingRemoved = false) }
+    }
+
     /** Tanlangan oraliqni saqlaydi: oraliqdan tashqari hamma narsa olib tashlanadi. */
     fun cutSelection() {
         val source = currentFile ?: return
@@ -260,7 +372,12 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             fadeInMs = if (start > 0L) EDGE_FADE_MS else 0L,
             fadeOutMs = if (end < current.durationMs) EDGE_FADE_MS else 0L,
         )
-        runEdit(TAG_CUT) { destination, onProgress ->
+        val total = current.durationMs
+        val removed = buildList {
+            if (start > 0L) add(AudioTrimmer.Cut(0L, start))
+            if (end < total) add(AudioTrimmer.Cut(end, total))
+        }
+        runEdit(TAG_CUT, removed) { destination, onProgress ->
             AudioTrimmer.copyRange(source, destination, start, end, fades, onProgress = onProgress)
         }
     }
@@ -281,7 +398,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(error = TrimError.SELECTION_ALL) }
             return
         }
-        runEdit(TAG_DELETE) { destination, onProgress ->
+        runEdit(TAG_DELETE, listOf(AudioTrimmer.Cut(start, end))) { destination, onProgress ->
             AudioTrimmer.deleteRanges(
                 source,
                 destination,
@@ -299,9 +416,23 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         stopPlayback()
+        stopRemovedPlayback()
+        // Tarix orqaga surildi: oldingi qadamning oraliqlari qaytadi, hozirgisi
+        // o'z kuchini yo'qotdi.
+        removedRanges.clear()
+        removedPreview?.delete()
+        removedPreview = null
         historyIndex--
         _state.update {
-            it.copy(result = null, savedName = null, error = null, revision = it.revision + 1)
+            it.copy(
+                removedPreviewReady = false,
+                removedRangesAvailable = false,
+                removedPreviewDurationMs = 0L,
+                result = null,
+                savedName = null,
+                error = null,
+                revision = it.revision + 1,
+            )
         }
         refreshFromCurrent()
     }
@@ -399,6 +530,8 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     fun releasePlayer() {
         player.release()
         stopTicker()
+        removedPlayer.release()
+        stopRemovedTicker()
     }
 
     // --- yordamchi ---
@@ -432,11 +565,34 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         refreshFromCurrent()
     }
 
-    private fun runEdit(tag: String, operation: (File, (Float) -> Unit) -> WavInfo) {
+    /**
+     * [removed] — shu amal olib tashlagan oraliqlar (asl fayl vaqtida).
+     * Ular keyin «o'chirilgan qismlarni eshitish» uchun nusxa yasashda
+     * ishlatiladi. Amal bajarilgach eski nusxa o'chiriladi: u endi
+     * boshqa faylga tegishli.
+     */
+    private fun runEdit(
+        tag: String,
+        removed: List<AudioTrimmer.Cut> = emptyList(),
+        operation: (File, (Float) -> Unit) -> WavInfo,
+    ) {
         if (currentFile == null || _state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
-            _state.update { it.copy(busy = TrimBusy.EDITING, progress = null, error = null, savedName = null) }
+            stopRemovedPlayback()
+            removedPreview?.delete()
+            removedPreview = null
+            _state.update {
+                it.copy(
+                    removedPreviewReady = false,
+                    removedRangesAvailable = false,
+                    removedPreviewDurationMs = 0L,
+                    busy = TrimBusy.EDITING,
+                    progress = null,
+                    error = null,
+                    savedName = null,
+                )
+            }
             val destination = store.newEditFile(tag)
             val result = withContext(Dispatchers.IO) {
                 var lastPercent = -1
@@ -460,8 +616,18 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     history += destination
                     historyIndex = history.size - 1
+                    // Amal o'tdi: endi eshittiriladigan oraliqlar — shular.
+                    removedRanges.clear()
+                    removedRanges += removed
+                    val rangesAvailable = removedRanges.isNotEmpty()
                     _state.update {
-                        it.copy(busy = TrimBusy.NONE, progress = null, result = null, revision = it.revision + 1)
+                        it.copy(
+                            busy = TrimBusy.NONE,
+                            progress = null,
+                            result = null,
+                            revision = it.revision + 1,
+                            removedRangesAvailable = rangesAvailable,
+                        )
                     }
                     refreshFromCurrent()
                 },
@@ -530,6 +696,30 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         playTicker = null
     }
 
+    private fun startRemovedTicker() {
+        stopRemovedTicker()
+        removedTicker = viewModelScope.launch {
+            var last = 0L
+            while (true) {
+                delay(POSITION_TICK_MS)
+                val position = removedPlayer.positionMs()
+                if (!removedPlayer.isPlaying) {
+                    _state.update { it.copy(isPlayingRemoved = false, playRemovedPositionMs = position) }
+                    break
+                }
+                if (position != last) {
+                    last = position
+                    _state.update { it.copy(playRemovedPositionMs = position) }
+                }
+            }
+        }
+    }
+
+    private fun stopRemovedTicker() {
+        removedTicker?.cancel()
+        removedTicker = null
+    }
+
     override fun onCleared() {
         super.onCleared()
         releasePlayer()
@@ -542,6 +732,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         const val SCOPE = "audio"
         const val TAG_CUT = "kesish"
         const val TAG_DELETE = "ochirish"
+        const val TAG_REMOVED = "ochirilgan-qism"
         const val DEFAULT_NAME = "audio"
         const val POSITION_TICK_MS = 100L
 

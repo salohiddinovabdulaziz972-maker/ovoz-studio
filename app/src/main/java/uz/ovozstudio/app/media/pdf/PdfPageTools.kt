@@ -66,7 +66,7 @@ object PdfPageTools {
      * diskda turadi.
      */
     @Throws(IOException::class)
-    private fun open(context: Context, file: File): PDDocument {
+    internal fun openSource(context: Context, file: File): PDDocument {
         prepare(context)
         try {
             return PDDocument.load(file, MemoryUsageSetting.setupTempFileOnly())
@@ -78,7 +78,7 @@ object PdfPageTools {
     /** Sahifalar soni. */
     @Throws(IOException::class)
     fun pageCount(context: Context, file: File): Int =
-        open(context, file).use { document -> document.getNumberOfPages() }
+        openSource(context, file).use { document -> document.getNumberOfPages() }
 
     /**
      * [pages] (1 dan boshlanadi) dan yangi PDF yasaydi: faqat shu sahifalar qoladi.
@@ -121,7 +121,7 @@ object PdfPageTools {
         file: File,
         onProgress: (Int, Int) -> Unit = { _, _ -> },
     ): List<PdfPageText> {
-        open(context, file).use { document ->
+        openSource(context, file).use { document ->
             val total = document.getNumberOfPages()
             val stripper = PDFTextStripper()
             val result = ArrayList<PdfPageText>()
@@ -152,7 +152,7 @@ object PdfPageTools {
         select: (Int) -> List<Int>,
     ) {
         var expected = 0
-        open(context, source).use { document ->
+        openSource(context, source).use { document ->
             val total = document.getNumberOfPages()
             val keep = select(total)
             if (keep.isEmpty()) throw IOException("Natijada birorta ham sahifa qolmaydi")
@@ -176,14 +176,14 @@ object PdfPageTools {
 
         // Yozilgan fayl qayta ochiladi: buzuq natijani foydalanuvchiga
         // «tayyor» deb berib bo'lmaydi.
-        val actual = open(context, dest).use { document -> document.getNumberOfPages() }
+        val actual = openSource(context, dest).use { document -> document.getNumberOfPages() }
         if (actual != expected) {
             throw IOException("Natija tekshiruvdan o'tmadi: $actual sahifa, $expected kutilgan")
         }
     }
 
     /** Muallif sahifalarni ajratishni taqiqlagan bo'lsa — hurmat qilinadi. */
-    private fun requireAssemblyAllowed(document: PDDocument) {
+    internal fun requireAssemblyAllowed(document: PDDocument) {
         if (!document.isEncrypted()) return
         val permission = document.getCurrentAccessPermission()
         if (!permission.isOwnerPermission() && !permission.canAssembleDocument()) {
@@ -207,7 +207,7 @@ object PdfPageTools {
      * chiqadi). Shuning uchun boshqa sahifaga olib boradigan havola va
      * ko'rsatkichlar olib tashlanadi; tashqi manzilga (URL) havolalar qoladi.
      */
-    private fun detach(page: PDPage) {
+    internal fun detach(page: PDPage) {
         val dictionary: COSDictionary = page.getCOSObject()
         // Maqola boncuklari (`/B`) zanjir bo'ylab boshqa sahifalarga bog'langan.
         dictionary.removeItem(NAME_B)

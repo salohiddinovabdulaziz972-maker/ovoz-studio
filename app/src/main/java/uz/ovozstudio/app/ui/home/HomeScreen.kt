@@ -44,6 +44,7 @@ fun HomeScreen(
     onAudioMerge: () -> Unit,
     onPdfCut: () -> Unit,
     onPdfDelete: () -> Unit,
+    onPdfMerge: () -> Unit,
     onLog: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -104,6 +105,11 @@ fun HomeScreen(
         A11yButton(
             label = stringResource(R.string.home_pdf_delete),
             onClick = onPdfDelete,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        A11yButton(
+            label = stringResource(R.string.home_pdf_merge),
+            onClick = onPdfMerge,
             modifier = Modifier.fillMaxWidth(),
         )
 

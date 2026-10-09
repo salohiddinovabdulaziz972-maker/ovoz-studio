@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import uz.ovozstudio.app.ui.home.HomeScreen
 import uz.ovozstudio.app.ui.log.LogScreen
 import uz.ovozstudio.app.ui.merge.MergeScreen
+import uz.ovozstudio.app.ui.pdf.PdfMergeScreen
 import uz.ovozstudio.app.ui.pdf.PdfMode
 import uz.ovozstudio.app.ui.pdf.PdfScreen
 import uz.ovozstudio.app.ui.trim.TrimMode
@@ -23,6 +24,7 @@ object Routes {
     const val AUDIO_MERGE = "audio_merge"
     const val PDF_CUT = "pdf_cut"
     const val PDF_DELETE = "pdf_delete"
+    const val PDF_MERGE = "pdf_merge"
     const val LOG = "log"
 }
 
@@ -52,6 +54,7 @@ fun AppNav() {
                 onAudioMerge = { navController.navigate(Routes.AUDIO_MERGE) },
                 onPdfCut = { navController.navigate(Routes.PDF_CUT) },
                 onPdfDelete = { navController.navigate(Routes.PDF_DELETE) },
+                onPdfMerge = { navController.navigate(Routes.PDF_MERGE) },
                 onLog = { navController.navigate(Routes.LOG) },
             )
         }
@@ -74,6 +77,10 @@ fun AppNav() {
 
         composable(Routes.PDF_DELETE) {
             PdfScreen(mode = PdfMode.DELETE, onBack = back)
+        }
+
+        composable(Routes.PDF_MERGE) {
+            PdfMergeScreen(onBack = back)
         }
 
         composable(Routes.LOG) {

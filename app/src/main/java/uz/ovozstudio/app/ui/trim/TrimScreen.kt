@@ -269,6 +269,60 @@ fun TrimScreen(
                 enabled = state.canUndo && !state.isBusy,
             )
 
+            // «O'chirilgan qismlarni eshitish»: tahrirdan keyin foydalanuvchi
+            // nima o'chganini qulog'i bilan tekshira olsin. Ekran o'quvchi
+            // foydalanuvchisi natijani ko'rmaydi — eshitadi.
+            if (state.removedRangesAvailable) {
+                Text(
+                    text = stringResource(R.string.trim_removed_section),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.a11yHeading(),
+                )
+                Text(
+                    text = stringResource(R.string.trim_removed_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+
+                if (state.isPlayingRemoved) {
+                    Text(
+                        text = stringResource(
+                            R.string.trim_removed_position,
+                            spokenTime(state.playRemovedPositionMs),
+                            spokenTime(state.removedPreviewDurationMs),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    A11yOutlinedButton(
+                        label = stringResource(R.string.trim_removed_stop),
+                        onClick = { viewModel.stopRemovedPlayback() },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else if (state.removedPreviewReady) {
+                    A11yOutlinedButton(
+                        label = stringResource(R.string.trim_removed_play),
+                        onClick = { viewModel.playRemovedPreview() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isBusy,
+                    )
+                } else {
+                    A11yOutlinedButton(
+                        label = stringResource(R.string.trim_removed_prepare),
+                        onClick = { viewModel.prepareRemovedPreview() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isBusy,
+                    )
+                    if (state.removedPreviewDurationMs > 0L) {
+                        Text(
+                            text = stringResource(
+                                R.string.trim_removed_ready,
+                                spokenTime(state.removedPreviewDurationMs),
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            }
+
             Text(
                 text = stringResource(R.string.trim_step2_heading),
                 style = MaterialTheme.typography.titleMedium,
@@ -366,6 +420,7 @@ private fun TrimError.message(): String = stringResource(
         TrimError.EDIT_FAILED -> R.string.trim_error_edit_failed
         TrimError.EXPORT_FAILED -> R.string.trim_error_export_failed
         TrimError.SAVE_FAILED -> R.string.trim_error_save_failed
+        TrimError.REMOVED_PREVIEW_FAILED -> R.string.trim_removed_error
     },
 )
 

@@ -165,6 +165,57 @@ object AudioTrimmer {
     }
 
     /**
+     * [ranges] da ko'rsatilgan oraliqlarni **ketma-ket** bitta faylga yozadi.
+     *
+     * Nima uchun kerak: tahrirdan keyin o'chirilgan qismlar natija faylida
+     * yo'q, asl faylda esa tarqoq yotadi. Foydalanuvchi «nima o'chirdim?»
+     * degan savolga quloq solib javob oladigan bo'lishi uchun shu bo'laklar
+     * bitta nusxaga yig'iladi.
+     *
+     * Oraliqlar **asl fayl vaqtida** beriladi va qayta tartiblanmaydi:
+     * foydalanuvchi eshitayotganda amallar ketma-ketligini eshitadi, sonlar
+     * bo'yicha tartibni emas.
+     */
+    @Throws(IOException::class)
+    fun extractRanges(
+        source: File,
+        dest: File,
+        ranges: List<Cut>,
+        onProgress: (Float) -> Unit = {},
+    ): WavInfo {
+        WavSampleReader(source).use { reader ->
+            val info = reader.info
+            val kept = ranges
+                .map { it.startMs.coerceIn(0, info.durationMs) to it.endMs.coerceIn(0, info.durationMs) }
+                .filter { it.second > it.first }
+            if (kept.isEmpty()) throw IOException("Eshitish uchun oraliq yo'q")
+
+            val totalMs = kept.sumOf { it.second - it.first }
+            val writer = WavWriter(dest, info.sampleRate, info.channels, bitDepthOf(info.bitsPerSample))
+            try {
+                val buffer = FloatArray(CHUNK_FRAMES * info.channels)
+                var writtenMs = 0L
+                for ((fromMs, toMs) in kept) {
+                    var frame = info.msToFrame(fromMs)
+                    val endFrame = info.msToFrame(toMs)
+                    while (frame < endFrame) {
+                        val want = minOf(CHUNK_FRAMES.toLong(), endFrame - frame).toInt()
+                        val got = reader.readFrames(frame, want, buffer)
+                        if (got <= 0) break
+                        writer.write(buffer, got)
+                        frame += got
+                        writtenMs = writtenMs + got * 1000L / info.sampleRate
+                        if (totalMs > 0L) onProgress((writtenMs.toFloat() / totalMs).coerceIn(0f, 1f))
+                    }
+                }
+            } finally {
+                writer.close()
+            }
+            return WavFile.readInfo(dest)
+        }
+    }
+
+    /**
      * Ko'p nuqtali o'chirish: [cuts] da ko'rsatilgan bo'laklar chiqarib tashlanadi,
      * qolgan qismlar ketma-ket qo'shiladi. Bo'sh bo'laklar e'tiborsiz qoldiriladi,
      * ustma-ust tushganlari birlashtiriladi.

@@ -61,10 +61,15 @@ object MediaSaver {
                 // ko'rinmaydi. Yazish o'rtasida to'xtab qolsa ham yarim
                 // fayl pleyerda paydo bo'lmaydi.
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
+                // Yo'l oxirida qiya chiziq BO'LISHI SHART: MediaStore shuni
+                // kutadi. Usiz ba'zi qurilmalar (Samsung, Android 13) yo'lni
+                // «Music/Ovoz Studio» deb saqlaydi va keyin uni
+                // `DISPLAY_NAME` bilan birlashtirganda `Music/Ovoz Studio//8-bob.mp3`
+                // kabi qo'sh chiziqli manzil chiqadi.
                 put(
                     MediaStore.MediaColumns.RELATIVE_PATH,
-                    if (isAudio) "${Environment.DIRECTORY_MUSIC}/Ovoz Studio"
-                    else "${Environment.DIRECTORY_DOCUMENTS}/Ovoz Studio",
+                    if (isAudio) "${Environment.DIRECTORY_MUSIC}/Ovoz Studio/"
+                    else "${Environment.DIRECTORY_DOCUMENTS}/Ovoz Studio/",
                 )
             }
         }
@@ -110,16 +115,17 @@ object MediaSaver {
     }
 
     /**
-     * MediaStore yozuvidagi ko'rinadigan joy — foydalanuvchiga aytish uchun.
-     * Ba'zi provayderlar bu ustunni bermaydi, o'shanda `null`.
-     */
-    /**
      * Saqlangan faylning qurilmadagi manzili — aytish uchun.
      *
      * `RELATIVE_PATH` MediaStore'da oxirida qiya chiziq bilan turadi
      * (`Music/Ovoz Studio/`), shuning uchun qismlar bo'sh bo'lmaganlari
      * olinadi va orasiga bitta `/` qo'yiladi: `Music/Ovoz Studio/8-bob.mp3`,
      * `Music/Ovoz Studio//8-bob.mp3` emas.
+     *
+     * Eski yozuvlarda yo'l qiya chiziqsiz saqlangan bo'lishi mumkin
+     * (`Music/Ovoz Studio`): MediaStore o'shanda uni `DISPLAY_NAME` bilan
+     * birlashtirib qo'sh chiziq bergan. Yuqoridagi tozalash ikkala holatni
+     * ham to'g'ri chiqaradi.
      */
     private fun locationOf(context: Context, uri: Uri): String? = runCatching {
         val columns = arrayOf(MediaStore.MediaColumns.RELATIVE_PATH, MediaStore.MediaColumns.DISPLAY_NAME)
