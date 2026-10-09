@@ -24,7 +24,7 @@ name: Android
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
 #
-# Yuri (10): chip xatosi tuzatildi (isChosen), eshitish paytida aniq vaqtga o'tish qo'shildi — tanlangan oraliq ham, o'chirilgan qismlar ham. Tahrir faqat yig'ishni qo'zg'atish uchun.
+# Yuri (11): JumpToPosition fayliga TimeParts importi qo'shildi — oldingi yig'ish shu sababdan yiqilgan edi. Tahrir faqat yig'ishni qo'zg'atish uchun.
 
 on:
   workflow_dispatch:

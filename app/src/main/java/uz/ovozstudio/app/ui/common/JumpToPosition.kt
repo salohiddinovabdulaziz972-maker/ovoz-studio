@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import uz.ovozstudio.app.util.TimeParts
 
 /**
  * Ijro boshi joyini ko'rsatadi va uni aniq vaqtga o'tkazishga beradi.
