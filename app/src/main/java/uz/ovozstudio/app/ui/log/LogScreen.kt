@@ -148,11 +148,20 @@ fun LogScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.a11yHeading(),
             )
-            Text(
-                text = state.tail,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // Butun jurnal bir matn bo'lib o'qilsa, ekran o'quvchi uni
+            // uzluksiz va chegarasiz o'qiydi — ko'ruvchi esa har bir
+            // yozuvni alohida qatordan ajratib ko'radi. Har bir yozuv
+            // alohida o'qiladi, shuning uchun foydalanuvchi kerakli
+            // yozuvda to'xtab qolishi mumkin.
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                state.tail.lines().filter { it.isNotBlank() }.forEach { line ->
+                    Text(
+                        text = line,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
         }
     }
 }

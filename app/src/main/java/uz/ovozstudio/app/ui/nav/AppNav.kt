@@ -1,9 +1,14 @@
 package uz.ovozstudio.app.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.home.HomeScreen
 import uz.ovozstudio.app.ui.log.LogScreen
 import uz.ovozstudio.app.ui.merge.MergeScreen
@@ -41,6 +46,34 @@ fun AppNav() {
             popUpTo(Routes.HOME) { inclusive = true }
             launchSingleTop = true
         }
+    }
+
+    // Ekran almashganda uning sarlavhasi ovoz bilan aytiladi: ko'ruvchi
+    // foydalanuvchi qaysi ekranga tushganini bir qarashda biladi, eshitish
+    // bilan esa yangi sarlavhani topib yurguncha qayerdaligini bilmaydi.
+    val view = LocalView.current
+    val homeTitle = stringResource(R.string.home_title)
+    val cutTitle = stringResource(R.string.trim_title_cut)
+    val deleteTitle = stringResource(R.string.trim_title_delete)
+    val mergeTitle = stringResource(R.string.merge_title)
+    val pdfCutTitle = stringResource(R.string.pdf_title_cut)
+    val pdfDeleteTitle = stringResource(R.string.pdf_title_delete)
+    val pdfMergeTitle = stringResource(R.string.pdf_merge_title)
+    val logTitle = stringResource(R.string.log_title)
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    LaunchedEffect(currentRoute) {
+        val title = when (currentRoute) {
+            Routes.HOME -> homeTitle
+            Routes.AUDIO_CUT -> cutTitle
+            Routes.AUDIO_DELETE -> deleteTitle
+            Routes.AUDIO_MERGE -> mergeTitle
+            Routes.PDF_CUT -> pdfCutTitle
+            Routes.PDF_DELETE -> pdfDeleteTitle
+            Routes.PDF_MERGE -> pdfMergeTitle
+            Routes.LOG -> logTitle
+            else -> null
+        }
+        if (title != null) view.announceForAccessibility(title)
     }
 
     // Har bir ekran o'z ViewModel'iga ega, u ekran yopilganda tozalanadi:
