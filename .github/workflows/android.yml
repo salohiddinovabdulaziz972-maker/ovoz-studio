@@ -24,7 +24,7 @@ name: Android
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
 #
-# Yuri (6): v0.6.0 — surish, tezlik/balandlik, oxirgi fayllar va ekran o'chmasligi qo'shildi. Qochirish xatosi tuzatildi. Tahrir faqat yig'ishni qo'zg'atish uchun.
+# Yuri (7): v0.6.0 — surish, tezlik/balandlik, oxirgi fayllar va ekran o'chmasligi qo'shildi. Qochirish xatosi tuzatildi. Tahrir faqat yig'ishni qo'zg'atish uchun.
 
 on:
   workflow_dispatch:
