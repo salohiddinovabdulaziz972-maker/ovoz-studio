@@ -140,4 +140,33 @@
     <string name="log_error_share">Не удалось поделиться журналом.</string>
     <string name="log_share_title">Журнал ошибок</string>
     <string name="log_preview_title">Последние записи</string>
+    <!-- v0.5.0: PDF birlashtirish va o'chirilgan qismlarni eshitish -->
+    <string name="home_pdf_merge">PDF: объединить файлы</string>
+    <string name="pdf_merge_title">Объединение PDF файлов</string>
+    <string name="pdf_merge_intro">Выберите несколько PDF файлов, задайте их порядок и объедините в один PDF. Каждый файл проверяется при добавлении.</string>
+    <string name="pdf_merge_add">Добавить PDF файлы</string>
+    <string name="pdf_merge_list_title">Список файлов</string>
+    <string name="pdf_merge_summary">В списке %1$d файлов, всего %2$d страниц.</string>
+    <string name="pdf_merge_item">%1$d. %2$s — %3$d страниц</string>
+    <string name="pdf_merge_list_collapsed">Добавлено файлов: %1$d. Нажмите, чтобы посмотреть или изменить порядок.</string>
+    <string name="pdf_merge_move_up">Переместить выше</string>
+    <string name="pdf_merge_move_down">Переместить ниже</string>
+    <string name="pdf_merge_remove">Убрать из списка</string>
+    <string name="pdf_merge_apply">Объединить</string>
+    <string name="pdf_merge_need_two_hint">Добавьте ещё один PDF для объединения.</string>
+    <string name="pdf_merge_busy_adding">PDF открывается: %1$d из %2$d. Подождите…</string>
+    <string name="pdf_merge_busy_merging">PDF файлы объединяются. Подождите…</string>
+    <string name="pdf_merge_progress">Страницы копируются: %1$d из %2$d.</string>
+    <string name="pdf_merge_result">Готово: %1$s — %2$d страниц (%3$s)</string>
+    <string name="pdf_merge_error_need_two">Для объединения нужно не меньше двух PDF.</string>
+    <string name="pdf_merge_error_failed">Объединить PDF не удалось. Один из файлов повреждён или не хватает памяти.</string>
+    <string name="pdf_merge_error_file">%1$s: %2$s</string>
+    <string name="trim_removed_section">Проверить удалённые части</string>
+    <string name="trim_removed_hint">После правки послушайте, какое место удалено. В файле результата этих частей нет — они берутся из исходного файла.</string>
+    <string name="trim_removed_prepare">Подготовить удалённые части</string>
+    <string name="trim_removed_play">Прослушать удалённые части</string>
+    <string name="trim_removed_stop">Остановить прослушивание</string>
+    <string name="trim_removed_ready">Готово: удалённые части собраны для прослушивания (%1$s).</string>
+    <string name="trim_removed_position">Играет: %1$s / %2$s</string>
+    <string name="trim_removed_error">Не удалось подготовить копию удалённых частей для прослушивания.</string>
 </resources>

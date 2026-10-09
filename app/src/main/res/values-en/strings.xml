@@ -140,4 +140,33 @@
     <string name="log_error_share">Could not share the log.</string>
     <string name="log_share_title">Error log</string>
     <string name="log_preview_title">Latest entries</string>
+    <!-- v0.5.0: PDF birlashtirish va o'chirilgan qismlarni eshitish -->
+    <string name="home_pdf_merge">PDF: merge files</string>
+    <string name="pdf_merge_title">Merge PDF files</string>
+    <string name="pdf_merge_intro">Pick several PDF files, set their order and merge them into one PDF. Each file is checked as it is added.</string>
+    <string name="pdf_merge_add">Add PDF files</string>
+    <string name="pdf_merge_list_title">The list of files</string>
+    <string name="pdf_merge_summary">%1$d files in the list, %2$d pages in total.</string>
+    <string name="pdf_merge_item">%1$d. %2$s — %3$d pages</string>
+    <string name="pdf_merge_list_collapsed">%1$d files added. Press to view or change the order.</string>
+    <string name="pdf_merge_move_up">Move up</string>
+    <string name="pdf_merge_move_down">Move down</string>
+    <string name="pdf_merge_remove">Remove from the list</string>
+    <string name="pdf_merge_apply">Merge</string>
+    <string name="pdf_merge_need_two_hint">Add another PDF to merge.</string>
+    <string name="pdf_merge_busy_adding">Opening PDF: %1$d of %2$d. Wait…</string>
+    <string name="pdf_merge_busy_merging">Merging PDF files. Wait…</string>
+    <string name="pdf_merge_progress">Copying pages: %1$d of %2$d.</string>
+    <string name="pdf_merge_result">Ready: %1$s — %2$d pages (%3$s)</string>
+    <string name="pdf_merge_error_need_two">Merging needs at least two PDF files.</string>
+    <string name="pdf_merge_error_failed">The PDF files could not be merged. One of them is damaged or there is not enough memory.</string>
+    <string name="pdf_merge_error_file">%1$s: %2$s</string>
+    <string name="trim_removed_section">Check the removed parts</string>
+    <string name="trim_removed_hint">After editing, listen to which part was removed. These parts are not in the result file — they are taken from the original file.</string>
+    <string name="trim_removed_prepare">Prepare the removed parts</string>
+    <string name="trim_removed_play">Listen to the removed parts</string>
+    <string name="trim_removed_stop">Stop listening</string>
+    <string name="trim_removed_ready">Ready: the removed parts were gathered for listening (%1$s).</string>
+    <string name="trim_removed_position">Playing: %1$s / %2$s</string>
+    <string name="trim_removed_error">Could not prepare a copy of the removed parts for listening.</string>
 </resources>

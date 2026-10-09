@@ -166,7 +166,6 @@
     <string name="pdf_merge_busy_merging">PDF lar birlashtirilmoqda. Kuting…</string>
     <string name="pdf_merge_progress">Sahifalar ko\'chirilmoqda: %1$d dan %2$d.</string>
     <string name="pdf_merge_result">Tayyor: %1$s — %2$d ta sahifa (%3$s)</string>
-    <string name="pdf_merge_ready">PDF birlashtirildi: %1$d ta sahifa.</string>
     <string name="pdf_merge_error_need_two">Birlashtirish uchun kamida ikkita PDF kerak.</string>
     <string name="pdf_merge_error_failed">PDF larni birlashtirib bo\'lmadi. Fayllardan biri buzuq yoki xotirada joy yetmayotgan bo\'lishi mumkin.</string>
     <string name="pdf_merge_error_file">%1$s: %2$s</string>

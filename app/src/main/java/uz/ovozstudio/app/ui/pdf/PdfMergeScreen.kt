@@ -229,10 +229,14 @@ fun PdfMergeScreen(
         }
 
         if (state.failures.isNotEmpty()) {
+            // Matn Compose ichida yasaladi: `joinToString` lambdasi
+            // @Composable emas, shuning uchun `stringResource` ni to'g'ridan
+            // to'g'ri chaqirib bo'lmaydi.
+            val failureText = state.failures.joinToString("\n") { failure ->
+                context.getString(R.string.pdf_merge_error_file, failure.fileName, failure.text)
+            }
             StatusMessage(
-                message = state.failures.joinToString("\n") { failure ->
-                    stringResource(R.string.pdf_merge_error_file, failure.fileName, failure.text)
-                },
+                message = failureText,
                 onDismiss = { viewModel.clearFailures() },
                 isError = true,
             )

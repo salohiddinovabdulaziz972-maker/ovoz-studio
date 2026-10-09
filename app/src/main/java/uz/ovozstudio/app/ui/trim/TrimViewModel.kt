@@ -119,20 +119,18 @@ data class TrimUiState(
     /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
     val savedTo: String? = null,
     val error: TrimError? = null,
-) {
-    val isOpen: Boolean get() = info != null
-    val isBusy: Boolean get() = busy != TrimBusy.NONE
-    val durationMs: Long get() = info?.durationMs ?: 0L
-
     /**
      * Tahrir natijasida o'chirilgan (yoki kesib olingan) oraliqlar bormi.
      * Bo'lmasa bo'lim umuman ko'rinmaydi — bo'sh tugma ekran o'quvchi
      * foydalanuvchisini chalg'itadi.
      */
     val removedRangesAvailable: Boolean = false,
-
     /** Eshitish uchun yig'ilgan qismning uzunligi (ms); tayyor bo'lmasa 0. */
     val removedPreviewDurationMs: Long = 0L,
+) {
+    val isOpen: Boolean get() = info != null
+    val isBusy: Boolean get() = busy != TrimBusy.NONE
+    val durationMs: Long get() = info?.durationMs ?: 0L
 }
 
 /**

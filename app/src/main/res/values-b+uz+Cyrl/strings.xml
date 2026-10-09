@@ -140,4 +140,33 @@
     <string name="log_error_share">Журнални улашиб бўлмади.</string>
     <string name="log_share_title">Хатолар журнали</string>
     <string name="log_preview_title">Охирги ёзувлар</string>
+    <!-- v0.5.0: PDF birlashtirish va o'chirilgan qismlarni eshitish -->
+    <string name="home_pdf_merge">PDF ларни бирлаштириш</string>
+    <string name="pdf_merge_title">PDF ларни бирлаштириш</string>
+    <string name="pdf_merge_intro">Бир нечта PDF файлни танланг, тартибини белгиланг ва битта PDF қилиб бирлаштиринг. Ҳар бир файл қўшилиши биланоқ текширилади.</string>
+    <string name="pdf_merge_add">PDF файлларни қўшиш</string>
+    <string name="pdf_merge_list_title">Файллар рўйхати</string>
+    <string name="pdf_merge_summary">Рўйхатда %1$d та файл, жами %2$d та саҳифа.</string>
+    <string name="pdf_merge_item">%1$d. %2$s — %3$d та саҳифа</string>
+    <string name="pdf_merge_list_collapsed">%1$d та файл қўшилди. Тартибини кўриш ёки ўзгартириш учун босинг.</string>
+    <string name="pdf_merge_move_up">Юқорига кўчириш</string>
+    <string name="pdf_merge_move_down">Пастга кўчириш</string>
+    <string name="pdf_merge_remove">Рўйхатдан олиб ташлаш</string>
+    <string name="pdf_merge_apply">Бирлаштириш</string>
+    <string name="pdf_merge_need_two_hint">Бирлаштириш учун яна PDF қўшинг.</string>
+    <string name="pdf_merge_busy_adding">PDF очилмоқда: %1$d дан %2$d. Кутинг…</string>
+    <string name="pdf_merge_busy_merging">PDF лар бирлаштирилмоқда. Кутинг…</string>
+    <string name="pdf_merge_progress">Саҳифалар кўчирилмоқда: %1$d дан %2$d.</string>
+    <string name="pdf_merge_result">Тайёр: %1$s — %2$d та саҳифа (%3$s)</string>
+    <string name="pdf_merge_error_need_two">Бирлаштириш учун камида иккита PDF керак.</string>
+    <string name="pdf_merge_error_failed">PDF ларни бирлаштириб бўлмади. Файллардан бири бузуқ ёки хотирада жой етмаяпти.</string>
+    <string name="pdf_merge_error_file">%1$s: %2$s</string>
+    <string name="trim_removed_section">Ўчирилган қисмларни текшириш</string>
+    <string name="trim_removed_hint">Таҳрирдан кейин қайси жой ўчганини қулоқ солиб текширинг. Бу қисмлар натижа файлида йўқ — улар асл файлдан олинади.</string>
+    <string name="trim_removed_prepare">Ўчирилган қисмларни тайёрлаш</string>
+    <string name="trim_removed_play">Ўчирилган қисмларни эшитиш</string>
+    <string name="trim_removed_stop">Эшитишни тўхтатиш</string>
+    <string name="trim_removed_ready">Тайёр: ўчирилган қисмлар эшитиш учун йиғилди (%1$s).</string>
+    <string name="trim_removed_position">Эшитилмоқда: %1$s / %2$s</string>
+    <string name="trim_removed_error">Ўчирилган қисмлардан эшитиш учун нусха тайёрлаб бўлмади.</string>
 </resources>
