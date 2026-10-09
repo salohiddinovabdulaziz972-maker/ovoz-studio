@@ -264,6 +264,11 @@ fun TrimScreen(
                 if (state.isPlaying) {
                     val backDone = stringResource(R.string.trim_play_back_done)
                     val forwardDone = stringResource(R.string.trim_play_forward_done)
+                    // Maqsad vaqt matni shu yerda tayyorlanadi: `spokenTime`
+                    // ham `@Composable`, uni `onClick` ichida chaqirib
+                    // bo'lmaydi.
+                    val backTarget = spokenTime((state.playPositionMs - SKIP_MS).coerceAtLeast(0L))
+                    val forwardTarget = spokenTime(state.playPositionMs + SKIP_MS)
                     // Oldinga/orqaga surish tugmalari. Ekran o'quvchi
                     // foydalanuvchisi uchun bu sakrashning yagona yo'li:
                     // slayderni barmoq bilan aniq nishonga olish imkoni yo'q.
@@ -276,7 +281,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_back),
                             onClick = {
                                 viewModel.skipPlayback(-SKIP_MS)
-                                announce(skipMessage(backDone, -SKIP_MS, state.playPositionMs))
+                                announce(skipMessage(backDone, backTarget))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -284,7 +289,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_forward),
                             onClick = {
                                 viewModel.skipPlayback(SKIP_MS)
-                                announce(skipMessage(forwardDone, SKIP_MS, state.playPositionMs))
+                                announce(skipMessage(forwardDone, forwardTarget))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -388,6 +393,8 @@ fun TrimScreen(
                     )
                     val backDone = stringResource(R.string.trim_play_back_done)
                     val forwardDone = stringResource(R.string.trim_play_forward_done)
+                    val backTarget = spokenTime((state.playRemovedPositionMs - SKIP_MS).coerceAtLeast(0L))
+                    val forwardTarget = spokenTime(state.playRemovedPositionMs + SKIP_MS)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -396,7 +403,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_back),
                             onClick = {
                                 viewModel.skipRemovedPlayback(-SKIP_MS)
-                                announce(skipMessage(backDone, -SKIP_MS, state.playRemovedPositionMs))
+                                announce(skipMessage(backDone, backTarget))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -404,7 +411,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_forward),
                             onClick = {
                                 viewModel.skipRemovedPlayback(SKIP_MS)
-                                announce(skipMessage(forwardDone, SKIP_MS, state.playRemovedPositionMs))
+                                announce(skipMessage(forwardDone, forwardTarget))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -563,10 +570,8 @@ private val PITCH_VALUES = listOf(0.85f, 1f, 1.15f)
  * `stringResource` chaqirib bo'lmaydi. Shuning uchun tayyor shablon matni
  * tashqaridan beriladi.
  */
-private fun skipMessage(template: String, deltaMs: Long, beforeMs: Long): String {
-    val target = (beforeMs + deltaMs).coerceAtLeast(0L)
-    return template.format(spokenTime(target))
-}
+private fun skipMessage(template: String, spokenTarget: String): String =
+    template.format(spokenTarget)
 
 /** Tezlik qiymatiga mos tugma indeksi (0 — sekin, 1 — oddiy, 2 — tez). */
 private fun speedIndex(speed: Float): Int = when {
