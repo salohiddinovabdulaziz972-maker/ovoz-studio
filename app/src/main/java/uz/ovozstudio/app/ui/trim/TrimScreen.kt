@@ -262,6 +262,8 @@ fun TrimScreen(
                 )
 
                 if (state.isPlaying) {
+                    val backDone = stringResource(R.string.trim_play_back_done)
+                    val forwardDone = stringResource(R.string.trim_play_forward_done)
                     // Oldinga/orqaga surish tugmalari. Ekran o'quvchi
                     // foydalanuvchisi uchun bu sakrashning yagona yo'li:
                     // slayderni barmoq bilan aniq nishonga olish imkoni yo'q.
@@ -274,7 +276,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_back),
                             onClick = {
                                 viewModel.skipPlayback(-SKIP_MS)
-                                announce(skipMessage(-SKIP_MS, state.playPositionMs))
+                                announce(skipMessage(backDone, -SKIP_MS, state.playPositionMs))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -282,7 +284,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_forward),
                             onClick = {
                                 viewModel.skipPlayback(SKIP_MS)
-                                announce(skipMessage(SKIP_MS, state.playPositionMs))
+                                announce(skipMessage(forwardDone, SKIP_MS, state.playPositionMs))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -384,6 +386,8 @@ fun TrimScreen(
                         text = stringResource(R.string.trim_removed_skip_hint),
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                    val backDone = stringResource(R.string.trim_play_back_done)
+                    val forwardDone = stringResource(R.string.trim_play_forward_done)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -392,7 +396,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_back),
                             onClick = {
                                 viewModel.skipRemovedPlayback(-SKIP_MS)
-                                announce(skipMessage(-SKIP_MS, state.playRemovedPositionMs))
+                                announce(skipMessage(backDone, -SKIP_MS, state.playRemovedPositionMs))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -400,7 +404,7 @@ fun TrimScreen(
                             label = stringResource(R.string.trim_play_forward),
                             onClick = {
                                 viewModel.skipRemovedPlayback(SKIP_MS)
-                                announce(skipMessage(SKIP_MS, state.playRemovedPositionMs))
+                                announce(skipMessage(forwardDone, SKIP_MS, state.playRemovedPositionMs))
                             },
                             modifier = Modifier.weight(1f),
                         )
@@ -554,14 +558,14 @@ private val PITCH_VALUES = listOf(0.85f, 1f, 1.15f)
  *
  * [beforeMs] — tugma bosilishidan OLDINGI pozitsiya; yangi pozitsiya shundan
  * hisoblanadi, chunki holat yangilanishi bir kadr orqada qolishi mumkin.
+ *
+ * Ataylab `@Composable` emas: matn `onClick` ichida yasaladi, u joyda esa
+ * `stringResource` chaqirib bo'lmaydi. Shuning uchun tayyor shablon matni
+ * tashqaridan beriladi.
  */
-@Composable
-private fun skipMessage(deltaMs: Long, beforeMs: Long): String {
+private fun skipMessage(template: String, deltaMs: Long, beforeMs: Long): String {
     val target = (beforeMs + deltaMs).coerceAtLeast(0L)
-    return stringResource(
-        if (deltaMs < 0) R.string.trim_play_back_done else R.string.trim_play_forward_done,
-        spokenTime(target),
-    )
+    return template.format(spokenTime(target))
 }
 
 /** Tezlik qiymatiga mos tugma indeksi (0 — sekin, 1 — oddiy, 2 — tez). */
