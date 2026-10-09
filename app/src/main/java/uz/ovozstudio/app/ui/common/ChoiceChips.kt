@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
@@ -45,7 +47,9 @@ fun A11yChoiceRow(
             Text(text = it, style = MaterialTheme.typography.bodyMedium)
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             options.forEachIndexed { index, (name, selected) ->
@@ -55,9 +59,22 @@ fun A11yChoiceRow(
                     enabled = enabled,
                     label = { Text(text = name, style = MaterialTheme.typography.bodyMedium) },
                     // Chip ham barmoq uchun kamida 48 dp bo'lishi kerak.
+                    //
+                    // `defaultMinSize(minHeight = 48.dp)` ATAYLAB `fillMaxWidth()`
+                    // bilan birga ishlatilmaydi: kenglikni teng bo'lishish uchun
+                    // `Row` ichidagi har bir chip `weight(1f)` oladi. Avval
+                    // `fillMaxWidth()` bor edi — u har bir chipni butun qator
+                    // kengligiga cho'zib, uchtasini ustma-ust tashlab qo'yardi.
+                    // Ko'rish bilan ishlaydigan foydalanuvchi buni darhol
+                    // ko'radi, ekran o'quvchi foydalanuvchisi esa faqat
+                    // tartibsiz ovoz eshitadi — farq sezilmasligi kerak.
                     modifier = Modifier
-                        .defaultMinSize(minHeight = 48.dp, minWidth = 48.dp)
-                        .semantics { role = Role.RadioButton },
+                        .weight(1f)
+                        .defaultMinSize(minHeight = 48.dp)
+                        .semantics {
+                            role = Role.RadioButton
+                            selected = selected
+                        },
                 )
             }
         }

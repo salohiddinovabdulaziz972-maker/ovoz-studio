@@ -31,6 +31,7 @@ import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.ParamsGroup
+import uz.ovozstudio.app.ui.common.RecentFilesBlock
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.WorkProgress
 import uz.ovozstudio.app.ui.common.a11yGroup
@@ -92,6 +93,9 @@ fun MergeScreen(
         if (state.items.isNotEmpty()) announce(summary)
     }
 
+    // Boshqa ekranda ochilgan fayl shu yerda ham ko'rinishi kerak.
+    LaunchedEffect(Unit) { viewModel.refreshRecent() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -126,6 +130,20 @@ fun MergeScreen(
         if (state.isBusy) {
             val itemProgress = if (state.busy == MergeBusy.ADDING) state.addingFileProgress else state.progress
             WorkProgress(label = busyText, progress = itemProgress)
+        }
+
+        // Ro'yxat bo'sh bo'lganda — ilgari ochilgan fayllar. Ro'yxat
+        // to'lgach u ortiqcha: ekranda allaqachon tartib va amal
+        // tugmalari bor, uchinchi ro'yxat faqat yo'lni uzaytiradi.
+        if (state.items.isEmpty()) {
+            RecentFilesBlock(
+                files = state.recentFiles,
+                query = state.recentQuery,
+                onQueryChange = viewModel::searchRecent,
+                onClear = viewModel::clearRecent,
+                onPick = { picker.launch(FileTypes.AUDIO) },
+                enabled = !state.isBusy,
+            )
         }
 
         if (state.items.isNotEmpty()) {

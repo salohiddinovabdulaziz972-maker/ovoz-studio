@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
+import uz.ovozstudio.app.ui.common.RecentFilesBlock
 import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
@@ -74,6 +75,10 @@ fun PdfScreen(
 
     val result = state.result
 
+    // Ekranga qaytganda ro'yxat yangilanadi: boshqa ekranda ochilgan fayl
+    // (masalan birlashtirishda) shu yerda ham ko'rinishi kerak.
+    LaunchedEffect(state.isOpen) { viewModel.refreshRecent() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -107,6 +112,20 @@ fun PdfScreen(
 
         if (state.isBusy) {
             WorkProgress(label = busyText, progress = state.progress)
+        }
+
+        // Fayl tanlanmagan paytda ilgari ochilganlar ko'rinadi — boshqa
+        // ekranlardagi bilan bir xil blok. Fayl ochilgach u ortiqcha:
+        // ekranda allaqachon sahifalar va amal tugmalari bor.
+        if (!state.isOpen) {
+            RecentFilesBlock(
+                files = state.recentFiles,
+                query = state.recentQuery,
+                onQueryChange = viewModel::searchRecent,
+                onClear = viewModel::clearRecent,
+                onPick = { picker.launch(FileTypes.PDF) },
+                enabled = !state.isBusy,
+            )
         }
 
         if (state.isOpen) {

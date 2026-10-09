@@ -37,11 +37,24 @@ fun ParamsGroup(
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (!expanded) {
-            Text(text = summary, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodyLarge,
+                // Xulosa — qaysi oraliq hozir tanlanganini aytadigan yagona
+                // joy. Ko'ruvchi uni maydonlarga qaramasdan ko'radi, ekran
+                // o'quvchi foydalanuvchisi esa tugmani bosishdan oldin
+                // eshitib bilishi kerak: aks holda «o'zgartirish» nima
+                // o'zgarishini aytmaydi.
+                modifier = Modifier.a11yState(
+                    label = stringResource(R.string.params_current),
+                    value = summary,
+                ),
+            )
             A11yOutlinedButton(
                 label = stringResource(R.string.params_change),
                 onClick = { onExpandedChange(true) },
                 modifier = Modifier.fillMaxWidth(),
+                description = stringResource(R.string.params_change_hint),
             )
         } else {
             content()
@@ -49,6 +62,7 @@ fun ParamsGroup(
                 label = stringResource(R.string.params_collapse),
                 onClick = { onExpandedChange(false) },
                 modifier = Modifier.fillMaxWidth(),
+                description = stringResource(R.string.params_collapse_hint),
             )
         }
     }

@@ -4,11 +4,15 @@
     <string name="app_name">Ovoz Studio</string>
     <string name="common_back">Back</string>
     <string name="common_ok">OK</string>
+    <string name="common_error_prefix">Error</string>
     <string name="common_share_failed">Could not share. No suitable app was found on the device.</string>
     <string name="common_share_title">Share file</string>
     <string name="progress_percent">%1$s: %2$d%%</string>
     <string name="params_change">Change parameters</string>
     <string name="params_collapse">Collapse</string>
+    <string name="params_current">Currently selected</string>
+    <string name="params_change_hint">Opens the fields for entering the start and end time</string>
+    <string name="params_collapse_hint">Closes the fields and leaves only the summary</string>
     <string name="time_unit_hours">hours</string>
     <string name="time_unit_minutes">min</string>
     <string name="time_unit_seconds">sec</string>

@@ -3,6 +3,7 @@ package uz.ovozstudio.app.ui.common
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
@@ -49,6 +50,12 @@ fun <T> ChoiceRow(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        // Qator balandligi kamida 48 dp: barmoq bilan ham,
+                        // ekran o'quvchi bilan ham nishon yetarlicha katta
+                        // bo'lsin. Ichidagi `RadioButton` o'zi ~48 dp, lekin
+                        // kichik ekranda matn bir qatorga sig'masa balandlik
+                        // matnga qarab o'zi o'sadi.
+                        .defaultMinSize(minHeight = 48.dp)
                         .selectable(
                             selected = option == selected,
                             enabled = enabled,

@@ -25,6 +25,7 @@ import uz.ovozstudio.app.media.format.StrictFormat
 import uz.ovozstudio.app.media.merge.AudioMerger
 import uz.ovozstudio.app.ui.common.ResultFile
 import uz.ovozstudio.app.util.MediaSaver
+import uz.ovozstudio.app.util.RecentFiles
 import java.io.File
 
 /** Ro'yxatdagi bitta fayl: ochilgan va birlashtirishga tayyor. */
@@ -92,6 +93,10 @@ data class MergeUiState(
      * bo'lmay qolardi.
      */
     val revision: Int = 0,
+    /** Ilovada ilgari ochilgan fayllar nomi (eng yangisi birinchi). */
+    val recentFiles: List<String> = emptyList(),
+    /** Shu ro'yxat ustidagi qidiruv so'zi. */
+    val recentQuery: String = "",
 ) {
     val isBusy: Boolean get() = busy != MergeBusy.NONE
 
@@ -118,6 +123,7 @@ data class MergeUiState(
 class MergeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val store = WorkStore(application, SCOPE)
+    private val recent = RecentFiles(application)
     private val opener = AudioOpener(store, Build.VERSION.SDK_INT)
     private val exporter = FormatPreservingExporter(Build.VERSION.SDK_INT, AndroidAudioEncoders::open)
 
@@ -182,6 +188,23 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
             }
             _state.update { it.copy(busy = MergeBusy.NONE, addingFileProgress = null) }
         }
+    }
+
+    fun refreshRecent() {
+        _state.update { it.copy(recentFiles = recent.list().map { entry -> entry.name }) }
+    }
+
+    fun searchRecent(query: String) {
+        val needle = query.trim()
+        val matches = if (needle.isEmpty()) recent.list() else recent.find(needle)
+        _state.update {
+            it.copy(recentQuery = query, recentFiles = matches.map { entry -> entry.name })
+        }
+    }
+
+    fun clearRecent() {
+        recent.clear()
+        _state.update { it.copy(recentFiles = emptyList(), recentQuery = "") }
     }
 
     /** Faylni [delta] qadamga ko'chiradi: -1 — yuqoriga, +1 — pastga. */
@@ -365,6 +388,11 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
             wav = opened.wav,
         )
         _state.update { it.copy(items = it.items + item, result = null, savedName = null) }
+        // Faqat ro'yxatga HAQIQATAN tushgan fayl yoziladi. Rad etilgan
+        // (formati mos kelmagan) faylni «oxirgi fayllar»ga qo'shsak,
+        // foydalanuvchi keyingi safar ochib bo'lmaydigan nomni ko'rardi.
+        recent.remember(item.name)
+        refreshRecent()
     }
 
     private fun addFailure(failure: MergeFailure) {

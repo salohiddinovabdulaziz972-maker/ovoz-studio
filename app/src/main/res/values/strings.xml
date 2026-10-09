@@ -5,11 +5,15 @@
     <string name="app_name">Ovoz Studio</string>
     <string name="common_back">Orqaga</string>
     <string name="common_ok">Yaxshi</string>
+    <string name="common_error_prefix">Xato</string>
     <string name="common_share_failed">Ulashib bo\'lmadi. Qurilmada mos ilova topilmadi.</string>
     <string name="common_share_title">Faylni ulashish</string>
     <string name="progress_percent">%1$s: %2$d foiz</string>
     <string name="params_change">Parametrlarni o\'zgartirish</string>
     <string name="params_collapse">Yopish</string>
+    <string name="params_current">Hozir tanlangan</string>
+    <string name="params_change_hint">Bosilganda boshlanish va tugash vaqtini kiritish maydonlari ochiladi</string>
+    <string name="params_collapse_hint">Bosilganda maydonlar yopiladi va faqat xulosa qoladi</string>
     <string name="time_unit_hours">soat</string>
     <string name="time_unit_minutes">daqiqa</string>
     <string name="time_unit_seconds">soniya</string>

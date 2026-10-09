@@ -4,11 +4,15 @@
     <string name="app_name">Овоз Студио</string>
     <string name="common_back">Орқага</string>
     <string name="common_ok">Яхши</string>
+    <string name="common_error_prefix">Хато</string>
     <string name="common_share_failed">Улашиб бўлмади. Қурилмада мос илова топилмади.</string>
     <string name="common_share_title">Файлни улашиш</string>
     <string name="progress_percent">%1$s: %2$d фоиз</string>
     <string name="params_change">Параметрларни ўзгартириш</string>
     <string name="params_collapse">Ёпиш</string>
+    <string name="params_current">Ҳозир танланган</string>
+    <string name="params_change_hint">Босилганда бошланиш ва тугаш вақтини киритиш майдонлари очилади</string>
+    <string name="params_collapse_hint">Босилганда майдонлар ёпилади ва фақат хулоса қолади</string>
     <string name="time_unit_hours">соат</string>
     <string name="time_unit_minutes">дақиқа</string>
     <string name="time_unit_seconds">сония</string>

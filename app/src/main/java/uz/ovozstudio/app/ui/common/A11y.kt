@@ -80,6 +80,24 @@ private fun Modifier.a11yDescription(label: String, description: String?): Modif
 fun Modifier.a11yHeading(): Modifier = semantics { heading() }
 
 /**
+ * Holat qatori: nom + qiymat, ekran o'quvchi uchun bitta to'xtash nuqtasi.
+ *
+ * Nima uchun kerak: ilovadagi deyarli hamma ma'lumot ikki qismdan iborat —
+ * «Davomiylik» va «3 daqiqa 12 soniya», «Tezlik» va «Tez». Bittalab
+ * yurganda ekran o'quvchi foydalanuvchisi avval nomni, keyin qiymatni
+ * eshitadi va ularni bog'lashi kerak bo'ladi. Ko'rish bilan ishlaydigan
+ * foydalanuvchi esa ikkalasini bir qarashda ko'radi — ya'ni imkoniyat
+ * teng bo'lmay qoladi. Birlashtirilgan qatorda esa «Davomiylik, 3 daqiqa
+ * 12 soniya» bir marta, yaxlit eshitiladi.
+ *
+ * Diqqat: faqat faqat o'qiladigan (tugmasiz) qatorlar uchun. [label] va
+ * [value] oralig'iga `": "` qo'yilmaydi — nuqta-vergul pauza beradi va
+ * ko'p ekran o'quvchilarda ortiqcha ohang chiqaradi.
+ */
+fun Modifier.a11yState(label: String, value: String): Modifier =
+    semantics(mergeDescendants = true) { contentDescription = "$label, $value" }
+
+/**
  * Bir nechta qatorni TalkBack uchun BITTA to'xtash nuqtasiga birlashtiradi.
  *
  * Faqat o'zaro bog'liq, faqat o'qiladigan (tugmasiz) matnlar uchun: masalan

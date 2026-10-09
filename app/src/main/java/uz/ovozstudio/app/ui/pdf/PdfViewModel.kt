@@ -20,6 +20,7 @@ import uz.ovozstudio.app.media.pdf.PdfPageTools
 import uz.ovozstudio.app.media.pdf.PdfPasswordException
 import uz.ovozstudio.app.ui.common.ResultFile
 import uz.ovozstudio.app.util.MediaSaver
+import uz.ovozstudio.app.util.RecentFiles
 import java.io.File
 import java.io.IOException
 
@@ -86,6 +87,10 @@ data class PdfUiState(
     val error: PdfError? = null,
     /** Sahifalar ro'yxatidagi muammoli bo'lak (xabarda ko'rsatiladi). */
     val errorToken: String = "",
+    /** Ilovada ilgari ochilgan fayllar nomi (eng yangisi birinchi). */
+    val recentFiles: List<String> = emptyList(),
+    /** Shu ro'yxat ustidagi qidiruv so'zi. */
+    val recentQuery: String = "",
 ) {
     val isOpen: Boolean get() = pageCount > 0
     val isBusy: Boolean get() = busy != PdfBusy.NONE
@@ -101,6 +106,7 @@ data class PdfUiState(
 class PdfViewModel(application: Application) : AndroidViewModel(application) {
 
     private val store = WorkStore(application, SCOPE)
+    private val recent = RecentFiles(application)
 
     private var sourceFile: File? = null
     private var baseName = ""
@@ -156,7 +162,29 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
                     errorToken = "",
                 )
             }
+            // Muvaffaqiyatli ochilgandan keyingina yozamiz: yarim yo'lda
+            // uzilgan urinish ro'yxatga tushib qolsa, foydalanuvchi
+            // ochib bo'lmaydigan fayl nomini ko'rib qolardi.
+            recent.remember(baseName)
+            refreshRecent()
         }
+    }
+
+    fun refreshRecent() {
+        _state.update { it.copy(recentFiles = recent.list().map { entry -> entry.name }) }
+    }
+
+    fun searchRecent(query: String) {
+        val needle = query.trim()
+        val matches = if (needle.isEmpty()) recent.list() else recent.find(needle)
+        _state.update {
+            it.copy(recentQuery = query, recentFiles = matches.map { entry -> entry.name })
+        }
+    }
+
+    fun clearRecent() {
+        recent.clear()
+        _state.update { it.copy(recentFiles = emptyList(), recentQuery = "") }
     }
 
     fun setPages(text: String) = _state.update { it.copy(pagesText = text) }

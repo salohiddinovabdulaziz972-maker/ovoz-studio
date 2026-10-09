@@ -9,6 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import uz.ovozstudio.app.R
@@ -49,9 +52,23 @@ fun WorkProgress(label: String, progress: Float?, modifier: Modifier = Modifier)
             style = MaterialTheme.typography.bodyMedium,
         )
         if (progress != null) {
+            val fraction = progress.coerceIn(0f, 1f)
             LinearProgressIndicator(
-                progress = { progress.coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth(),
+                progress = { fraction },
+                // Chiziqning O'ZI ham o'qiladi.
+                //
+                // Avval faqat matn va har 10 foizlik ovozli e'lon bor edi,
+                // chiziq esa ekran o'quvchi uchun bo'sh joy edi: ko'rish bilan
+                // ishlaydigan foydalanuvchi chiziqqa qarab «qancha qoldi»ni
+                // bilib oladi, ekran o'quvchi foydalanuvchisi esa faqat
+                // kutishi kerak edi. Endi barmoqni chiziqqa qo'yib suryapti
+                // desa, TalkBack joriy foizni o'qiydi — xuddi ko'ruvchi
+                // ko'rgandek, so'ramasdan ham.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics {
+                        progressBarRangeInfo = ProgressBarRangeInfo(fraction, 0f..1f)
+                    },
             )
         } else {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import uz.ovozstudio.app.R
 
@@ -29,9 +30,22 @@ fun StatusMessage(
     isError: Boolean = false,
 ) {
     val announce = rememberAnnouncer()
-    LaunchedEffect(message) { announce(message) }
+    // Xato turi matndan oldin aytiladi: «Xato. Faylni o'qib bo'lmadi» —
+    // shunda foydalanuvchi xabar mazmunini eshitmasidan turib ham bu xato
+    // ekanini biladi. Ko'ruvchi uni qizil rangdan darhol taniydi; rang esa
+    // ekran o'quvchi uchun mavjud emas, shuning uchun u so'z bilan beriladi.
+    val prefix = if (isError) stringResource(R.string.common_error_prefix) else ""
+    val announcement = if (prefix.isEmpty()) message else "$prefix. $message"
+    LaunchedEffect(message) { announce(announcement) }
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = modifier
+            // Butun blok bitta tirqish: xabar matni va «Yaxshi» tugmasi
+            // orasida qolib ketmasin. Guruh ichidagi tugma baribir alohida
+            // bosiladi — fokus unga yetganda to'xtaydi.
+            .semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         Text(
             text = message,
             color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
