@@ -188,6 +188,9 @@
     <string name="trim_pitch_value">Высота: %1$s.</string>
     <string name="trim_removed_skip_hint">Во время прослушивания можно перейти на 10 секунд назад или вперёд.</string>
     <string name="trim_removed_position_label">Сейчас играет удалённая часть</string>
+    <string name="trim_play_empty_hint">Выбранный диапазон пуст — введите начало и конец, чтобы прослушать.</string>
+    <string name="trim_undo_nothing_hint">Отменять нечего.</string>
+    <string name="pdf_pages_need_hint">Введите номера страниц — например 3 или 3-5.</string>
     <string name="pick_recent_title">Недавно открытые файлы</string>
     <string name="pick_recent_hint">Список составляется из файлов, открытых этим приложением на этом устройстве. Не нужно ходить по папкам — файл открывается одним нажатием.</string>
     <string name="pick_recent_empty">Пока пусто: выберите первый файл в «Файлах», и он появится здесь.</string>

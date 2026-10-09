@@ -188,6 +188,9 @@
     <string name="trim_pitch_value">Pitch: %1$s.</string>
     <string name="trim_removed_skip_hint">While listening you can skip 10 seconds back or forward.</string>
     <string name="trim_removed_position_label">Currently playing removed part</string>
+    <string name="trim_play_empty_hint">The selected range is empty — enter start and end times to listen.</string>
+    <string name="trim_undo_nothing_hint">Nothing to undo.</string>
+    <string name="pdf_pages_need_hint">Enter page numbers — for example 3 or 3-5.</string>
     <string name="pick_recent_title">Recently opened files</string>
     <string name="pick_recent_hint">The list is built from files opened with this app on this device. No walking through folders — one press opens the file.</string>
     <string name="pick_recent_empty">Empty for now: pick your first file from Files and it will appear here.</string>

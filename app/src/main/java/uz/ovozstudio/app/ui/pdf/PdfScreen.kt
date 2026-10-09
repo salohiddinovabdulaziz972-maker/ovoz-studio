@@ -134,8 +134,14 @@ fun PdfScreen(
                     text = stringResource(R.string.pdf_file_name, state.fileName),
                     style = MaterialTheme.typography.bodyLarge,
                 )
+                // Sahifalar soni ko'ruvchiga bir qarashda ko'rinadi; eshitish
+                // bilan esa faqat aytilsa bilinadi — fayl ochilganini
+                // tasdiqlovchi yagona belgi shu.
+                val pageCountText = stringResource(R.string.pdf_page_count, state.pageCount)
+                val announcePages = rememberAnnouncer()
+                LaunchedEffect(pageCountText) { announcePages(pageCountText) }
                 Text(
-                    text = stringResource(R.string.pdf_page_count, state.pageCount),
+                    text = pageCountText,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -152,8 +158,22 @@ fun PdfScreen(
                 label = stringResource(if (mode == PdfMode.CUT) R.string.pdf_apply_cut else R.string.pdf_apply_delete),
                 onClick = { viewModel.apply(mode) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isBusy,
+                enabled = !state.isBusy && state.pagesText.isNotBlank(),
+                // Sahifa raqami yozilmagan bo'lsa tugma o'chiq turadi —
+                // sabab aytilmasa, eshitish bilan nima uchun bosilmasligini
+                // bilishning yo'li yo'q.
+                description = if (state.pagesText.isBlank()) {
+                    stringResource(R.string.pdf_pages_need_hint)
+                } else {
+                    null
+                },
             )
+            if (state.pagesText.isBlank()) {
+                Text(
+                    text = stringResource(R.string.pdf_pages_need_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
 
         if (result != null) {

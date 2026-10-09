@@ -188,6 +188,9 @@
     <string name="trim_pitch_value">Balandlik: %1$s.</string>
     <string name="trim_removed_skip_hint">Yig\'indi ichida 10 soniya oldinga yoki orqaga surish mumkin.</string>
     <string name="trim_removed_position_label">Hozir eshitilayotgan o\'chirilgan qism</string>
+    <string name="trim_play_empty_hint">Tanlangan oraliq bo\'sh — eshitish uchun avval boshlanish va tugash vaqtini kiriting.</string>
+    <string name="trim_undo_nothing_hint">Qaytaradigan amal yo\'q.</string>
+    <string name="pdf_pages_need_hint">Sahifa raqamini yozing — masalan 3 yoki 3-5.</string>
     <string name="pick_recent_title">Oxirgi ochilgan fayllar</string>
     <string name="pick_recent_hint">Ro\'yxat shu qurilmada ilova orqali ochilgan fayllardan tuziladi. Papka ichida yurish shart emas — bitta bosishda ochiladi.</string>
     <string name="pick_recent_empty">Hozircha bo\'sh: birinchi faylni «Fayllar» dan tanlang, keyin shu yerda paydo bo\'ladi.</string>

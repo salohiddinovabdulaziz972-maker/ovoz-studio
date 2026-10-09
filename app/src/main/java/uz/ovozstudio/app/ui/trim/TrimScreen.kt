@@ -341,6 +341,10 @@ fun TrimScreen(
                         onClick = { viewModel.playSelection() },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isBusy && endMs > startMs,
+                        // Oraliq bo'sh bo'lsa eshitish uchun hech narsa yo'q:
+                        // sabab aytilmasa tugma jim qolardi.
+                        description = if (endMs > startMs) null
+                            else stringResource(R.string.trim_play_empty_hint),
                     )
                 }
 
@@ -398,6 +402,11 @@ fun TrimScreen(
                 onClick = { viewModel.undo() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.canUndo && !state.isBusy,
+                // Qaytaradigan amal bo'lmasa tugma o'chiq turadi: sabab
+                // aytilmasa eshitish bilan bilinmaydi, ko'ruvchi esa buni
+                // tugmaning rangidan taniydi.
+                description = if (state.canUndo) null
+                    else stringResource(R.string.trim_undo_nothing_hint),
             )
 
             // «O'chirilgan qismlarni eshitish»: tahrirdan keyin foydalanuvchi
@@ -415,12 +424,18 @@ fun TrimScreen(
                 )
 
                 if (state.isPlayingRemoved) {
+                    val removedPositionText = stringResource(
+                        R.string.trim_removed_position,
+                        spokenTime(state.playRemovedPositionMs),
+                        spokenTime(state.removedPreviewDurationMs),
+                    )
+                    // Pozitsiya surilganda ko'ruvchi uni raqamdan darhol
+                    // ko'radi; eshitish bilan esa faqat e'lon qilinsa bilinadi —
+                    // aks holda tugma bosilgani jim qolardi.
+                    val announceRemoved = rememberAnnouncer()
+                    LaunchedEffect(removedPositionText) { announceRemoved(removedPositionText) }
                     Text(
-                        text = stringResource(
-                            R.string.trim_removed_position,
-                            spokenTime(state.playRemovedPositionMs),
-                            spokenTime(state.removedPreviewDurationMs),
-                        ),
+                        text = removedPositionText,
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
@@ -495,11 +510,18 @@ fun TrimScreen(
                         enabled = !state.isBusy,
                     )
                     if (state.removedPreviewDurationMs > 0L) {
+                        val removedReadyText = stringResource(
+                            R.string.trim_removed_ready,
+                            spokenTime(state.removedPreviewDurationMs),
+                        )
+                        // «Tayyor» matni ish tugaganini bildiradi, lekin u
+                        // ekranda paydo bo'lganini ko'zi ojiz foydalanuvchi
+                        // ko'rmaydi — jarayon tamom bo'lganini faqat shu
+                        // e'lon orqali bilib oladi.
+                        val announceReady = rememberAnnouncer()
+                        LaunchedEffect(removedReadyText) { announceReady(removedReadyText) }
                         Text(
-                            text = stringResource(
-                                R.string.trim_removed_ready,
-                                spokenTime(state.removedPreviewDurationMs),
-                            ),
+                            text = removedReadyText,
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -520,6 +542,23 @@ fun TrimScreen(
                 style = MaterialTheme.typography.bodyMedium,
             )
 
+            // Natija tayyor bo'lganda ovoz bilan aytiladi: ko'ruvchi yangi
+            // qator paydo bo'lganini ko'radi, eshitish bilan esa fayl
+            // tayyorligini faqat shu e'lon orqali bilish mumkin.
+            val resultReadyText = if (result != null) {
+                stringResource(
+                    R.string.trim_result_ready,
+                    result.name,
+                    Formatter.formatShortFileSize(context, result.sizeBytes),
+                )
+            } else {
+                ""
+            }
+            val announceResult = rememberAnnouncer()
+            LaunchedEffect(resultReadyText) {
+                if (resultReadyText.isNotEmpty()) announceResult(resultReadyText)
+            }
+
             A11yButton(
                 label = stringResource(R.string.trim_prepare),
                 onClick = { viewModel.prepareResult(mode) },
@@ -535,11 +574,7 @@ fun TrimScreen(
 
             if (result != null) {
                 Text(
-                    text = stringResource(
-                        R.string.trim_result_ready,
-                        result.name,
-                        Formatter.formatShortFileSize(context, result.sizeBytes),
-                    ),
+                    text = resultReadyText,
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
