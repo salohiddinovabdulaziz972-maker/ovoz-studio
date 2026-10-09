@@ -19,6 +19,10 @@ name: Android
 # Qo'lda yuritish tugmasi.
 #
 # Triggersiz yig'ish yuri (2): @hide konstanta tuzatilgandan keyin.
+#
+# Triggersiz yig'ish yuri (3): v0.5.0 — PDF birlashtirish va o'chirilgan
+# qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
+# qo'zg'atiladi.
 on:
   workflow_dispatch:
   push:
