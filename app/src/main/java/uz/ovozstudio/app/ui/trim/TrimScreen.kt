@@ -4,6 +4,7 @@ import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,9 +33,12 @@ import android.content.pm.PackageManager
 import android.Manifest
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.DocumentPicker
+import uz.ovozstudio.app.ui.common.A11yChoiceRow
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
+import uz.ovozstudio.app.ui.common.KeepScreenOn
 import uz.ovozstudio.app.ui.common.ParamsGroup
+import uz.ovozstudio.app.ui.common.RecentFilesBlock
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.TimeInput
 import uz.ovozstudio.app.ui.common.WorkProgress
@@ -120,6 +124,16 @@ fun TrimScreen(
         if (state.revision > 0) announce(editDoneMessage)
     }
 
+    // Ro'yxat bir marta, ekran ochilganda o'qiladi. Har fayl ochilganda
+    // yangilanadi — bu holda `revision` o'zgaradi.
+    LaunchedEffect(state.revision, state.isOpen) {
+        if (!state.isOpen) viewModel.refreshRecent()
+    }
+
+    // Tinglash davomida ekran o'chmasin: foydalanuvchi tinglab o'tiradi va
+    // ekranga tegmaydi, ekran o'chsa ekran o'quvchi bilan boshqarish qiyin.
+    KeepScreenOn(active = state.isPlaying || state.isPlayingRemoved)
+
     val startMs = viewModel.selectionStartMs(state)
     val endMs = viewModel.selectionEndMs(state)
 
@@ -156,6 +170,19 @@ fun TrimScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )
+
+        // Oxirgi fayllar faqat ish boshlanmagan paytda ko'rsatiladi: fayl
+        // ochilgach ekranda o'z ishi ko'p, ro'yxat esa faqat chalg'itardi.
+        if (!state.isOpen) {
+            RecentFilesBlock(
+                files = state.recentFiles,
+                query = state.recentQuery,
+                onQueryChange = viewModel::searchRecent,
+                onClear = viewModel::clearRecent,
+                onPick = { picker.launch(FileTypes.AUDIO) },
+                enabled = !state.isBusy,
+            )
+        }
 
         if (state.isBusy) {
             WorkProgress(label = busyText, progress = state.progress)
@@ -235,6 +262,31 @@ fun TrimScreen(
                 )
 
                 if (state.isPlaying) {
+                    // Oldinga/orqaga surish tugmalari. Ekran o'quvchi
+                    // foydalanuvchisi uchun bu sakrashning yagona yo'li:
+                    // slayderni barmoq bilan aniq nishonga olish imkoni yo'q.
+                    // Har bosishda yangi pozitsiya ovozda aytiladi.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.trim_play_back),
+                            onClick = {
+                                viewModel.skipPlayback(-SKIP_MS)
+                                announce(skipMessage(-SKIP_MS, state.playPositionMs))
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.trim_play_forward),
+                            onClick = {
+                                viewModel.skipPlayback(SKIP_MS)
+                                announce(skipMessage(SKIP_MS, state.playPositionMs))
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     A11yOutlinedButton(
                         label = stringResource(R.string.trim_stop),
                         onClick = { viewModel.stopPlayback() },
@@ -248,6 +300,42 @@ fun TrimScreen(
                         enabled = !state.isBusy && endMs > startMs,
                     )
                 }
+
+                // Tezlik va balandlik. Uchtadan bittasi tanlanadi: slayder
+                // o'rniga tugmalar — sabab A11yChoiceRow izohida.
+                val speedLabels = listOf(
+                    stringResource(R.string.trim_speed_slow),
+                    stringResource(R.string.trim_speed_normal),
+                    stringResource(R.string.trim_speed_fast),
+                )
+                val speedSelected = speedIndex(state.playSpeed)
+                A11yChoiceRow(
+                    label = stringResource(R.string.trim_speed_title),
+                    description = stringResource(R.string.trim_speed_value, speedLabels[speedSelected]),
+                    options = speedLabels.mapIndexed { index, name -> name to (index == speedSelected) },
+                    enabled = !state.isBusy,
+                    onSelect = { index ->
+                        viewModel.setSpeed(SPEED_VALUES[index])
+                        announce(speedLabels[index])
+                    },
+                )
+
+                val pitchLabels = listOf(
+                    stringResource(R.string.trim_pitch_low),
+                    stringResource(R.string.trim_pitch_normal),
+                    stringResource(R.string.trim_pitch_high),
+                )
+                val pitchSelected = pitchIndex(state.playPitch)
+                A11yChoiceRow(
+                    label = stringResource(R.string.trim_pitch_title),
+                    description = stringResource(R.string.trim_pitch_value, pitchLabels[pitchSelected]),
+                    options = pitchLabels.mapIndexed { index, name -> name to (index == pitchSelected) },
+                    enabled = !state.isBusy,
+                    onSelect = { index ->
+                        viewModel.setPitch(PITCH_VALUES[index])
+                        announce(pitchLabels[index])
+                    },
+                )
             }
 
             // Bitta amal tugmasi: rejimga qarab «kesib olish» yoki «o'chirish».
@@ -292,6 +380,31 @@ fun TrimScreen(
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                    Text(
+                        text = stringResource(R.string.trim_removed_skip_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.trim_play_back),
+                            onClick = {
+                                viewModel.skipRemovedPlayback(-SKIP_MS)
+                                announce(skipMessage(-SKIP_MS, state.playRemovedPositionMs))
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        A11yOutlinedButton(
+                            label = stringResource(R.string.trim_play_forward),
+                            onClick = {
+                                viewModel.skipRemovedPlayback(SKIP_MS)
+                                announce(skipMessage(SKIP_MS, state.playRemovedPositionMs))
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     A11yOutlinedButton(
                         label = stringResource(R.string.trim_removed_stop),
                         onClick = { viewModel.stopRemovedPlayback() },
@@ -426,3 +539,41 @@ private fun TrimError.message(): String = stringResource(
 
 /** Android 9 va pastda MediaStore'ga yozish uchun so'raladigan ruxsat. */
 private const val WRITE_PERMISSION = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+
+/** Bir bosishda suriladigan oraliq: 10 soniya. */
+private const val SKIP_MS = 10_000L
+
+/** Tezlik tugmalariga mos qiymatlar (sekin / oddiy / tez). */
+private val SPEED_VALUES = listOf(0.75f, 1f, 1.5f)
+
+/** Balandlik tugmalariga mos qiymatlar (past / oddiy / baland). */
+private val PITCH_VALUES = listOf(0.85f, 1f, 1.15f)
+
+/**
+ * Surish natijasini ovozda aytish uchun matn.
+ *
+ * [beforeMs] — tugma bosilishidan OLDINGI pozitsiya; yangi pozitsiya shundan
+ * hisoblanadi, chunki holat yangilanishi bir kadr orqada qolishi mumkin.
+ */
+@Composable
+private fun skipMessage(deltaMs: Long, beforeMs: Long): String {
+    val target = (beforeMs + deltaMs).coerceAtLeast(0L)
+    return stringResource(
+        if (deltaMs < 0) R.string.trim_play_back_done else R.string.trim_play_forward_done,
+        spokenTime(target),
+    )
+}
+
+/** Tezlik qiymatiga mos tugma indeksi (0 — sekin, 1 — oddiy, 2 — tez). */
+private fun speedIndex(speed: Float): Int = when {
+    speed < 0.95f -> 0
+    speed > 1.05f -> 2
+    else -> 1
+}
+
+/** Balandlik qiymatiga mos tugma indeksi. */
+private fun pitchIndex(pitch: Float): Int = when {
+    pitch < 0.95f -> 0
+    pitch > 1.05f -> 2
+    else -> 1
+}

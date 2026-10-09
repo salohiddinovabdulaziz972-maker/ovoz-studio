@@ -169,4 +169,30 @@
     <string name="trim_removed_ready">Ready: the removed parts were gathered for listening (%1$s).</string>
     <string name="trim_removed_position">Playing: %1$s / %2$s</string>
     <string name="trim_removed_error">Could not prepare a copy of the removed parts for listening.</string>
+    <!-- v0.6.0: o'ynatgich boshqaruvi va fayl tanlash qulayliklari -->
+    <string name="trim_play_back">Back 10 seconds</string>
+    <string name="trim_play_forward">Forward 10 seconds</string>
+    <string name="trim_speed_title">Playback speed</string>
+    <string name="trim_speed_slow">Slow</string>
+    <string name="trim_speed_normal">Normal</string>
+    <string name="trim_speed_fast">Fast</string>
+    <string name="trim_speed_value">Speed: %1$s. Affects the playback of the selected part.</string>
+    <string name="trim_pitch_title">Pitch</string>
+    <string name="trim_pitch_low">Low</string>
+    <string name="trim_pitch_normal">Normal</string>
+    <string name="trim_pitch_high">High</string>
+    <string name="trim_pitch_value">Pitch: %1$s.</string>
+    <string name="trim_removed_skip_hint">While listening you can skip 10 seconds back or forward.</string>
+    <string name="pick_recent_title">Recently opened files</string>
+    <string name="pick_recent_hint">The list is built from files opened with this app on this device. No walking through folders — one press opens the file.</string>
+    <string name="pick_recent_empty">Empty for now: pick your first file from Files and it will appear here.</string>
+    <string name="pick_clear_recent">Clear the list</string>
+    <string name="pick_search_title">Find by name</string>
+    <string name="pick_search_label">File name</string>
+    <string name="pick_search_found">Found %1$d files.</string>
+    <string name="pick_search_none">No file with that name was found. Try a part of the name.</string>
+    <string name="trim_play_back_done">Moved back to {0}.</string>
+    <string name="trim_play_forward_done">Moved forward to {0}.</string>
+    <string name="pick_recent_open">Open</string>
+    <string name="pick_search_history_only">Search looks through files opened in this app. Scanning the whole device needs a broad permission, which this app does not request.</string>
 </resources>

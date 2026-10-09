@@ -169,4 +169,30 @@
     <string name="pdf_merge_error_need_two">Birlashtirish uchun kamida ikkita PDF kerak.</string>
     <string name="pdf_merge_error_failed">PDF larni birlashtirib bo\'lmadi. Fayllardan biri buzuq yoki xotirada joy yetmayotgan bo\'lishi mumkin.</string>
     <string name="pdf_merge_error_file">%1$s: %2$s</string>
+    <!-- v0.6.0: o'ynatgich boshqaruvi va fayl tanlash qulayliklari -->
+    <string name="trim_play_back">10 soniya orqaga</string>
+    <string name="trim_play_forward">10 soniya oldinga</string>
+    <string name="trim_speed_title">Eshitish tezligi</string>
+    <string name="trim_speed_slow">Sekin</string>
+    <string name="trim_speed_normal">Oddiy</string>
+    <string name="trim_speed_fast">Tez</string>
+    <string name="trim_speed_value">Tezlik: %1$s. Belgilangan qismni eshitishga ta\'sir qiladi.</string>
+    <string name="trim_pitch_title">Ovoz balandligi</string>
+    <string name="trim_pitch_low">Past</string>
+    <string name="trim_pitch_normal">Oddiy</string>
+    <string name="trim_pitch_high">Baland</string>
+    <string name="trim_pitch_value">Balandlik: %1$s.</string>
+    <string name="trim_removed_skip_hint">Yig\'indi ichida 10 soniya oldinga yoki orqaga surish mumkin.</string>
+    <string name="pick_recent_title">Oxirgi ochilgan fayllar</string>
+    <string name="pick_recent_hint">Ro\'yxat shu qurilmada ilova orqali ochilgan fayllardan tuziladi. Papka ichida yurish shart emas — bitta bosishda ochiladi.</string>
+    <string name="pick_recent_empty">Hozircha bo\'sh: birinchi faylni «Fayllar» dan tanlang, keyin shu yerda paydo bo\'ladi.</string>
+    <string name="pick_clear_recent">Ro\'yxatni tozalash</string>
+    <string name="pick_search_title">Nom bo\'yicha topish</string>
+    <string name="pick_search_label">Fayl nomi</string>
+    <string name="pick_search_found">Topildi: %1$d ta fayl.</string>
+    <string name="pick_search_none">Bu nom bilan fayl topilmadi. Nomning bir qismini yozib ko\'ring.</string>
+    <string name="trim_play_back_done">{0} soniya orqaga surildi.</string>
+    <string name="trim_play_forward_done">{0} soniya oldinga surildi.</string>
+    <string name="pick_recent_open">Ochish</string>
+    <string name="pick_search_history_only">Qidiruv ilova orqali ochilgan fayllar ichidan izlaydi. Butun qurilmani ko'rib chiqish alohida keng ruxsat talab qiladi va so\'ralmaydi.</string>
 </resources>

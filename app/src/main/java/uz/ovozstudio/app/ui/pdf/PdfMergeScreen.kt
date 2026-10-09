@@ -30,6 +30,7 @@ import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.ParamsGroup
+import uz.ovozstudio.app.ui.common.RecentFilesBlock
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.WorkProgress
 import uz.ovozstudio.app.ui.common.a11yGroup
@@ -88,6 +89,10 @@ fun PdfMergeScreen(
         if (state.items.isNotEmpty()) announce(summary)
     }
 
+    // Ro'yxat bir marta o'qiladi; har fayl qo'shilganda `revision` o'zgaradi
+    // va yangi nom o'sha zahoti paydo bo'ladi.
+    LaunchedEffect(state.revision) { viewModel.refreshRecent() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -118,6 +123,19 @@ fun PdfMergeScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )
+
+        // Ro'yxat bo'sh bo'lganda ko'rsatiladi: fayllar tanlangach ekranda
+        // allaqachon tartib va amal tugmalari bor, uchinchi ro'yxat ortiqcha.
+        if (state.items.isEmpty()) {
+            RecentFilesBlock(
+                files = state.recentFiles,
+                query = state.recentQuery,
+                onQueryChange = viewModel::searchRecent,
+                onClear = viewModel::clearRecent,
+                onPick = { picker.launch(FileTypes.PDF) },
+                enabled = !state.isBusy,
+            )
+        }
 
         if (state.isBusy) {
             val mergeProgress = state.mergeProgress

@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.log.ErrorLog
 import uz.ovozstudio.app.media.WorkStore
+import uz.ovozstudio.app.util.RecentFiles
 import uz.ovozstudio.app.media.pdf.PdfMergeSource
 import uz.ovozstudio.app.media.pdf.PdfMerger
 import uz.ovozstudio.app.media.pdf.PdfNoPermissionException
@@ -76,6 +77,10 @@ data class PdfMergeUiState(
      * son o'zgarmaydi va e'lon umuman bo'lmay qolardi.
      */
     val revision: Int = 0,
+    /** Oxirgi qo'shilgan PDF lar nomi (eng yangisi birinchi). */
+    val recentFiles: List<String> = emptyList(),
+    /** Oxirgi fayllar ichidan qidiruv so'zi. */
+    val recentQuery: String = "",
 ) {
     val isBusy: Boolean get() = busy != PdfMergeBusy.NONE
 
@@ -105,6 +110,9 @@ data class PdfMergeUiState(
 class PdfMergeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val store = WorkStore(application, SCOPE)
+
+    /** Oxirgi ochilgan PDF lar — papkalar ichida yurish o'rniga bir bosish. */
+    private val recent = RecentFiles(application)
 
     private val _state = MutableStateFlow(PdfMergeUiState())
     val state: StateFlow<PdfMergeUiState> = _state.asStateFlow()
@@ -173,7 +181,33 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
                     revision = it.revision + 1,
                 )
             }
+
+            // Faqat qabul qilingan fayllar eslab qolinadi: ochilmagan fayl
+            // ro'yxatda turib, keyin yana xato bersa ro'yxat ishonchsiz
+            // bo'lib qolardi.
+            accepted.forEach { item -> recent.remember(item.name) }
+            refreshRecent()
         }
+    }
+
+    /** Oxirgi qo'shilgan PDF lar ro'yxatini holatga yuklaydi. */
+    fun refreshRecent() {
+        _state.update { it.copy(recentFiles = recent.list().map { entry -> entry.name }) }
+    }
+
+    /** Ro'yxat ichidan nom bo'yicha filtrlaydi (bo'sh so'z — butun ro'yxat). */
+    fun searchRecent(query: String) {
+        val needle = query.trim()
+        val matches = if (needle.isEmpty()) recent.list() else recent.find(needle)
+        _state.update {
+            it.copy(recentQuery = query, recentFiles = matches.map { entry -> entry.name })
+        }
+    }
+
+    /** Ro'yxatni tozalaydi — fayllar o'zi o'chirilmaydi, faqat yodda qolgani. */
+    fun clearRecent() {
+        recent.clear()
+        _state.update { it.copy(recentFiles = emptyList(), recentQuery = "") }
     }
 
     /** Faylni ro'yxatda yuqoriga yoki pastga suradi. */

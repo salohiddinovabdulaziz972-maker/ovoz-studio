@@ -28,6 +28,7 @@ import uz.ovozstudio.app.media.format.FormatPreservingExporter
 import uz.ovozstudio.app.media.format.ImportFailure
 import uz.ovozstudio.app.media.format.OpenResult
 import uz.ovozstudio.app.media.format.StrictFormat
+import uz.ovozstudio.app.util.RecentFiles
 import uz.ovozstudio.app.ui.common.ResultFile
 import uz.ovozstudio.app.util.MediaSaver
 import uz.ovozstudio.app.util.TimeParts
@@ -88,6 +89,14 @@ data class TrimUiState(
     val isPlaying: Boolean = false,
     val playPositionMs: Long = 0L,
     /**
+     * Ijro tezligi (1.0 — o'zgarmagan). Sekinlashtirib diqqat bilan
+     * eshitish uchun. Tanlov sessiya davomida saqlanadi: har yangi
+     * eshitishda qaytadan tanlash kerak emas.
+     */
+    val playSpeed: Float = 1f,
+    /** Ijro balandligi (1.0 — o'zgarmagan). */
+    val playPitch: Float = 1f,
+    /**
      * O'chirilgan qismlar eshittirilmoqda (asl fayldagidek). Belgilangan
      * qismni eshitishdan ([isPlaying]) alohida: foydalanuvchi ikkovini
      * bir vaqtda kutmasin, ekran qaysi biri ketayotganini aniq aytsin.
@@ -127,6 +136,13 @@ data class TrimUiState(
     val removedRangesAvailable: Boolean = false,
     /** Eshitish uchun yig'ilgan qismning uzunligi (ms); tayyor bo'lmasa 0. */
     val removedPreviewDurationMs: Long = 0L,
+    /**
+     * Oxirgi ochilgan fayllar nomi (eng yangisi birinchi). Fayl ochilmagan
+     * paytda ko'rsatiladi: papkalar ichida qo'lda yurish o'rniga bir bosish.
+     */
+    val recentFiles: List<String> = emptyList(),
+    /** Oxirgi fayllar ichidan qidiruv so'zi (nom bo'yicha). */
+    val recentQuery: String = "",
 ) {
     val isOpen: Boolean get() = info != null
     val isBusy: Boolean get() = busy != TrimBusy.NONE
@@ -151,6 +167,9 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private val opener = AudioOpener(store, Build.VERSION.SDK_INT)
     private val exporter = FormatPreservingExporter(Build.VERSION.SDK_INT, AndroidAudioEncoders::open)
     private val player = AudioPlayer()
+
+    /** Oxirgi ochilgan fayllar — papkalar ichida yurish o'rniga bir bosish. */
+    private val recent = RecentFiles(application)
 
     /**
      * «O'chirilgan qismlarni eshitish» uchun alohida pleyer: asosiy pleyer
@@ -222,7 +241,13 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             when (val opened = outcome.getOrNull()) {
-                is OpenResult.Opened -> startSession(opened)
+                is OpenResult.Opened -> {
+                    // Nomni faqat ochilish MUVAFFAQIYATLI bo'lgach eslaymiz:
+                    // ochilmagan fayl ro'yxatda turib, keyin yana xato bersa
+                    // ro'yxat ishonchsiz bo'lib qolardi.
+                    recent.remember(opened.displayName)
+                    startSession(opened)
+                }
                 is OpenResult.Refused -> {
                     ErrorLog.info("audio.open", "Fayl ochilmadi: ${opened.reason}, format: ${opened.formatName}")
                     _state.update {
@@ -251,6 +276,33 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setStart(parts: TimeParts) = _state.update { it.copy(startParts = parts) }
     fun setEnd(parts: TimeParts) = _state.update { it.copy(endParts = parts) }
+
+    /**
+     * Oxirgi fayllar ro'yxatini holatga yuklaydi.
+     *
+     * Fayl ochilmagan paytda chaqiriladi: ro'yxat faqat shunda kerak, ish
+     * boshlangach ekrandan olinadi.
+     */
+    fun refreshRecent() {
+        _state.update {
+            it.copy(recentFiles = recent.list().map { entry -> entry.name })
+        }
+    }
+
+    /** Ro'yxat ichidan nom bo'yicha filtrlaydi (bo'sh so'z — butun ro'yxat). */
+    fun searchRecent(query: String) {
+        val needle = query.trim()
+        val matches = if (needle.isEmpty()) recent.list() else recent.find(needle)
+        _state.update {
+            it.copy(recentQuery = query, recentFiles = matches.map { entry -> entry.name })
+        }
+    }
+
+    /** Ro'yxatni tozalaydi — fayllar o'zi o'chirilmaydi, faqat yodda qolgani. */
+    fun clearRecent() {
+        recent.clear()
+        _state.update { it.copy(recentFiles = emptyList(), recentQuery = "") }
+    }
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearOpenFailure() = _state.update { it.copy(openFailure = null, openFailureFormat = "") }
@@ -283,6 +335,51 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         player.stop()
         stopTicker()
         _state.update { it.copy(isPlaying = false) }
+    }
+
+    /**
+     * O'ynab turgan joydan oldinga yoki orqaga suradi.
+     *
+     * Ekran o'quvchi foydalanuvchisi uchun bu tugmalar sakrashning yagona
+     * yo'li: slayderni barmoq bilan aniq nishonga olish imkoni yo'q.
+     * Chegara — tanlangan oraliq: undan tashqariga chiqilsa, eshitish
+     * foydalanuvchi belgilamagan qismga o'tib ketardi.
+     */
+    fun skipPlayback(deltaMs: Long) {
+        if (!_state.value.isPlaying) return
+        val current = _state.value
+        val start = selectionStartMs(current).coerceIn(0, current.durationMs)
+        val end = selectionEndMs(current).coerceIn(start, current.durationMs)
+        val position = player.skipBy(deltaMs, start, end)
+        _state.update { it.copy(playPositionMs = position) }
+    }
+
+    /** O'chirilgan qismlar orasida suradi (butun yig'indi bo'ylab). */
+    fun skipRemovedPlayback(deltaMs: Long) {
+        if (!_state.value.isPlayingRemoved) return
+        val total = _state.value.removedPreviewDurationMs
+        val position = removedPlayer.skipBy(deltaMs, 0L, total)
+        _state.update { it.copy(playRemovedPositionMs = position) }
+    }
+
+    /**
+     * Tezlikni o'zgartiradi va darhol qo'llaydi.
+     *
+     * O'zgarish ovozda aytilishi kerak: ekran o'quvchi foydalanuvchisi
+     * tezlik o'zgarganini boshqa yo'l bilan bilmaydi.
+     */
+    fun setSpeed(speed: Float) {
+        val value = speed.coerceIn(MIN_RATE, MAX_RATE)
+        player.setRate(value, _state.value.playPitch)
+        removedPlayer.setRate(value, _state.value.playPitch)
+        _state.update { it.copy(playSpeed = value) }
+    }
+
+    fun setPitch(pitch: Float) {
+        val value = pitch.coerceIn(MIN_RATE, MAX_RATE)
+        player.setRate(_state.value.playSpeed, value)
+        removedPlayer.setRate(_state.value.playSpeed, value)
+        _state.update { it.copy(playPitch = value) }
     }
 
     /**
@@ -731,6 +828,9 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         const val TAG_CUT = "kesish"
         const val TAG_DELETE = "ochirish"
         const val TAG_REMOVED = "ochirilgan-qism"
+        /** Tezlik va balandlik chegaralari — pleyerdagi bilan bir xil. */
+        const val MIN_RATE = 0.5f
+        const val MAX_RATE = 2.0f
         const val DEFAULT_NAME = "audio"
         const val POSITION_TICK_MS = 100L
 
