@@ -187,6 +187,7 @@
     <string name="trim_pitch_high">Baland</string>
     <string name="trim_pitch_value">Balandlik: %1$s.</string>
     <string name="trim_removed_skip_hint">Yig\'indi ichida 10 soniya oldinga yoki orqaga surish mumkin.</string>
+    <string name="trim_removed_position_label">Hozir eshitilayotgan o\'chirilgan qism</string>
     <string name="pick_recent_title">Oxirgi ochilgan fayllar</string>
     <string name="pick_recent_hint">Ro\'yxat shu qurilmada ilova orqali ochilgan fayllardan tuziladi. Papka ichida yurish shart emas — bitta bosishda ochiladi.</string>
     <string name="pick_recent_empty">Hozircha bo\'sh: birinchi faylni «Fayllar» dan tanlang, keyin shu yerda paydo bo\'ladi.</string>
@@ -197,6 +198,10 @@
     <string name="pick_search_none">Bu nom bilan fayl topilmadi. Nomning bir qismini yozib ko\'ring.</string>
     <string name="trim_play_back_done">{0} soniya orqaga surildi.</string>
     <string name="trim_play_forward_done">{0} soniya oldinga surildi.</string>
+    <string name="trim_position_label">Hozir eshitilayotgan joy</string>
+    <string name="trim_jump_label">Shu joyga o\'tish</string>
+    <string name="trim_jump_done">{0} dan davom etmoqda.</string>
+    <string name="trim_jump_invalid">Vaqtni kiriting, so\'ng shu joyga o\'tish tugmasini bosing.</string>
     <string name="pick_recent_open">Ochish</string>
     <string name="pick_search_history_only">Qidiruv ilova orqali ochilgan fayllar ichidan izlaydi. Butun qurilmani ko\'rib chiqish alohida keng ruxsat talab qiladi va so\'ralmaydi.</string>
 </resources>

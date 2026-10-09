@@ -36,6 +36,7 @@ import uz.ovozstudio.app.ui.common.DocumentPicker
 import uz.ovozstudio.app.ui.common.A11yChoiceRow
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.FileTypes
+import uz.ovozstudio.app.ui.common.JumpToPosition
 import uz.ovozstudio.app.ui.common.KeepScreenOn
 import uz.ovozstudio.app.ui.common.ParamsGroup
 import uz.ovozstudio.app.ui.common.RecentFilesBlock
@@ -221,6 +222,13 @@ fun TrimScreen(
                 modifier = Modifier.a11yHeading(),
             )
 
+            // Ikkala eshitish bo'limi (tanlangan oraliq va o'chirilgan qismlar)
+            // uchun umumiy matnlar. Sarlavhalar shu yerda olinadi: pastdagi
+            // shoxobchalar bir-biriga qardosh, ichkaridagi `val` tashqarida
+            // ko'rinmaydi.
+            val jumpDone = stringResource(R.string.trim_jump_done)
+            val jumpInvalid = stringResource(R.string.trim_jump_invalid)
+
             val paramsSummary = stringResource(
                 R.string.trim_params_summary,
                 TimeFormat.format(startMs),
@@ -294,6 +302,34 @@ fun TrimScreen(
                             modifier = Modifier.weight(1f),
                         )
                     }
+
+                    // Aniq joyga o'tish. ±10 soniyalik sakrash tez, lekin
+                    // qo'pol: kerakli joyga yetish uchun o'nlab marta bosish
+                    // kerak bo'lardi. Ikkala foydalanuvchi turi ham bir xil
+                    // ishlatadigan yagona usul — vaqtni kiritib o'tish.
+                    val positionLabel = stringResource(R.string.trim_position_label)
+                    val positionText = spokenTime(state.playPositionMs)
+                    // Maqsad matni oldindan yasaladi: `spokenTime` — `@Composable`,
+                    // uni `onJump` ichida chaqirib bo'lmaydi.
+                    val jumpTargetText = spokenTime(state.jumpParts.toMillisOrNull() ?: 0L)
+                    val jumpTarget = state.jumpParts.toMillisOrNull()
+                    JumpToPosition(
+                        label = positionLabel,
+                        positionText = positionText,
+                        parts = state.jumpParts,
+                        onPartsChange = viewModel::setJump,
+                        onJump = {
+                            if (jumpTarget == null) {
+                                announce(jumpInvalid)
+                            } else {
+                                viewModel.jumpTo(jumpTarget)
+                                announce(skipMessage(jumpDone, jumpTargetText))
+                            }
+                        },
+                        jumpLabel = stringResource(R.string.trim_jump_label),
+                        enabled = !state.isBusy,
+                        isError = !state.jumpParts.isEmpty && jumpTarget == null,
+                    )
                     A11yOutlinedButton(
                         label = stringResource(R.string.trim_stop),
                         onClick = { viewModel.stopPlayback() },
@@ -416,6 +452,29 @@ fun TrimScreen(
                             modifier = Modifier.weight(1f),
                         )
                     }
+                    // O'chirilgan qismlar ichida ham aniq joyga o'tish mumkin:
+                    // tanlangan oraliq bilan bir xil imkoniyat, aks holda
+                    // «o'chirilganini eshitish» yuzaki qolardi.
+                    val removedPositionLabel = stringResource(R.string.trim_removed_position_label)
+                    val removedJumpTarget = state.removedJumpParts.toMillisOrNull()
+                    val removedJumpTargetText = spokenTime(removedJumpTarget ?: 0L)
+                    JumpToPosition(
+                        label = removedPositionLabel,
+                        positionText = spokenTime(state.playRemovedPositionMs),
+                        parts = state.removedJumpParts,
+                        onPartsChange = viewModel::setRemovedJump,
+                        onJump = {
+                            if (removedJumpTarget == null) {
+                                announce(jumpInvalid)
+                            } else {
+                                viewModel.jumpRemoved(removedJumpTarget)
+                                announce(skipMessage(jumpDone, removedJumpTargetText))
+                            }
+                        },
+                        jumpLabel = stringResource(R.string.trim_jump_label),
+                        enabled = !state.isBusy,
+                        isError = !state.removedJumpParts.isEmpty && removedJumpTarget == null,
+                    )
                     A11yOutlinedButton(
                         label = stringResource(R.string.trim_removed_stop),
                         onClick = { viewModel.stopRemovedPlayback() },

@@ -89,6 +89,12 @@ data class TrimUiState(
     val isPlaying: Boolean = false,
     val playPositionMs: Long = 0L,
     /**
+     * «Shu joyga o'tish» maydonining qiymati. Eshitish paytida kerak bo'ladi,
+     * shuning uchun alohida saqlanadi va eshitish tugagach tozalanadi —
+     * aks holda keyingi safar eski raqam turib qolardi.
+     */
+    val jumpParts: TimeParts = TimeParts(),
+    /**
      * Ijro tezligi (1.0 — o'zgarmagan). Sekinlashtirib diqqat bilan
      * eshitish uchun. Tanlov sessiya davomida saqlanadi: har yangi
      * eshitishda qaytadan tanlash kerak emas.
@@ -103,6 +109,8 @@ data class TrimUiState(
      */
     val isPlayingRemoved: Boolean = false,
     val playRemovedPositionMs: Long = 0L,
+    /** O'chirilgan qismlar uchun sakrash vaqti maydoni. */
+    val removedJumpParts: TimeParts = TimeParts(),
     /** O'chirilgan qism eshittirish uchun tayyor (bir marta tayyorlanadi). */
     val removedPreviewReady: Boolean = false,
     val canUndo: Boolean = false,
@@ -276,6 +284,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setStart(parts: TimeParts) = _state.update { it.copy(startParts = parts) }
     fun setEnd(parts: TimeParts) = _state.update { it.copy(endParts = parts) }
+    fun setJump(parts: TimeParts) = _state.update { it.copy(jumpParts = parts) }
 
     /**
      * Oxirgi fayllar ro'yxatini holatga yuklaydi.
@@ -334,7 +343,10 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     fun stopPlayback() {
         player.stop()
         stopTicker()
-        _state.update { it.copy(isPlaying = false) }
+        // Sakrash maydoni eshitish bilan birga yashaydi: keyingi eshitishda
+        // oldingi raqam turib qolsa, foydalanuvchi uni o'zi yozgan deb
+        // o'ylashi mumkin.
+        _state.update { it.copy(isPlaying = false, jumpParts = TimeParts(), playPositionMs = 0L) }
     }
 
     /**
@@ -354,6 +366,29 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(playPositionMs = position) }
     }
 
+    /**
+     * Joriy joyni tanlangan oraliq ichidagi aniq vaqtga o'tkazadi.
+     *
+     * [skipPlayback] dan farqi: u nisbiy (shu yerdan ±10 soniya), bu esa
+     * mutlaq — foydalanuvchi «2 daqiqa 30 soniya» deb yozadi va o'sha joyga
+     * tushadi. Slayder o'rnini bosadi: slayderni ekran o'quvchi bilan aniq
+     * nishonga olishning iloji yo'q, vaqtni kiritish esa ikkala foydalanuvchi
+     * uchun ham bir xil ishlaydi.
+     *
+     * Maqsad oraliqdan tashqariga chiqsa, chegaraga qisiladi — aks holda
+     * eshitish tanlovdan tashqarida davom etib, foydalanuvchi nima
+     * eshitayotganini bilmay qolardi.
+     */
+    fun jumpTo(positionMs: Long) {
+        if (!_state.value.isPlaying) return
+        val current = _state.value
+        val start = selectionStartMs(current).coerceIn(0, current.durationMs)
+        val end = selectionEndMs(current).coerceIn(start, current.durationMs)
+        val target = positionMs.coerceIn(start, end)
+        player.seekTo(target)
+        _state.update { it.copy(playPositionMs = target) }
+    }
+
     /** O'chirilgan qismlar orasida suradi (butun yig'indi bo'ylab). */
     fun skipRemovedPlayback(deltaMs: Long) {
         if (!_state.value.isPlayingRemoved) return
@@ -361,6 +396,24 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         val position = removedPlayer.skipBy(deltaMs, 0L, total)
         _state.update { it.copy(playRemovedPositionMs = position) }
     }
+
+    /**
+     * O'chirilgan qismlar yig'indisi ichida aniq vaqtga o'tadi.
+     *
+     * [jumpTo] ning o'chirilgan qismlar uchun egizagi: bu yerda ham
+     * slayder o'rniga vaqt kiritiladi. Eshitilayotgan joy uzunlikdan
+     * tashqariga chiqsa, chegaraga qisiladi.
+     */
+    fun jumpRemoved(positionMs: Long) {
+        if (!_state.value.isPlayingRemoved) return
+        val total = _state.value.removedPreviewDurationMs
+        val target = positionMs.coerceIn(0L, total)
+        removedPlayer.seekTo(target)
+        _state.update { it.copy(playRemovedPositionMs = target) }
+    }
+
+    /** O'chirilgan qismlar uchun sakrash maydonini yangilaydi. */
+    fun setRemovedJump(parts: TimeParts) = _state.update { it.copy(removedJumpParts = parts) }
 
     /**
      * Tezlikni o'zgartiradi va darhol qo'llaydi.
@@ -447,7 +500,10 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     fun stopRemovedPlayback() {
         removedPlayer.stop()
         stopRemovedTicker()
-        _state.update { it.copy(isPlayingRemoved = false) }
+        // Sakrash maydoni eshitish bilan birga yashaydi: keyingi eshitishda
+        // oldingi raqam turib qolsa, foydalanuvchi uni o'zi yozgan deb
+        // o'ylashi mumkin.
+        _state.update { it.copy(isPlayingRemoved = false, removedJumpParts = TimeParts()) }
     }
 
     /** Tanlangan oraliqni saqlaydi: oraliqdan tashqari hamma narsa olib tashlanadi. */

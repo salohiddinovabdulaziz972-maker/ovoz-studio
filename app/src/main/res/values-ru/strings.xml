@@ -187,6 +187,7 @@
     <string name="trim_pitch_high">Высокая</string>
     <string name="trim_pitch_value">Высота: %1$s.</string>
     <string name="trim_removed_skip_hint">Во время прослушивания можно перейти на 10 секунд назад или вперёд.</string>
+    <string name="trim_removed_position_label">Сейчас играет удалённая часть</string>
     <string name="pick_recent_title">Недавно открытые файлы</string>
     <string name="pick_recent_hint">Список составляется из файлов, открытых этим приложением на этом устройстве. Не нужно ходить по папкам — файл открывается одним нажатием.</string>
     <string name="pick_recent_empty">Пока пусто: выберите первый файл в «Файлах», и он появится здесь.</string>
@@ -197,6 +198,10 @@
     <string name="pick_search_none">Файл с таким именем не найден. Попробуйте часть имени.</string>
     <string name="trim_play_back_done">Переход назад к {0}.</string>
     <string name="trim_play_forward_done">Переход вперёд к {0}.</string>
+    <string name="trim_position_label">Сейчас играет на</string>
+    <string name="trim_jump_label">Перейти на это место</string>
+    <string name="trim_jump_done">Продолжается с {0}.</string>
+    <string name="trim_jump_invalid">Введите время, затем нажмите «Перейти на это место».</string>
     <string name="pick_recent_open">Открыть</string>
     <string name="pick_search_history_only">Поиск идёт по файлам, открытым в приложении. Просмотр всего устройства требует широкого разрешения, которое приложение не запрашивает.</string>
 </resources>

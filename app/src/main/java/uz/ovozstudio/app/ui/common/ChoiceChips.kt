@@ -52,9 +52,13 @@ fun A11yChoiceRow(
                 .selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            options.forEachIndexed { index, (name, selected) ->
+            // `isChosen` deb nomlandi, `selected` emas: `semantics { }` ichida
+            // `selected` — bu holat maydoni (SemanticsPropertyReceiver.selected),
+            // tashqi o'zgaruvchi emas. Bir xil nom berilsa Kotlin tashqi
+            // `val`ni ko'radi va «val qayta yozilmaydi» xatosini beradi.
+            options.forEachIndexed { index, (name, isChosen) ->
                 FilterChip(
-                    selected = selected,
+                    selected = isChosen,
                     onClick = { onSelect(index) },
                     enabled = enabled,
                     label = { Text(text = name, style = MaterialTheme.typography.bodyMedium) },
@@ -73,7 +77,7 @@ fun A11yChoiceRow(
                         .defaultMinSize(minHeight = 48.dp)
                         .semantics {
                             role = Role.RadioButton
-                            selected = selected
+                            selected = isChosen
                         },
                 )
             }

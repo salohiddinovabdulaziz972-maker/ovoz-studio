@@ -187,6 +187,7 @@
     <string name="trim_pitch_high">Баланд</string>
     <string name="trim_pitch_value">Баландлик: %1$s.</string>
     <string name="trim_removed_skip_hint">Йиғинди ичида 10 сония олдинга ёки орқага суриш мумкин.</string>
+    <string name="trim_removed_position_label">Ҳозир эшитилаётган ўчирилган қисм</string>
     <string name="pick_recent_title">Охирги очилган файллар</string>
     <string name="pick_recent_hint">Рўйхат шу қурилмада илова орқали очилган файллардан тузилади. Папка ичида юриш шарт эмас — битта босишда очилади.</string>
     <string name="pick_recent_empty">Ҳозирча бўш: биринчи файлни «Файллар» дан танланг, кейин шу ерда пайдо бўлади.</string>
@@ -197,6 +198,10 @@
     <string name="pick_search_none">Бу ном билан файл топилмади. Номнинг бир қисмини ёзиб кўринг.</string>
     <string name="trim_play_back_done">{0} га орқага сурилди.</string>
     <string name="trim_play_forward_done">{0} га олдинга сурилди.</string>
+    <string name="trim_position_label">Ҳозир эшитилаётган жой</string>
+    <string name="trim_jump_label">Шу жойга ўтиш</string>
+    <string name="trim_jump_done">{0} дан давом этмоқда.</string>
+    <string name="trim_jump_invalid">Вақтни киритинг, сўнг шу жойга ўтиш тугмасини босинг.</string>
     <string name="pick_recent_open">Очиш</string>
     <string name="pick_search_history_only">Қидирув илова орқали очилган файллар ичидан излайди. Бутун қурилмани кўриб чиқиш алоҳида кенг рухсат талаб қилади ва сўралмайди.</string>
 </resources>
