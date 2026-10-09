@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.a11yHeading
+import uz.ovozstudio.app.ui.common.rememberAnnouncer
 import uz.ovozstudio.app.util.Sharing
 
 /**
@@ -76,16 +78,22 @@ fun LogScreen(
         )
 
         if (state.loaded) {
+            val countText = if (state.entryCount == 0) {
+                stringResource(R.string.log_empty)
+            } else {
+                stringResource(
+                    R.string.log_count,
+                    state.entryCount,
+                    Formatter.formatShortFileSize(context, state.sizeBytes),
+                )
+            }
+            // Yozuvlar soni o'zgarganda (tozalash, yangilash) ko'ruvchi
+            // foydalanuvchi buni bir qarashda ko'radi. Eshitish bilan esa
+            // faqat e'lon qilinsa bilinadi.
+            val announce = rememberAnnouncer()
+            LaunchedEffect(countText) { announce(countText) }
             Text(
-                text = if (state.entryCount == 0) {
-                    stringResource(R.string.log_empty)
-                } else {
-                    stringResource(
-                        R.string.log_count,
-                        state.entryCount,
-                        Formatter.formatShortFileSize(context, state.sizeBytes),
-                    )
-                },
+                text = countText,
                 style = MaterialTheme.typography.bodyLarge,
             )
         }

@@ -24,7 +24,7 @@ name: Android
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
 #
-# Yuri (11): JumpToPosition fayliga TimeParts importi qo'shildi — oldingi yig'ish shu sababdan yiqilgan edi. Tahrir faqat yig'ishni qo'zg'atish uchun.
+# Yuri (12): vaqt maydonlari alohida o'qiladi, xato ovoz bilan e'lon qilinadi, ro'yxat o'rni va tugma sababi aytiladi, bosishda tebranish. Tahrir faqat yig'ishni qo'zg'atish uchun.
 
 on:
   workflow_dispatch:

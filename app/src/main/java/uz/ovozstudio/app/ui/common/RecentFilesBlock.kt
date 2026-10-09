@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -61,13 +62,18 @@ fun RecentFilesBlock(
         } else {
             // Har bir nom alohida tugma: ekran o'quvchi foydalanuvchisi
             // ro'yxatni bittalab yurib, kerakli faylni tanlaydi.
-            files.forEach { name ->
+            //
+            // Tugma yorlig'i — faylning O'ZI, izohi esa «ochish» + ro'yxatdagi
+            // o'rni. Ilgari yorliq «Ochish» bo'lgani uchun qaysi fayl
+            // ochilishini eshitishdan bilib bo'lmasdi.
+            val openLabel = stringResource(R.string.pick_recent_open)
+            files.forEachIndexed { index, name ->
                 A11yOutlinedButton(
                     label = name,
                     onClick = onPick,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = enabled,
-                    description = stringResource(R.string.pick_recent_open),
+                    description = "$openLabel — ${index + 1}/${files.size}",
                 )
             }
             A11yOutlinedButton(
@@ -96,13 +102,22 @@ fun RecentFilesBlock(
         )
 
         if (files.isEmpty() && query.trim().isNotEmpty()) {
+            val noneText = stringResource(R.string.pick_search_none)
+            // Qidiruv natijasi ko'ruvchiga darhol ko'rinadi, eshitish bilan
+            // esa faqat so'ralganda aytiladi — aks holda foydalanuvchi
+            // filtrlash ishlaganini bilmay qolardi.
+            val announce = rememberAnnouncer()
+            LaunchedEffect(noneText) { announce(noneText) }
             Text(
-                text = stringResource(R.string.pick_search_none),
+                text = noneText,
                 style = MaterialTheme.typography.bodyMedium,
             )
         } else if (files.isNotEmpty()) {
+            val foundText = stringResource(R.string.pick_search_found, files.size)
+            val announce = rememberAnnouncer()
+            LaunchedEffect(foundText) { announce(foundText) }
             Text(
-                text = stringResource(R.string.pick_search_found, files.size),
+                text = foundText,
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

@@ -167,6 +167,11 @@ fun PdfMergeScreen(
                 onExpandedChange = { listExpanded = it },
             ) {
                 state.items.forEachIndexed { index, item ->
+                    // Har bir tugma qaysi faylga tegishli ekanini va
+                    // ro'yxatdagi o'rnini aytadi: ko'ruvchi foydalanuvchi
+                    // buni qatorning joyidan biladi, eshitish bilan esa
+                    // faqat nom aytilsa «nechanchi fayl?» degan savol qolardi.
+                    val itemRef = "${item.name} — ${index + 1}/${state.items.size}"
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = stringResource(
@@ -179,21 +184,21 @@ fun PdfMergeScreen(
                         )
                         A11yOutlinedButton(
                             label = stringResource(R.string.pdf_merge_move_up),
-                            description = item.name,
+                            description = itemRef,
                             onClick = { viewModel.move(item.id, -1) },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isBusy && index > 0,
                         )
                         A11yOutlinedButton(
                             label = stringResource(R.string.pdf_merge_move_down),
-                            description = item.name,
+                            description = itemRef,
                             onClick = { viewModel.move(item.id, 1) },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isBusy && index < state.items.size - 1,
                         )
                         A11yOutlinedButton(
                             label = stringResource(R.string.pdf_merge_remove),
-                            description = item.name,
+                            description = itemRef,
                             onClick = { viewModel.remove(item.id) },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isBusy,
@@ -207,6 +212,11 @@ fun PdfMergeScreen(
                 onClick = { viewModel.merge() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isBusy && state.items.size >= 2,
+                // O'chiq tugma nima uchun bosilmasligini aytadi: ko'ruvchi
+                // foydalanuvchi sababni pastdagi izohdan ko'radi, eshitish
+                // bilan esa tugmaning o'zi jim qolardi.
+                description = if (state.items.size >= 2) null
+                    else stringResource(R.string.pdf_merge_need_two_hint),
             )
             if (state.items.size < 2) {
                 Text(

@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -35,8 +37,14 @@ fun A11yButton(
     description: String? = null,
     containerColor: Color = MaterialTheme.colorScheme.primary,
 ) {
+    val haptics = LocalHapticFeedback.current
+    // Barmoq bilan bosgan foydalanuvchi javobni darhol his qiladi; ekran
+    // o'quvchi foydalanuvchisi esa allaqachon ovozli javob oladi. Tepki
+    // ikkalasiga bir xil qo'shiladi — bu «qulaylik rejimi» emas, oddiy
+    // tugma xatti-harakati.
+    val wrapped = { haptics.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }
     Button(
-        onClick = onClick,
+        onClick = wrapped,
         enabled = enabled,
         modifier = modifier
             .defaultMinSize(minHeight = MinTouchTarget, minWidth = MinTouchTarget)
@@ -55,8 +63,10 @@ fun A11yOutlinedButton(
     enabled: Boolean = true,
     description: String? = null,
 ) {
+    val haptics = LocalHapticFeedback.current
+    val wrapped = { haptics.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }
     OutlinedButton(
-        onClick = onClick,
+        onClick = wrapped,
         enabled = enabled,
         modifier = modifier
             .defaultMinSize(minHeight = MinTouchTarget, minWidth = MinTouchTarget)

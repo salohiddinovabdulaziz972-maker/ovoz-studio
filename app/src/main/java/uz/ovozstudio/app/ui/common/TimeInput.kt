@@ -10,8 +10,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -80,6 +83,13 @@ fun TimeInput(
         }
 
         if (isError) {
+            // Ko'ruvchi foydalanuvchi maydonlar tagida qizarib chiqqan
+            // izohni bir qarashda ko'radi. Ekran o'quvchi foydalanuvchisi
+            // uchun rang yo'q — shuning uchun xato ovoz bilan ham e'lon
+            // qilinadi, aks holda u maydon nima uchun qabul qilmayotganini
+            // bilmay qolardi.
+            val announce = rememberAnnouncer()
+            LaunchedEffect(errorText) { announce(errorText) }
             Text(
                 text = errorText,
                 color = MaterialTheme.colorScheme.error,
@@ -99,6 +109,12 @@ private fun TimePartField(
     enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    // To'rt maydonning yorlig'i bir xil «soat / daqiqa / soniya» bo'lgani
+    // uchun ular ekran o'quvchisida bir-biridan ajralmasdi: foydalanuvchi
+    // qaysi maydonga yozayotganini eshitmasdi. Shuning uchun har bir maydon
+    // o'z nomini ham aytadi — «daqiqa, 30» kabi, yozilgan qiymat bilan
+    // birga. Ko'ruvchi foydalanuvchi buni yorliqdan bir qarashda biladi.
+    val fieldDescription = if (value.isEmpty()) suffix else "$suffix, $value"
     OutlinedTextField(
         value = value,
         onValueChange = { input ->
@@ -114,6 +130,8 @@ private fun TimePartField(
             keyboardType = KeyboardType.Number,
             imeAction = ImeAction.Next,
         ),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = fieldDescription },
     )
 }
