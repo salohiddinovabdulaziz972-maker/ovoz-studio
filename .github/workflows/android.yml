@@ -23,6 +23,10 @@ name: Android
 # Triggersiz yig'ish yuri (3): v0.5.0 — PDF birlashtirish va o'chirilgan
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
+#
+# Yuri (4): kompilyatsiya xatolari tuzatildi — TrimViewModel maydonlari,
+# PdfMergeScreen matni va uch til faylidagi kalitlar. Tahrir faqat yig'ishni
+# qo'zg'atish uchun.
 on:
   workflow_dispatch:
   push:
