@@ -1,7 +1,5 @@
 package uz.ovozstudio.app.media.format
 
-import android.content.Context
-import android.net.Uri
 import uz.ovozstudio.app.media.WorkStore
 import java.io.File
 
@@ -58,13 +56,6 @@ class AudioOpener(store: WorkStore, private val apiLevel: Int) {
      * noma'lum faylda chaqirilmasligi mumkin — chaqiruvchi bunday holda
      * aniq bo'lmagan «ishlayapti» holatini ko'rsatishi kerak.
      */
-    fun open(context: Context, uri: Uri, onProgress: (Float) -> Unit = {}): OpenResult =
-        when (val outcome = importer.import(context, uri, onProgress)) {
-            is ImportOutcome.Rejected ->
-                OpenResult.Refused(outcome.reason, displayName = importer.displayName(context, uri))
-            is ImportOutcome.Ready -> check(outcome)
-        }
-
     /**
      * Qurilmadagi haqiqiy faylni ochadi — nusxa ko'chirilmaydi.
      *
@@ -113,8 +104,6 @@ class AudioOpener(store: WorkStore, private val apiLevel: Int) {
     }
 
     /** Havoladagi faylning foydalanuvchi ko'radigan nomi. */
-    fun displayName(context: Context, uri: Uri): String = importer.displayName(context, uri)
-
     /** Ochilgan fayllarni tashlaydi. Ikkalasi bir fayl bo'lsa (WAV) — bir marta. */
     fun discard(source: File, wav: File) {
         runCatching { source.delete() }
