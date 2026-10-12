@@ -2,8 +2,6 @@ package uz.ovozstudio.app.ui.pdf
 
 import android.app.Application
 import android.content.Context
-import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -69,6 +67,8 @@ data class PdfMergeUiState(
     val savedName: String? = null,
     /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
     val savedTo: String? = null,
+    /** Saqlangan faylning yo'li — papkani ochish tugmasi uchun. */
+    val savedPath: String? = null,
     val error: PdfMergeError? = null,
     /**
      * Har bir qo'shish urinishida oshadi.
@@ -117,75 +117,72 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
     private val _state = MutableStateFlow(PdfMergeUiState())
     val state: StateFlow<PdfMergeUiState> = _state.asStateFlow()
 
-    /** Tanlangan fayllarni ro'yxatga qo'shadi (tartib: tanlangan tartibda). */
-    fun addFiles(uris: List<Uri>) {
-        if (uris.isEmpty() || _state.value.isBusy) return
+    /**
+     * Tanlangan PDF ni ro'yxatga qo'shadi.
+     *
+     * Fayl — qurilmadagi haqiqiy fayl ([File]), nusxa ko'chirilmaydi. Ilgari
+     * fayl `WorkStore` ga ko'chirilar edi va ekran yopilganda o'sha nusxa
+     * o'chib ketardi — birlashtirish o'rtasida manba yo'qolsa natija buzuq
+     * chiqardi (ekranda xato bo'lib ko'rinardi). Endi fayl o'z joyida turadi
+     * va uni hech kim o'chirmaydi; foydalanuvchi tanlagan fayli shu yerda
+     * qoladi va boshqa ilovada ham ochiladi. Papkadagi nom o'zgarmaydi,
+     * natija esa alohida fayl bo'lib saqlanadi.
+     */
+    fun addFile(file: File) {
+        if (_state.value.isBusy) return
         viewModelScope.launch {
             val context = getApplication<Application>()
             _state.update {
                 it.copy(
                     busy = PdfMergeBusy.ADDING,
                     progress = null,
-                    addingCurrent = 0,
-                    addingTotal = uris.size,
+                    addingCurrent = 1,
+                    addingTotal = 1,
                     error = null,
                     savedName = null,
                     savedTo = null,
+                    savedPath = null,
                 )
             }
 
-            var nextId = (_state.value.items.maxOfOrNull { it.id } ?: 0L) + 1
-            val accepted = mutableListOf<PdfMergeItem>()
-            val rejected = mutableListOf<PdfMergeFailure>()
-
-            for ((index, uri) in uris.withIndex()) {
-                _state.update { it.copy(addingCurrent = index + 1) }
-                val name = displayName(context, uri).ifBlank { DEFAULT_NAME }
-                val copy = store.newSourceFile("pdf")
-
-                val count = withContext(Dispatchers.IO) {
-                    runCatching {
-                        val input = context.contentResolver.openInputStream(uri)
-                            ?: throw IOException("Fayl ochilmadi")
-                        input.use { source -> copy.outputStream().use { sink -> source.copyTo(sink, COPY_BUFFER) } }
-                        PdfPageTools.pageCount(context, copy)
-                    }
-                }
-
-                val pages = count.getOrNull()
-                if (pages == null || pages <= 0) {
-                    runCatching { copy.delete() }
-                    val failure = count.exceptionOrNull()
-                    if (failure != null) ErrorLog.error(LOG_TAG_OPEN, "PDF birlashtirishga qo'shilmadi: $name", failure)
-                    rejected += PdfMergeFailure(
-                        name.substringBeforeLast('.').ifBlank { DEFAULT_NAME },
-                        reasonOf(context, failure),
-                    )
-                } else {
-                    accepted += PdfMergeItem(
-                        id = nextId++,
-                        name = name.substringBeforeLast('.').ifBlank { DEFAULT_NAME },
-                        pageCount = pages,
-                        source = copy,
-                    )
-                }
+            val name = file.name.ifBlank { DEFAULT_NAME }
+            val pages = withContext(Dispatchers.IO) {
+                runCatching { PdfPageTools.pageCount(context, file) }
             }
 
-            _state.update {
-                it.copy(
-                    items = it.items + accepted,
+            val count = pages.getOrNull()
+            val state = if (count == null || count <= 0) {
+                val failure = pages.exceptionOrNull()
+                if (failure != null) ErrorLog.error(LOG_TAG_OPEN, "PDF birlashtirishga qo'shilmadi: $name", failure)
+                _state.value.copy(
                     busy = PdfMergeBusy.NONE,
                     addingCurrent = 0,
                     addingTotal = 0,
-                    failures = rejected,
-                    revision = it.revision + 1,
+                    failures = listOf(
+                        PdfMergeFailure(
+                            name.substringBeforeLast('.').ifBlank { DEFAULT_NAME },
+                            reasonOf(context, failure),
+                        ),
+                    ),
+                )
+            } else {
+                val item = PdfMergeItem(
+                    id = (_state.value.items.maxOfOrNull { it.id } ?: 0L) + 1,
+                    name = name.substringBeforeLast('.').ifBlank { DEFAULT_NAME },
+                    pageCount = count,
+                    source = file,
+                )
+                recent.remember(item.name)
+                _state.value.copy(
+                    items = _state.value.items + item,
+                    busy = PdfMergeBusy.NONE,
+                    addingCurrent = 0,
+                    addingTotal = 0,
+                    failures = emptyList(),
+                    revision = _state.value.revision + 1,
                 )
             }
-
-            // Faqat qabul qilingan fayllar eslab qolinadi: ochilmagan fayl
-            // ro'yxatda turib, keyin yana xato bersa ro'yxat ishonchsiz
-            // bo'lib qolardi.
-            accepted.forEach { item -> recent.remember(item.name) }
+            _state.value = state
             refreshRecent()
         }
     }
@@ -332,7 +329,7 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearFailures() = _state.update { it.copy(failures = emptyList()) }
-    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null) }
+    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null, savedPath = null) }
 
     /**
      * Faylni ochish muvaffaqiyatsizligi sababini tayyor matnga o'giradi.
@@ -347,17 +344,6 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
         else -> context.getString(R.string.pdf_error_failed)
     }
 
-    private fun displayName(context: Application, uri: Uri): String {
-        val projection = arrayOf(OpenableColumns.DISPLAY_NAME)
-        context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index >= 0) return cursor.getString(index) ?: ""
-            }
-        }
-        return ""
-    }
-
     override fun onCleared() {
         // Ekran yopilganda manba nusxalari qolib ketmasligi kerak.
         // Natijalar qoldiriladi: ulashilgan fayl keyinroq ham o'qilishi mumkin.
@@ -368,7 +354,6 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
         const val SCOPE = "pdf.merge"
         const val LOG_TAG_OPEN = "pdf.merge.open"
         const val LOG_TAG_MERGE = "pdf.merge.apply"
-        const val COPY_BUFFER = 128 * 1024
         const val DEFAULT_NAME = "PDF"
         const val MERGED_NAME = "Birlashtirilgan"
         const val MERGE_SUFFIX = "-birlashtirilgan"

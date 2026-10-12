@@ -1,7 +1,6 @@
 package uz.ovozstudio.app.ui.pdf
 
 import android.text.format.Formatter
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,9 +23,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.RecentFilesBlock
-import uz.ovozstudio.app.ui.common.DocumentPicker
+import uz.ovozstudio.app.ui.common.FolderPicker
+import uz.ovozstudio.app.ui.common.SavedFileBlock
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
-import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.StatusMessage
 import uz.ovozstudio.app.ui.common.TextRow
 import uz.ovozstudio.app.ui.common.WorkProgress
@@ -35,6 +34,12 @@ import uz.ovozstudio.app.ui.common.a11yHeading
 import uz.ovozstudio.app.ui.common.rememberAnnouncer
 import uz.ovozstudio.app.util.Sharing
 import java.io.File
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import uz.ovozstudio.app.media.MediaSaver
 
 /**
  * PDF dan sahifalarni kesib olish yoki o'chirish.
@@ -50,11 +55,28 @@ fun PdfScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+
+    // Android 9 va undan pastda MediaStore'ga yozish uchun ruxsat kerak.
+    // So'rov javobidan qat'i nazar saqlashga urinamiz: rad etilsa xato
+    // jurnalga tushadi va ekranda ko'rinadi — foydalanuvchi tugmani ikkinchi
+    // marta bosib qolmasin deb, javobni kutib turmaymiz.
+    val permission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { viewModel.save() }
+
+    val saveWithPermission: () -> Unit = {
+        if (MediaSaver.needsLegacyPermission &&
+            ContextCompat.checkSelfPermission(context, WRITE_PERMISSION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permission.launch(WRITE_PERMISSION)
+        } else {
+            viewModel.save()
+        }
+    }
     val announce = rememberAnnouncer()
 
-    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenAny) { uri ->
-        if (uri != null) viewModel.open(uri)
-    }
+    // Fayl tanlash — ilovaning o'z oynasi (sabab: `FolderPicker` izohida).
+    var picking by rememberSaveable { mutableStateOf(false) }
 
     // Uzoq ish boshlanganda ovozda aytiladi: ekran o'quvchi foydalanuvchisi
     // «hech narsa bo'lmayapti» deb o'ylamasligi kerak.
@@ -105,7 +127,7 @@ fun PdfScreen(
 
         A11yButton(
             label = stringResource(if (state.isOpen) R.string.pdf_pick_other else R.string.pdf_pick),
-            onClick = { picker.launch(FileTypes.PDF) },
+            onClick = { picking = true },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )
@@ -123,7 +145,7 @@ fun PdfScreen(
                 query = state.recentQuery,
                 onQueryChange = viewModel::searchRecent,
                 onClear = viewModel::clearRecent,
-                onPick = { picker.launch(FileTypes.PDF) },
+                onPick = { picking = true },
                 enabled = !state.isBusy,
             )
         }
@@ -191,7 +213,7 @@ fun PdfScreen(
             )
             A11yButton(
                 label = stringResource(R.string.trim_save),
-                onClick = { viewModel.save() },
+                onClick = saveWithPermission,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isBusy,
             )
@@ -221,6 +243,18 @@ fun PdfScreen(
                 message = stringResource(R.string.trim_saved, name, state.savedTo ?: name),
                 onDismiss = { viewModel.clearSaved() },
             )
+            SavedFileBlock(name = name, savedPath = state.savedPath, isAudio = false)
+        }
+
+        if (picking) {
+            FolderPicker(
+                isAudio = false,
+                onPick = { file ->
+                    picking = false
+                    viewModel.open(file)
+                },
+                onCancel = { picking = false },
+            )
         }
     }
 }
@@ -238,3 +272,5 @@ private fun errorMessage(error: PdfError, token: String, pageCount: Int): String
     PdfError.FAILED -> stringResource(R.string.pdf_error_failed)
     PdfError.SAVE_FAILED -> stringResource(R.string.trim_error_save_failed)
 }
+
+private const val WRITE_PERMISSION = android.Manifest.permission.WRITE_EXTERNAL_STORAGE

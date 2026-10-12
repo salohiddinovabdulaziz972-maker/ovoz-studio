@@ -84,6 +84,11 @@ data class MergeUiState(
     val savedName: String? = null,
     /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
     val savedTo: String? = null,
+    /**
+     * Saqlangan faylning yo'li (`Music/Ovoz Studio/…`). Papkani ochish
+     * tugmasi shu yo'ldan nom oladi; [savedTo] bilan bir xil manbadan.
+     */
+    val savedPath: String? = null,
     val error: MergeError? = null,
     /**
      * Har bir qo'shish urinishida oshadi.
@@ -132,15 +137,21 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(MergeUiState())
     val state: StateFlow<MergeUiState> = _state.asStateFlow()
 
-    /** Tanlangan fayllarni ketma-ket ochib, ro'yxat oxiriga qo'shadi. */
-    fun addFiles(uris: List<Uri>) {
-        if (uris.isEmpty() || _state.value.isBusy) return
+    /**
+     * Tanlangan faylni ochib, ro'yxat oxiriga qo'shadi.
+     *
+     * Fayl — qurilmadagi haqiqiy fayl ([File]), nusxa ko'chirilmaydi. Har bir
+     * tanlov bitta fayl beradi, shuning uchun ro'yxat foydalanuvchi fayllarni
+     * birma-bir qo'shishi bilan yig'iladi va tartib o'zi saqlanadi.
+     */
+    fun addFile(file: File) {
+        if (_state.value.isBusy) return
         viewModelScope.launch {
             _state.update {
                 it.copy(
                     busy = MergeBusy.ADDING,
-                    addingCurrent = 0,
-                    addingTotal = uris.size,
+                    addingCurrent = 1,
+                    addingTotal = 1,
                     failures = emptyList(),
                     error = null,
                     result = null,
@@ -148,42 +159,36 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                     revision = it.revision + 1,
                 )
             }
-            for ((index, uri) in uris.withIndex()) {
-                _state.update { it.copy(addingCurrent = index + 1, addingFileProgress = null) }
-                val context = getApplication<Application>()
-                val outcome = withContext(Dispatchers.IO) {
-                    var lastPercent = -1
-                    runCatching {
-                        opener.open(context, uri) { fraction ->
-                            val percent = (fraction * 100).toInt()
-                            if (percent != lastPercent) {
-                                lastPercent = percent
-                                _state.update { it.copy(addingFileProgress = fraction) }
-                            }
+            _state.update { it.copy(addingFileProgress = null) }
+            val outcome = withContext(Dispatchers.IO) {
+                var lastPercent = -1
+                runCatching {
+                    opener.open(file) { fraction ->
+                        val percent = (fraction * 100).toInt()
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            _state.update { it.copy(addingFileProgress = fraction) }
                         }
                     }
                 }
-                when (val opened = outcome.getOrNull()) {
-                    is OpenResult.Opened -> accept(opened)
-                    is OpenResult.Refused -> {
-                        ErrorLog.info("merge.add", "Fayl qo'shilmadi: ${opened.reason}, format: ${opened.formatName}")
-                        addFailure(
-                            MergeFailure(
-                                fileName = opened.displayName,
-                                reason = opened.reason,
-                                formatName = opened.formatName,
-                            ),
-                        )
-                    }
-                    null -> {
-                        ErrorLog.error("merge.add", "Fayl ochishda kutilmagan xato", outcome.exceptionOrNull())
-                        addFailure(
-                            MergeFailure(
-                                fileName = opener.displayName(context, uri),
-                                reason = ImportFailure.READ_FAILED,
-                            ),
-                        )
-                    }
+            }
+            when (val opened = outcome.getOrNull()) {
+                is OpenResult.Opened -> accept(opened)
+                is OpenResult.Refused -> {
+                    ErrorLog.info("merge.add", "Fayl qo'shilmadi: ${opened.reason}, format: ${opened.formatName}")
+                    addFailure(
+                        MergeFailure(
+                            fileName = opened.displayName,
+                            reason = opened.reason,
+                            formatName = opened.formatName,
+                        ),
+                    )
+                }
+                null -> {
+                    ErrorLog.error("merge.add", "Fayl ochishda kutilmagan xato", outcome.exceptionOrNull())
+                    addFailure(
+                        MergeFailure(fileName = file.name, reason = ImportFailure.READ_FAILED),
+                    )
                 }
             }
             _state.update { it.copy(busy = MergeBusy.NONE, addingFileProgress = null) }
@@ -342,12 +347,14 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                         busy = MergeBusy.NONE,
                         savedName = result.name,
                         savedTo = outcome.display,
+                        savedPath = outcome.display,
                         error = null,
                     )
                     is MediaSaver.Result.Failed -> it.copy(
                         busy = MergeBusy.NONE,
                         savedName = null,
                         savedTo = null,
+                        savedPath = null,
                         error = MergeError.SAVE_FAILED,
                     )
                 }
@@ -357,7 +364,7 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearFailures() = _state.update { it.copy(failures = emptyList()) }
-    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null) }
+    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null, savedPath = null) }
 
     // --- yordamchi ---
 

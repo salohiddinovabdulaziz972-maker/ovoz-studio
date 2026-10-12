@@ -32,10 +32,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.content.pm.PackageManager
 import android.Manifest
 import uz.ovozstudio.app.ui.common.A11yButton
-import uz.ovozstudio.app.ui.common.DocumentPicker
+import uz.ovozstudio.app.ui.common.FolderPicker
+import uz.ovozstudio.app.ui.common.SavedFileBlock
 import uz.ovozstudio.app.ui.common.A11yChoiceRow
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
-import uz.ovozstudio.app.ui.common.FileTypes
 import uz.ovozstudio.app.ui.common.JumpToPosition
 import uz.ovozstudio.app.ui.common.KeepScreenOn
 import uz.ovozstudio.app.ui.common.ParamsGroup
@@ -75,9 +75,10 @@ fun TrimScreen(
     // qisqa bo'lsin). Kengaytirilgan holat ekran aylanganda ham saqlanadi.
     var paramsExpanded by rememberSaveable { mutableStateOf(false) }
 
-    val picker = rememberLauncherForActivityResult(DocumentPicker.OpenAudio) { uri ->
-        if (uri != null) viewModel.open(uri)
-    }
+    // Fayl tanlash — ilovaning o'z oynasi. Tizim tanlagichidan farqli o'laroq
+    // u faylni nusxalamaydi: qurilmadagi haqiqiy yo'l ishlatiladi, shuning
+    // uchun tanlangan fayl o'z joyida qoladi va keyin ham ochiladi.
+    var picking by rememberSaveable { mutableStateOf(false) }
 
     // «Saqlash» oynasi yo'q: tugma bosilishi bilan fayl qurilmaning
     // papkasiga yoziladi (bitta bosish). Fayl turi natijaga qarab o'zgaradi.
@@ -167,7 +168,7 @@ fun TrimScreen(
 
         A11yButton(
             label = stringResource(if (state.isOpen) R.string.audio_pick_other else R.string.audio_pick),
-            onClick = { picker.launch(FileTypes.AUDIO) },
+            onClick = { picking = true },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )
@@ -180,7 +181,7 @@ fun TrimScreen(
                 query = state.recentQuery,
                 onQueryChange = viewModel::searchRecent,
                 onClear = viewModel::clearRecent,
-                onPick = { picker.launch(FileTypes.AUDIO) },
+                onPick = { picking = true },
                 enabled = !state.isBusy,
             )
         }
@@ -622,6 +623,21 @@ fun TrimScreen(
             StatusMessage(
                 message = stringResource(R.string.trim_saved, name, state.savedTo ?: name),
                 onDismiss = { viewModel.clearSaved() },
+            )
+            SavedFileBlock(name = name, savedPath = state.savedPath, isAudio = true)
+        }
+
+        // Tanlash oynasi oxirida turadi: papkalar ro'yxati uzun bo'ladi va
+        // ekran o'quvchi foydalanuvchisi undan keyingi tugmalarga yetib
+        // borishi qiyinlashardi. Bu yerda esa undan keyin hech narsa yo'q.
+        if (picking) {
+            FolderPicker(
+                isAudio = true,
+                onPick = { file ->
+                    picking = false
+                    viewModel.open(file)
+                },
+                onCancel = { picking = false },
             )
         }
     }

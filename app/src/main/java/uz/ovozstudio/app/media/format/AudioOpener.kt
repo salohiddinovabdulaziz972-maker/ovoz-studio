@@ -65,6 +65,22 @@ class AudioOpener(store: WorkStore, private val apiLevel: Int) {
             is ImportOutcome.Ready -> check(outcome)
         }
 
+    /**
+     * Qurilmadagi haqiqiy faylni ochadi — nusxa ko'chirilmaydi.
+     *
+     * Nima uchun bu yo'l asosiy bo'lib qoldi. Tizim tanlagichidan kelgan
+     * havola (`content://…`) doimiy emas: nusxa vaqtinchalik papkada yashaydi
+     * va jarayon qayta ishga tushganda yo'qoladi. [FolderPicker] esa
+     * qurilmaning o'z papkasidan haqiqiy yo'lni beradi, shuning uchun fayl
+     * o'z joyida qoladi va keyin ham ochiladi.
+     */
+    fun open(file: File, onProgress: (Float) -> Unit = {}): OpenResult =
+        when (val outcome = importer.open(file, onProgress = onProgress)) {
+            is ImportOutcome.Rejected ->
+                OpenResult.Refused(outcome.reason, displayName = file.name)
+            is ImportOutcome.Ready -> check(outcome)
+        }
+
     private fun check(ready: ImportOutcome.Ready): OpenResult {
         val rate = ready.format.sampleRate
         val durationMs = if (rate <= 0) 0L else ready.frames * 1000L / rate

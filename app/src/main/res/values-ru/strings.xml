@@ -163,7 +163,7 @@
     <string name="pdf_merge_progress">Страницы копируются: %1$d из %2$d.</string>
     <string name="pdf_merge_result">Готово: %1$s — %2$d страниц (%3$s)</string>
     <string name="pdf_merge_error_need_two">Для объединения нужно не меньше двух PDF.</string>
-    <string name="pdf_merge_error_failed">Объединить PDF не удалось. Один из файлов повреждён или не хватает памяти.</string>
+    <string name="pdf_merge_error_failed">Объединить PDF не удалось. Причина записана в журнал; файлы также могут быть повреждены.</string>
     <string name="pdf_merge_error_file">%1$s: %2$s</string>
     <string name="trim_removed_section">Проверить удалённые части</string>
     <string name="trim_removed_hint">После правки послушайте, какое место удалено. В файле результата этих частей нет — они берутся из исходного файла.</string>
@@ -207,4 +207,19 @@
     <string name="trim_jump_invalid">Введите время, затем нажмите «Перейти на это место».</string>
     <string name="pick_recent_open">Открыть</string>
     <string name="pick_search_history_only">Поиск идёт по файлам, открытым в приложении. Просмотр всего устройства требует широкого разрешения, которое приложение не запрашивает.</string>
+    <string name="common_close">Закрыть</string>
+    <string name="picker_title_audio">Выберите аудиофайл</string>
+    <string name="picker_title_pdf">Выберите PDF-файл</string>
+    <string name="picker_here">%1$s. Папок: %2$d.</string>
+    <string name="picker_up">Наверх</string>
+    <string name="picker_folder">Папка: %1$s</string>
+    <string name="picker_folder_hint">Папка. Откройте двойным нажатием.</string>
+    <string name="picker_empty">В этой папке нет файлов.</string>
+    <string name="picker_loading">Загрузка…</string>
+    <string name="picker_no_access">Папка не открылась: нет разрешения на чтение.</string>
+    <string name="picker_at_top">Вы в самой верхней папке.</string>
+    <string name="result_folder_failed">Не удалось открыть папку — на устройстве не найден файловый менеджер.</string>
+    <string name="result_saved_plain">Сохранено: %1$s</string>
+    <string name="result_saved_in">Сохранено: %1$s</string>
+    <string name="result_open_folder">Открыть папку</string>
 </resources>

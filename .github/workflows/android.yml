@@ -24,7 +24,7 @@ name: Android
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
 #
-# Yuri (15): 0.6.0 — ekran o'quvchi tengligi to'liq yurib chiqildi. Tahrir faqat yig'ishni qo'zg'atish uchun.
+# Yuri (16): 0.7.0 — fayl tanlash ilovaning o'zida, manba fayllar haqiqiy yo'l bilan, PDF birlashtirish xatosi tuzatildi.
 
 on:
   workflow_dispatch:

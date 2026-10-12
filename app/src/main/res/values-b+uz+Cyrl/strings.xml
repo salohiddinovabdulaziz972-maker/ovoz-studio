@@ -163,7 +163,7 @@
     <string name="pdf_merge_progress">Саҳифалар кўчирилмоқда: %1$d дан %2$d.</string>
     <string name="pdf_merge_result">Тайёр: %1$s — %2$d та саҳифа (%3$s)</string>
     <string name="pdf_merge_error_need_two">Бирлаштириш учун камида иккита PDF керак.</string>
-    <string name="pdf_merge_error_failed">PDF ларни бирлаштириб бўлмади. Файллардан бири бузуқ ёки хотирада жой етмаяпти.</string>
+    <string name="pdf_merge_error_failed">PDF ларни бирлаштириб бўлмади. Сабаб журналга ёзилди; файллар бузуқ бўлиши ҳам мумкин.</string>
     <string name="pdf_merge_error_file">%1$s: %2$s</string>
     <string name="trim_removed_section">Ўчирилган қисмларни текшириш</string>
     <string name="trim_removed_hint">Таҳрирдан кейин қайси жой ўчганини қулоқ солиб текширинг. Бу қисмлар натижа файлида йўқ — улар асл файлдан олинади.</string>
@@ -207,4 +207,19 @@
     <string name="trim_jump_invalid">Вақтни киритинг, сўнг шу жойга ўтиш тугмасини босинг.</string>
     <string name="pick_recent_open">Очиш</string>
     <string name="pick_search_history_only">Қидирув илова орқали очилган файллар ичидан излайди. Бутун қурилмани кўриб чиқиш алоҳида кенг рухсат талаб қилади ва сўралмайди.</string>
+    <string name="common_close">Ёпиш</string>
+    <string name="picker_title_audio">Аудио файлни танланг</string>
+    <string name="picker_title_pdf">PDF файлни танланг</string>
+    <string name="picker_here">%1$s. %2$d та папка.</string>
+    <string name="picker_up">Юқорига</string>
+    <string name="picker_folder">Папка: %1$s</string>
+    <string name="picker_folder_hint">Папка. Очиш учун икки марта босинг.</string>
+    <string name="picker_empty">Бу папкада файл йўқ.</string>
+    <string name="picker_loading">Ўқилмоқда…</string>
+    <string name="picker_no_access">Папка очилмади: ўқишга рухсат берилмаган.</string>
+    <string name="picker_at_top">Энг юқори папкадасиз.</string>
+    <string name="result_folder_failed">Папкани очиб бўлмади — қурилмада файл бошқарувчиси топилмади.</string>
+    <string name="result_saved_plain">Сакланди: %1$s</string>
+    <string name="result_saved_in">Сақланди: %1$s</string>
+    <string name="result_open_folder">Папкани очиш</string>
 </resources>

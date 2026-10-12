@@ -163,7 +163,7 @@
     <string name="pdf_merge_progress">Copying pages: %1$d of %2$d.</string>
     <string name="pdf_merge_result">Ready: %1$s — %2$d pages (%3$s)</string>
     <string name="pdf_merge_error_need_two">Merging needs at least two PDF files.</string>
-    <string name="pdf_merge_error_failed">The PDF files could not be merged. One of them is damaged or there is not enough memory.</string>
+    <string name="pdf_merge_error_failed">The PDF files could not be merged. The reason was written to the log; the files may also be damaged.</string>
     <string name="pdf_merge_error_file">%1$s: %2$s</string>
     <string name="trim_removed_section">Check the removed parts</string>
     <string name="trim_removed_hint">After editing, listen to which part was removed. These parts are not in the result file — they are taken from the original file.</string>
@@ -207,4 +207,19 @@
     <string name="trim_jump_invalid">Enter a time, then press “Go to this position”.</string>
     <string name="pick_recent_open">Open</string>
     <string name="pick_search_history_only">Search looks through files opened in this app. Scanning the whole device needs a broad permission, which this app does not request.</string>
+    <string name="common_close">Close</string>
+    <string name="picker_title_audio">Choose an audio file</string>
+    <string name="picker_title_pdf">Choose a PDF file</string>
+    <string name="picker_here">%1$s. %2$d folders.</string>
+    <string name="picker_up">Up</string>
+    <string name="picker_folder">Folder: %1$s</string>
+    <string name="picker_folder_hint">Folder. Double-tap to open.</string>
+    <string name="picker_empty">There are no files in this folder.</string>
+    <string name="picker_loading">Loading…</string>
+    <string name="picker_no_access">The folder could not be opened: read permission was not granted.</string>
+    <string name="picker_at_top">You are in the topmost folder.</string>
+    <string name="result_folder_failed">Could not open the folder — no file manager found on this device.</string>
+    <string name="result_saved_plain">Saved: %1$s</string>
+    <string name="result_saved_in">Saved: %1$s</string>
+    <string name="result_open_folder">Open the folder</string>
 </resources>

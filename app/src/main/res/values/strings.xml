@@ -171,7 +171,7 @@
     <string name="pdf_merge_progress">Sahifalar ko\'chirilmoqda: %1$d dan %2$d.</string>
     <string name="pdf_merge_result">Tayyor: %1$s — %2$d ta sahifa (%3$s)</string>
     <string name="pdf_merge_error_need_two">Birlashtirish uchun kamida ikkita PDF kerak.</string>
-    <string name="pdf_merge_error_failed">PDF larni birlashtirib bo\'lmadi. Fayllardan biri buzuq yoki xotirada joy yetmayotgan bo\'lishi mumkin.</string>
+    <string name="pdf_merge_error_failed">PDF larni birlashtirib bo\'lmadi. Sabab jurnalga yozildi; fayllar buzuq bo\'lishi ham mumkin.</string>
     <string name="pdf_merge_error_file">%1$s: %2$s</string>
     <!-- v0.6.0: o'ynatgich boshqaruvi va fayl tanlash qulayliklari -->
     <string name="trim_play_back">10 soniya orqaga</string>
@@ -207,4 +207,19 @@
     <string name="trim_jump_invalid">Vaqtni kiriting, so\'ng shu joyga o\'tish tugmasini bosing.</string>
     <string name="pick_recent_open">Ochish</string>
     <string name="pick_search_history_only">Qidiruv ilova orqali ochilgan fayllar ichidan izlaydi. Butun qurilmani ko\'rib chiqish alohida keng ruxsat talab qiladi va so\'ralmaydi.</string>
+    <string name="common_close">Yopish</string>
+    <string name="picker_title_audio">Audio faylni tanlang</string>
+    <string name="picker_title_pdf">PDF faylni tanlang</string>
+    <string name="picker_here">%1$s. %2$d ta papka.</string>
+    <string name="picker_up">Yuqoriga</string>
+    <string name="picker_folder">Papka: %1$s</string>
+    <string name="picker_folder_hint">Papka. Ochish uchun ikki marta bosing.</string>
+    <string name="picker_empty">Bu papkada fayl yo\'q.</string>
+    <string name="picker_loading">O\'qilmoqda…</string>
+    <string name="picker_no_access">Papka ochilmadi: o\'qishga ruxsat berilmagan.</string>
+    <string name="picker_at_top">Eng yuqori papkadasiz.</string>
+    <string name="result_folder_failed">Papkani ochib bo\'lmadi — qurilmada fayl boshqaruvchisi topilmadi.</string>
+    <string name="result_saved_plain">Saqlandi: %1$s</string>
+    <string name="result_saved_in">Saqlandi: %1$s</string>
+    <string name="result_open_folder">Papkani ochish</string>
 </resources>

@@ -135,6 +135,12 @@ data class TrimUiState(
     val savedName: String? = null,
     /** Saqlangan faylning qurilmadagi manzili — ovozda aytiladi. */
     val savedTo: String? = null,
+    /**
+     * Saqlangan faylning to'liq yo'li. [savedTo] — foydalanuvchiga
+     * ko'rsatiladigan nom, bu esa papkani ochish uchun kerak bo'lgan
+     * haqiqiy yo'l.
+     */
+    val savedPath: String? = null,
     val error: TrimError? = null,
     /**
      * Tahrir natijasida o'chirilgan (yoki kesib olingan) oraliqlar bormi.
@@ -211,8 +217,15 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
     private val currentFile: File?
         get() = history.getOrNull(historyIndex)
 
-    /** Tanlangan faylni ochadi. Eski ish (bo'lsa) yangi fayl muvaffaqiyatli ochilgandan keyin tashlanadi. */
-    fun open(uri: Uri) {
+    /**
+     * Tanlangan faylni ochadi. Eski ish (bo'lsa) yangi fayl muvaffaqiyatli
+     * ochilgandan keyin tashlanadi.
+     *
+     * Fayl — qurilmadagi haqiqiy fayl ([File]): nusxa ko'chirilmaydi, shuning
+     * uchun tanlangan fayl o'z joyida qoladi. `content://` yo'li ilgari
+     * ishlatilgan va vaqtinchalik nusxa yo'qolib qolgan hollarni bergan.
+     */
+    fun open(file: File) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
@@ -236,7 +249,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             val outcome = withContext(Dispatchers.IO) {
                 var lastPercent = -1
                 runCatching {
-                    opener.open(getApplication<Application>(), uri) { fraction ->
+                    opener.open(file) { fraction ->
                         // Har foizda bir marta yangilanadi, har bir dekodlangan
                         // bo'lakda emas — aks holda holat oqimi soniyasiga
                         // yuzlab marta chiqardi.
@@ -315,7 +328,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearOpenFailure() = _state.update { it.copy(openFailure = null, openFailureFormat = "") }
-    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null) }
+    fun clearSaved() = _state.update { it.copy(savedName = null, savedTo = null, savedPath = null) }
 
     /** Tanlangan oraliqning boshlanishi (ms). Kiritilmagan bo'lsa — 0. */
     fun selectionStartMs(state: TrimUiState = _state.value): Long =
@@ -670,9 +683,21 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             _state.update {
                 when (outcome) {
                     is MediaSaver.Result.Saved ->
-                        it.copy(busy = TrimBusy.NONE, savedName = result.name, savedTo = outcome.display, error = null)
+                        it.copy(
+                            busy = TrimBusy.NONE,
+                            savedName = result.name,
+                            savedTo = outcome.display,
+                            savedPath = outcome.display,
+                            error = null,
+                        )
                     is MediaSaver.Result.Failed ->
-                        it.copy(busy = TrimBusy.NONE, savedName = null, savedTo = null, error = TrimError.SAVE_FAILED)
+                        it.copy(
+                            busy = TrimBusy.NONE,
+                            savedName = null,
+                            savedTo = null,
+                            savedPath = null,
+                            error = TrimError.SAVE_FAILED,
+                        )
                 }
             }
         }
