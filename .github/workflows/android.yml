@@ -24,7 +24,7 @@ name: Android
 # qismlarni eshitish. Kod push qilindi, ish oqimi shu tahrir bilan
 # qo'zg'atiladi.
 #
-# Yuri (17): 0.7.0 — fayl tanlash ilovaning o'zida, manba fayllar haqiqiy yo'l bilan, PDF birlashtirish xatosi tuzatildi.
+# Yuri (18): 0.7.0 — fayl tanlash ilovaning o'zida, manba fayllar haqiqiy yo'l bilan, PDF birlashtirish xatosi tuzatildi.
 
 on:
   workflow_dispatch:

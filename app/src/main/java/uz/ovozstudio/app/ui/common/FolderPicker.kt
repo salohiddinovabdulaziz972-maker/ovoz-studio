@@ -80,13 +80,6 @@ fun FolderPicker(
     val noAccessMessage = stringResource(R.string.picker_no_access)
     val topMessage = stringResource(R.string.picker_at_top)
 
-    // Ruxsat berilmagan bo'lsa: tizim so'rovi, keyin qayta o'qish.
-    val permission = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) {
-        scope.launch { reload(folder) }
-    }
-
     // Ro'yxat fon oqimida o'qiladi: papkada minglab fayl bo'lishi mumkin va
     // asosiy oqimda o'qish ekranni qotirib qo'yardi.
     suspend fun reload(target: File) {
@@ -116,6 +109,13 @@ fun FolderPicker(
         } else {
             announce(topMessage)
         }
+    }
+
+    // Ruxsat berilmagan bo'lsa: tizim so'rovi, keyin qayta o'qish.
+    val permission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        scope.launch { reload(folder) }
     }
 
     // Har ochilishda amaldagi holatdan boshlanadi: tugma bosilganda
