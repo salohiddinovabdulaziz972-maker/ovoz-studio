@@ -45,7 +45,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import uz.ovozstudio.app.media.MediaSaver
+import uz.ovozstudio.app.util.MediaSaver
 
 /**
  * Bir nechta audio faylni ketma-ket birlashtirish.

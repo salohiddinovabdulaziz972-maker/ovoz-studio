@@ -73,6 +73,13 @@ fun FolderPicker(
     var entries by remember(isAudio) { mutableStateOf<List<DeviceFiles.Entry>>(emptyList()) }
     var isLoading by remember(isAudio) { mutableStateOf(true) }
 
+    // Matnlar `reload` dan oldin hisoblanadi: `stringResource` faqat
+    // @Composable kontekstda chaqiriladi, `reload` esa oddiy funksiya.
+    val busyMessage = stringResource(R.string.picker_loading)
+    val emptyMessage = stringResource(R.string.picker_empty)
+    val noAccessMessage = stringResource(R.string.picker_no_access)
+    val topMessage = stringResource(R.string.picker_at_top)
+
     // Ruxsat berilmagan bo'lsa: tizim so'rovi, keyin qayta o'qish.
     val permission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -82,7 +89,7 @@ fun FolderPicker(
 
     // Ro'yxat fon oqimida o'qiladi: papkada minglab fayl bo'lishi mumkin va
     // asosiy oqimda o'qish ekranni qotirib qo'yardi.
-    val reload = suspend fun(target: File) {
+    suspend fun reload(target: File) {
         folder = target
         isLoading = true
         entries = read(context, target, announce)
@@ -107,7 +114,7 @@ fun FolderPicker(
         if (parent != null && folder != root) {
             scope.launch { reload(parent) }
         } else {
-            announce(topText)
+            announce(topMessage)
         }
     }
 
@@ -121,11 +128,6 @@ fun FolderPicker(
             reload(root)
         }
     }
-
-    val busyText = stringResource(R.string.picker_loading)
-    val emptyText = stringResource(R.string.picker_empty)
-    val noAccessText = stringResource(R.string.picker_no_access)
-    val topText = stringResource(R.string.picker_at_top)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -145,12 +147,12 @@ fun FolderPicker(
         )
 
         if (!DeviceFiles.hasAccess(context, isAudio) && !isLoading) {
-            Text(text = noAccessText, style = MaterialTheme.typography.bodyMedium)
+            Text(text = noAccessMessage, style = MaterialTheme.typography.bodyMedium)
         } else if (isLoading) {
-            Text(text = busyText, style = MaterialTheme.typography.bodyMedium)
+            Text(text = busyMessage, style = MaterialTheme.typography.bodyMedium)
         } else {
             if (entries.isEmpty()) {
-                Text(text = emptyText, style = MaterialTheme.typography.bodyMedium)
+                Text(text = emptyMessage, style = MaterialTheme.typography.bodyMedium)
             }
             // Ro'yxat adapteri `remember` ichida saqlanadi: `update` har
             // qayta chizishda chaqiriladi va har safar yangi adapter yasalsa,

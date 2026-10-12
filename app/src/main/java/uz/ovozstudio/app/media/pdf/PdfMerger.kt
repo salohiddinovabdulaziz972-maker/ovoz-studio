@@ -38,44 +38,56 @@ object PdfMerger {
 
         var expectedFile = false
 
-        try {
-            // Barcha manbalar natija yozilgunga qadar OCHIQ turishi shart.
-            //
-            // Ilgari har bir manba o'z blokining oxirida yopilar edi, natija
-            // esa eng oxirida saqlanardi. Kutubxona sahifa mazmunini aynan
-            // saqlash paytida manba hujjatdan o'qiydi — yopilgan hujjatdan
-            // o'qish esa «COSStream has been closed» xatosini beradi. Bu
-            // xato aynan shu ilovada takrorlangan (0.6.0, Samsung SM-A716S).
-            // Shuning uchun hujjatlar ro'yxatda saqlanadi va saqlashdan keyin
-            // birgalikda yopiladi; xotira rejimi vaqtinchalik fayl bo'lgani
-            // uchun ular diskda turadi, xotirani ko'paytirmaydi.
-            val opened = ArrayList<PDDocument>(sources.size)
+        // Natija hujjati butun ish davomida ochiq turadi: `importPage` sahifa
+        // mazmunini saqlash paytida manbadan o'qiydi, shuning uchun manbalar
+        // ham, natija ham bir vaqtda ochiq bo'lishi kerak.
+        PDDocument().use { output ->
             try {
-                var done = 0
-                for (source in sources) {
-                    val document = PdfPageTools.openSource(context, source.file)
-                    opened += document
-                    val total = document.getNumberOfPages()
-                    PdfPageTools.requireAssemblyAllowed(document)
-                    for (number in source.pages) {
-                        if (number < 1 || number > total) {
-                            throw IOException("Sahifa hujjatdan tashqarida: $number")
+                // Barcha manbalar natija yozilgunga qadar OCHIQ turishi shart.
+                //
+                // Ilgari har bir manba o'z blokining oxirida yopilar edi, natija
+                // esa eng oxirida saqlanardi. Kutubxona sahifa mazmunini aynan
+                // saqlash paytida manba hujjatdan o'qiydi — yopilgan hujjatdan
+                // o'qish esa «COSStream has been closed» xatosini beradi. Bu
+                // xato aynan shu ilovada takrorlangan (0.6.0, Samsung SM-A716S).
+                // Shuning uchun hujjatlar ro'yxatda saqlanadi va saqlashdan keyin
+                // birgalikda yopiladi; xotira rejimi vaqtinchalik fayl bo'lgani
+                // uchun ular diskda turadi, xotirani ko'paytirmaydi.
+                val opened = ArrayList<PDDocument>(sources.size)
+                try {
+                    var done = 0
+                    for (source in sources) {
+                        val document = PdfPageTools.openSource(context, source.file)
+                        opened += document
+                        val total = document.getNumberOfPages()
+                        PdfPageTools.requireAssemblyAllowed(document)
+                        for (number in source.pages) {
+                            if (number < 1 || number > total) {
+                                throw IOException("Sahifa hujjatdan tashqarida: $number")
+                            }
+                            val imported = output.importPage(document.getPage(number - 1))
+                            PdfPageTools.detach(imported)
+                            onProgress(++done, expected)
                         }
-                        val imported = output.importPage(document.getPage(number - 1))
-                        PdfPageTools.detach(imported)
-                        onProgress(++done, expected)
+                    }
+
+                    // Manbalar shu yerda hali ham ochiq — saqlash xavfsiz.
+                    output.save(dest)
+                    expectedFile = true
+                } finally {
+                    // Xato bo'lsa ham hamma hujjat yopiladi: ochiq qolgan hujjat
+                    // vaqtinchalik faylini ushlab turadi va joy egallaydi.
+                    for (document in opened) {
+                        runCatching { document.close() }
                     }
                 }
-
-                // Manbalar shu yerda hali ham ochiq — saqlash xavfsiz.
-                output.save(dest)
-                expectedFile = true
-            } finally {
-                // Xato bo'lsa ham hamma hujjat yopiladi: ochiq qolgan hujjat
-                // vaqtinchalik faylini ushlab turadi va joy egallaydi.
-                for (document in opened) {
-                    runCatching { document.close() }
-                }
+            } catch (error: IOException) {
+                // Chala natija qoldirilmaydi — lekin butun fayl ham o'chirilmaydi.
+                // Istisno saqlashdan KEYIN (tekshiruvda) chiqqan bo'lsa, fayl
+                // to'liq yozilgan: uni o'chirish foydalanuvchining ishini yo'q
+                // qilardi.
+                if (!expectedFile) runCatching { dest.delete() }
+                throw error
             }
 
             // Yozilgan fayl qayta ochiladi: sahifalar soni kutilganidek
@@ -84,13 +96,6 @@ object PdfMerger {
             if (actual != expected) {
                 throw IOException("Natija tekshiruvdan o'tmadi: $actual sahifa, $expected kutilgan")
             }
-        } catch (error: IOException) {
-            // Chala natija qoldirilmaydi — lekin butun fayl ham o'chirilmaydi.
-            // Istisno saqlashdan KEYIN (tekshiruvda) chiqqan bo'lsa, fayl
-            // to'liq yozilgan: uni o'chirish foydalanuvchining ishini yo'q
-            // qilardi.
-            if (!expectedFile) runCatching { dest.delete() }
-            throw error
         }
     }
 }
