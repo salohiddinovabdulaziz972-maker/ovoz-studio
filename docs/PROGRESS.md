@@ -203,3 +203,62 @@ tizim «Saqlash» oynasi.
 - Eski `.doc` (OLE) o'quvchisi.
 - Qurilmada sinov: uzun MP3 (1 soat), 300 sahifali skaner PDF, TalkBack bilan yurish.
 - PDF da xatcho'plarni saqlash (hozir yangi hujjatga ko'chirish xatcho'plarni tashlaydi).
+
+## 0.7.1 — kod tekshiruvi va tuzatishlar (2026-10)
+
+0.7.0 kodi boshdan oxirigacha o'qib chiqildi. Eng og'ir topilmalar va tuzatishlar:
+
+### Ma'lumot yo'qolishi (eng muhimi)
+- Fayl endi qurilmadagi **haqiqiy yo'l** bilan ochiladi (nusxasiz), lekin tozalash
+  kodlari uni hali ham «ilovaning vaqtinchalik fayli» deb o'chirardi:
+  `AudioOpener.discard` (format yozilmaydigan bo'lsa), `MergeViewModel.remove`,
+  `TrimViewModel.startSession` (keyingi fayl ochilganda), `PdfMergeViewModel.remove`.
+  Tuzatish: `WorkStore.owns/deleteIfOwned` — o'chirish faqat ilovaning kesh
+  papkasidagi fayllarga ruxsat etiladi. Tekshiruv `FilePaths.isInside` da
+  (`..` va qo'shni papka holatlari `FilePathsTest` da).
+
+### Fayl tanlash
+- Manifestda o'qish ruxsati e'lon qilinmagan edi, shuning uchun ilova ichidagi
+  ro'yxat hech qayerda ishlamasdi (Android 13+ da kod «ruxsat kerak emas» deb
+  yanglishgan edi). Qo'shildi: `READ_MEDIA_AUDIO`, `READ_EXTERNAL_STORAGE` (≤32).
+- Android 11+ da boshqa ilovalar yaratgan **PDF** larni hech qanday ruxsat bilan
+  ko'rib bo'lmaydi: PDF ekranlari tizim tanlagichiga (`OpenDocumentAt`) o'tkazildi.
+- Tizim tanlagichi audio uchun `Music`, PDF uchun `Documents` papkasidan ochiladi
+  (`EXTRA_INITIAL_URI`); audio ekranlarida u ikkinchi tugma.
+- Ro'yxat oynasi (`ListView`) aylanadigan ustun ichida bir qator balandligida
+  o'lchanardi — balandlik aniq berildi; har qayta chizishda ro'yxat tepaga
+  qaytishi (adapterni qayta berish) olib tashlandi.
+
+### Boshqa xatolar
+- `FolderOpener`: papka manzili ikki marta kodlanardi (`Ovoz%2520Studio`).
+- `MediaSaver`: Android 9 va pastda saqlash ishlamasdi (`DATA` yo'q) — alohida yo'l.
+- `MediaCodecEncoder`: kodlovchi 64 KB dan katta bufer bersa yiqilardi; tugash
+  belgisi bufer topilmasa yuborilmay, fayl oxiri kesilardi.
+- `AndroidAudioDecoder`: dekoder fayl o'rtasida yiqilsa, qisqargan audio jimgina
+  «to'liq» deb qabul qilinardi; format o'zgarganda kadrlar hisobi buzilardi.
+- `Mp3Encoder`: chiqish buferi qat'iy 16 KB (LAME talabi 1,25·n + 7200).
+- `WavWriter`: yozish masshtabi (2^(n−1) − 1) o'qishnikidan (2^(n−1)) farq qilardi —
+  tegilmagan namunalar har tahrirda bir birlikka o'zgarardi; WAV chegarasi 2 GB
+  edi, endi 4 GB (uzun audio kitob dekodlanganda fayl o'chib ketardi).
+- Jurnalga foydalanuvchi fayllarining nomlari tushardi (hujjat esa «yozilmaydi»
+  deydi) — nomlar olib tashlandi.
+- README/SECURITY eskirgan edi (0.4.0, mavjud bo'lmagan o'qish va audio-kitob,
+  «hech qanday ruxsat yo'q») — yangilandi.
+
+### Tekshiruv holati (halol)
+Bu muhitda Kotlin kompilyatori, Gradle va Android SDK **yo'q edi**: kod
+**yig'ilmadi** va testlar **ishga tushirilmadi**. Bajarilgani: til fayllari
+(`bin/verify-locales.py`: 219 kalit × 4 til — OK), barcha manba fayllarida qavs
+balansi (Kotlin satr/izoh/shablonlarini hisobga oluvchi tahlilchi bilan), import va
+imzolarni qo'lda solishtirish. Yangi sinovlar: `FilePathsTest`, `WavFileTest`
+(float orqali bayt-bayt), `Mp3EncoderTest` (katta bo'lak) — ular ham ishga tushmagan.
+
+**Birinchi ish:** CI'da `gradle testDebugUnitTest` va `assembleDebug`. Qurilmada
+tekshirilishi kerak: ruxsat oynasi (Android 13), tizim tanlagichining `Music` /
+`Documents` dan ochilishi (Samsung'da), asl fayl joyida qolishi, papkani ochish tugmasi.
+
+### Hali tegilmagan
+- `media/doc/` (hujjat o'quvchilari, ~100 KB) ekransiz — foydalanuvchi qarori kerak.
+- `Resampler` sekin (har kadr uchun filtr); `WavPcmReader` 4096 kadrlik bo'lakda
+  o'qiydi (65 536 ga oshirish tezlikni deyarli o'zgartirmaydi).
+- MP3 da LAME'ning «Info» sarlavhasi to'ldirilmaydi (birinchi kadr bo'sh qoladi).

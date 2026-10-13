@@ -1,5 +1,7 @@
 package uz.ovozstudio.app.media.format
 
+import android.content.Context
+import android.net.Uri
 import uz.ovozstudio.app.media.WorkStore
 import java.io.File
 
@@ -47,17 +49,19 @@ sealed interface OpenResult {
  *
  * Faqat fon oqimidan chaqiriladi: ichida fayl nusxalash va dekodlash bor.
  */
-class AudioOpener(store: WorkStore, private val apiLevel: Int) {
+class AudioOpener(private val store: WorkStore, private val apiLevel: Int) {
 
     private val importer = AndroidAudioImporter(store)
 
     /**
+     * Qurilmadagi haqiqiy faylni ochadi — nusxa ko'chirilmaydi.
+     *
      * [onProgress] 0…1: WAV manbada (qayta kodlash yo'q) va uzunligi
      * noma'lum faylda chaqirilmasligi mumkin — chaqiruvchi bunday holda
      * aniq bo'lmagan «ishlayapti» holatini ko'rsatishi kerak.
-     */
-    /**
-     * Qurilmadagi haqiqiy faylni ochadi — nusxa ko'chirilmaydi.
+     *
+     * Muhim: bunday fayl foydalanuvchiniki, ilovaniki emas — [discard] uni
+     * hech qachon o'chirmaydi.
      *
      * Nima uchun bu yo'l asosiy bo'lib qoldi. Tizim tanlagichidan kelgan
      * havola (`content://…`) doimiy emas: nusxa vaqtinchalik papkada yashaydi
@@ -71,6 +75,21 @@ class AudioOpener(store: WorkStore, private val apiLevel: Int) {
                 OpenResult.Refused(outcome.reason, displayName = file.name)
             is ImportOutcome.Ready -> check(outcome)
         }
+
+    /**
+     * Tizim tanlagichidan kelgan faylni ochadi: avval ilovaning ish papkasiga
+     * nusxalanadi (havola doimiy emas), keyin nusxa ochiladi. Nusxa ilovaniki,
+     * shuning uchun uni o'chirish xavfsiz.
+     */
+    fun open(context: Context, uri: Uri, onProgress: (Float) -> Unit = {}): OpenResult =
+        when (val outcome = importer.`import`(context, uri, onProgress)) {
+            is ImportOutcome.Rejected ->
+                OpenResult.Refused(outcome.reason, displayName = importer.displayName(context, uri))
+            is ImportOutcome.Ready -> check(outcome)
+        }
+
+    /** Havoladagi faylning foydalanuvchi ko'radigan nomi. */
+    fun displayName(context: Context, uri: Uri): String = importer.displayName(context, uri)
 
     private fun check(ready: ImportOutcome.Ready): OpenResult {
         val rate = ready.format.sampleRate
@@ -103,11 +122,16 @@ class AudioOpener(store: WorkStore, private val apiLevel: Int) {
         )
     }
 
-    /** Havoladagi faylning foydalanuvchi ko'radigan nomi. */
-    /** Ochilgan fayllarni tashlaydi. Ikkalasi bir fayl bo'lsa (WAV) — bir marta. */
+    /**
+     * Ochilgan fayllarni tashlaydi. Ikkalasi bir fayl bo'lsa (WAV) — bir marta.
+     *
+     * **Faqat ilovaning o'z vaqtinchalik fayllari o'chadi.** Tanlagichdan
+     * nusxasiz ochilgan haqiqiy fayl (foydalanuvchining musiqasi, yozuvi)
+     * joyida qoladi — oldingi versiyada u shu yerda o'chib ketardi.
+     */
     fun discard(source: File, wav: File) {
-        runCatching { source.delete() }
-        if (wav.absolutePath != source.absolutePath) runCatching { wav.delete() }
+        store.deleteIfOwned(source)
+        if (wav.absolutePath != source.absolutePath) store.deleteIfOwned(wav)
     }
 
     private fun discard(ready: ImportOutcome.Ready) = discard(ready.source, ready.wav)

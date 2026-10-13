@@ -14,6 +14,13 @@ import kotlin.math.roundToInt
  * Kirish har doim float (−1.0 … 1.0) — shunda 16 va 24-bit chiqishni bir xil
  * kod bilan berish mumkin, va yozib olish paytida aniqlik yo'qolmaydi.
  *
+ * Masshtab o'qish tomoni bilan AYNAN bir xil: butun son `2^(n−1)` ga bo'linib
+ * floatga o'tadi, qaytishda shunga ko'paytiriladi va chegaraga qisiladi.
+ * Ilgari yozuvchi `2^(n−1) − 1` ga ko'paytirardi (o'qish esa `2^(n−1)` ga
+ * bo'lardi): har bir kesish yoki o'chirish bosqichi namunalarni bir birlik
+ * pasaytirib, ularni asldan farqlab qo'yardi. Endi tegilmagan namunalar
+ * float orqali o'tgach ham bayt-bayt o'zgarmaydi.
+ *
  * WAV sarlavhasidagi o'lchamlar fayl yopilganda to'ldiriladi: yozish paytida
  * umumiy hajm hali noma'lum.
  */
@@ -68,14 +75,16 @@ class WavWriter(
         when (bitDepth) {
             BitDepth.BIT_16 -> {
                 for (i in 0 until sampleCount) {
-                    val value = (samples[i].coerceIn(-1f, 1f) * SHORT_MAX).roundToInt()
+                    val value = (samples[i].coerceIn(-1f, 1f) * SHORT_SCALE).roundToInt()
+                        .coerceIn(-SHORT_LIMIT, SHORT_LIMIT - 1)
                     buffer[offset++] = (value and 0xFF).toByte()
                     buffer[offset++] = ((value shr 8) and 0xFF).toByte()
                 }
             }
             BitDepth.BIT_24 -> {
                 for (i in 0 until sampleCount) {
-                    val value = (samples[i].coerceIn(-1f, 1f) * INT24_MAX).roundToInt()
+                    val value = (samples[i].coerceIn(-1f, 1f) * INT24_SCALE).roundToInt()
+                        .coerceIn(-INT24_LIMIT, INT24_LIMIT - 1)
                     buffer[offset++] = (value and 0xFF).toByte()
                     buffer[offset++] = ((value shr 8) and 0xFF).toByte()
                     buffer[offset++] = ((value shr 16) and 0xFF).toByte()
@@ -142,7 +151,7 @@ class WavWriter(
                 // Jimgina qoldirmasdan o'chiramiz va sababini yozamiz.
                 ErrorLog.error(
                     "wav.yozish",
-                    "Natija 4 GB dan oshdi, sarlavhani yozib bo'lmadi: ${file.name}",
+                    "Natija 4 GB dan oshdi, sarlavhani yozib bo'lmadi",
                 )
                 runCatching { file.delete() }
             }
@@ -174,10 +183,13 @@ class WavWriter(
      * `false` — hajm 4 GB dan oshdi, sarlavhaga sig'maydi. Bunday fayl
      * nol o'lchamli sarlavha bilan qolib, ochilmaydi; chaqiruvchi uni
      * saqlamasligi kerak.
+     *
+     * 2 GB dan katta hajm `toInt()` da manfiy ko'rinadi, lekin bayt shakli
+     * ishorasiz son bilan bir xil — sarlavhaga aynan shu yoziladi.
      */
     private fun patchHeader(): Boolean {
         val dataSize = framesWritten * bytesPerFrame
-        if (dataSize > Int.MAX_VALUE) return false
+        if (dataSize > MAX_DATA_BYTES) return false
         RandomAccessFile(file, "rw").use { raf ->
             raf.seek(4)
             raf.write(intLe(HEADER_SIZE - 8 + dataSize.toInt()))
@@ -218,7 +230,17 @@ class WavWriter(
         /** Kanonik 44 baytli PCM WAV sarlavhasi. */
         const val HEADER_SIZE = 44
         private const val BUFFER_BYTES = 256 * 1024
-        private const val SHORT_MAX = 32_767f
-        private const val INT24_MAX = 8_388_607f
+        private const val SHORT_SCALE = 32_768f
+        private const val SHORT_LIMIT = 32_768
+        private const val INT24_SCALE = 8_388_608f
+        private const val INT24_LIMIT = 8_388_608
+
+        /**
+         * Sarlavhaga sig'adigan eng katta ma'lumot hajmi: RIFF o'lchami
+         * `HEADER_SIZE - 8 + data` ishorasiz 32 bitga (4 GB) sig'ishi kerak.
+         * Ilgari chegara `Int.MAX_VALUE` (2 GB) edi: uzun audio kitob (3,3
+         * soatdan oshiq, 44,1 kHz stereo) dekodlanganda fayl o'chirilardi.
+         */
+        private const val MAX_DATA_BYTES = 0xFFFF_FFFFL - (HEADER_SIZE - 8)
     }
 }

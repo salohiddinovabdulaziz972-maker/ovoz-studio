@@ -2,6 +2,7 @@ package uz.ovozstudio.app.ui.pdf
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,7 @@ import uz.ovozstudio.app.media.pdf.PdfPageTools
 import uz.ovozstudio.app.media.pdf.PdfPasswordException
 import uz.ovozstudio.app.ui.common.ResultFile
 import uz.ovozstudio.app.util.MediaSaver
+import uz.ovozstudio.app.util.UriImport
 import java.io.File
 import java.io.IOException
 
@@ -128,7 +130,19 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
      * qoladi va boshqa ilovada ham ochiladi. Papkadagi nom o'zgarmaydi,
      * natija esa alohida fayl bo'lib saqlanadi.
      */
-    fun addFile(file: File) {
+    fun addFile(file: File) = addWith { UriImport.Copied(file, file.name) }
+
+    /**
+     * Tizim tanlagichidan kelgan PDF ni qo'shadi (Android 11 dan boshlab
+     * boshqa ilovalar yaratgan PDF larni faqat shu yo'l bilan ko'rish mumkin).
+     * Fayl ish papkasiga nusxalanadi; asl fayl o'zgarmaydi.
+     */
+    fun addUri(uri: Uri) {
+        val context = getApplication<Application>()
+        addWith { UriImport.copy(context, store, uri, "pdf") }
+    }
+
+    private fun addWith(prepare: () -> UriImport.Copied?) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             val context = getApplication<Application>()
@@ -145,15 +159,23 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
                 )
             }
 
-            val name = file.name.ifBlank { DEFAULT_NAME }
+            val prepared = withContext(Dispatchers.IO) { runCatching(prepare).getOrNull() }
+            val file = prepared?.file
+            val name = (prepared?.displayName ?: "").ifBlank { DEFAULT_NAME }
             val pages = withContext(Dispatchers.IO) {
-                runCatching { PdfPageTools.pageCount(context, file) }
+                if (file == null) {
+                    Result.failure<Int>(IOException("Fayl nusxalanmadi"))
+                } else {
+                    runCatching { PdfPageTools.pageCount(context, file) }
+                }
             }
 
             val count = pages.getOrNull()
-            val state = if (count == null || count <= 0) {
+            val state = if (file == null || count == null || count <= 0) {
                 val failure = pages.exceptionOrNull()
-                if (failure != null) ErrorLog.error(LOG_TAG_OPEN, "PDF birlashtirishga qo'shilmadi: $name", failure)
+                if (failure != null) ErrorLog.error(LOG_TAG_OPEN, "PDF birlashtirishga qo'shilmadi", failure)
+                // Nusxa ilovaniki bo'lsa — tashlanadi; haqiqiy fayl joyida qoladi.
+                if (file != null) store.deleteIfOwned(file)
                 _state.value.copy(
                     busy = PdfMergeBusy.NONE,
                     addingCurrent = 0,
@@ -220,11 +242,15 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /** Faylni ro'yxatdan olib tashlaydi va uning nusxasini o'chiradi. */
+    /**
+     * Faylni ro'yxatdan olib tashlaydi. Tizim tanlagichidan kelgan nusxa
+     * (ilovaniki) o'chadi; qurilmadagi haqiqiy fayl esa joyida qoladi —
+     * oldingi versiyada u ham o'chib ketardi.
+     */
     fun remove(id: Long) {
         _state.update { current ->
             val item = current.items.firstOrNull { it.id == id } ?: return@update current
-            runCatching { item.source.delete() }
+            store.deleteIfOwned(item.source)
             current.copy(
                 items = current.items.filterNot { it.id == id },
                 revision = current.revision + 1,
@@ -314,6 +340,7 @@ class PdfMergeViewModel(application: Application) : AndroidViewModel(application
                         busy = PdfMergeBusy.NONE,
                         savedName = result.name,
                         savedTo = outcome.display,
+                        savedPath = outcome.display,
                         error = null,
                     )
                     is MediaSaver.Result.Failed -> it.copy(

@@ -32,6 +32,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.content.pm.PackageManager
 import android.Manifest
 import uz.ovozstudio.app.ui.common.A11yButton
+import uz.ovozstudio.app.ui.common.OpenDocumentAt
 import uz.ovozstudio.app.ui.common.FolderPicker
 import uz.ovozstudio.app.ui.common.SavedFileBlock
 import uz.ovozstudio.app.ui.common.A11yChoiceRow
@@ -79,6 +80,13 @@ fun TrimScreen(
     // u faylni nusxalamaydi: qurilmadagi haqiqiy yo'l ishlatiladi, shuning
     // uchun tanlangan fayl o'z joyida qoladi va keyin ham ochiladi.
     var picking by rememberSaveable { mutableStateOf(false) }
+
+    // Tizim oynasi: to'g'ridan-to'g'ri «Music» papkasidan ochiladi. Ruxsat
+    // kerak emas; SD karta va ilovaning o'z ro'yxati ko'rmaydigan joylar uchun
+    // ham ishlaydi. Fayl ish papkasiga nusxalanadi, asl fayl o'zgarmaydi.
+    val systemPicker = rememberLauncherForActivityResult(
+        OpenDocumentAt(isAudio = true),
+    ) { uri -> if (uri != null) viewModel.open(uri) }
 
     // «Saqlash» oynasi yo'q: tugma bosilishi bilan fayl qurilmaning
     // papkasiga yoziladi (bitta bosish). Fayl turi natijaga qarab o'zgaradi.
@@ -169,6 +177,13 @@ fun TrimScreen(
         A11yButton(
             label = stringResource(if (state.isOpen) R.string.audio_pick_other else R.string.audio_pick),
             onClick = { picking = true },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.isBusy,
+        )
+
+        A11yOutlinedButton(
+            label = stringResource(R.string.pick_system),
+            onClick = { systemPicker.launch(arrayOf("*/*")) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )

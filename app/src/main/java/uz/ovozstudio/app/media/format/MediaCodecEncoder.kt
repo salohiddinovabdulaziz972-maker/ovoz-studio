@@ -124,7 +124,14 @@ class MediaCodecEncoder(
             val buffer = codec.getInputBuffer(index)
                 ?: throw IOException("Kodlovchi kirish buferini bermadi")
             buffer.clear()
-            val capacityFrames = PcmBytes.framesIn(buffer.capacity(), format.channels)
+            // Bo'lak ikkala chegaradan oshmasin: kodlovchining bufer hajmi va
+            // `staging` massivi. Ba'zi kodlovchilar so'ralgan 64 KB dan KATTA
+            // bufer beradi — shunda `staging` ga sig'maydigan bo'lak
+            // `PcmBytes.write` da istisno chiqarardi.
+            val capacityFrames = minOf(
+                PcmBytes.framesIn(buffer.capacity(), format.channels),
+                PcmBytes.framesIn(staging.size, format.channels),
+            )
             val take = minOf(frames - offset, capacityFrames)
             if (take <= 0) throw IOException("Kirish buferi juda kichik: ${buffer.capacity()} bayt")
 
@@ -146,14 +153,26 @@ class MediaCodecEncoder(
         finished = true
         var failed = false
         try {
-            val index = codec.dequeueInputBuffer(TIMEOUT_US)
-            if (index >= 0) {
-                codec.queueInputBuffer(
-                    index, 0, 0,
-                    framesWritten * MICROS_PER_SECOND / format.sampleRate,
-                    MediaCodec.BUFFER_FLAG_END_OF_STREAM,
-                )
+            // Tugash belgisi uchun bufer topilguncha urinamiz. Avval bufer
+            // 10 ms ichida chiqmasa belgi UMUMAN yuborilmasdi: kodlovchi
+            // ichidagi oxirgi kadrlar yozilmay, fayl oxiri kesilib qolardi.
+            var queued = false
+            var attempts = 0
+            while (!queued && attempts < MAX_EOS_STALLS) {
+                val index = codec.dequeueInputBuffer(TIMEOUT_US)
+                if (index >= 0) {
+                    codec.queueInputBuffer(
+                        index, 0, 0,
+                        framesWritten * MICROS_PER_SECOND / format.sampleRate,
+                        MediaCodec.BUFFER_FLAG_END_OF_STREAM,
+                    )
+                    queued = true
+                } else {
+                    drain(endOfStream = false)
+                    attempts++
+                }
             }
+            if (!queued) throw IOException("Kodlovchi tugash belgisini qabul qilmadi")
             drain(endOfStream = true)
         } catch (error: Throwable) {
             failed = true

@@ -1,6 +1,7 @@
 package uz.ovozstudio.app.ui.pdf
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +20,7 @@ import uz.ovozstudio.app.media.pdf.PdfPasswordException
 import uz.ovozstudio.app.ui.common.ResultFile
 import uz.ovozstudio.app.util.MediaSaver
 import uz.ovozstudio.app.util.RecentFiles
+import uz.ovozstudio.app.util.UriImport
 import java.io.File
 import java.io.IOException
 
@@ -122,7 +124,19 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
      * endi fayl o'z joyida turadi, ishlov berilmaydi (manba hech qachon
      * o'zgartirilmaydi) va natija alohida fayl bo'lib saqlanadi.
      */
-    fun open(file: File) {
+    fun open(file: File) = openWith { UriImport.Copied(file, file.name) }
+
+    /**
+     * Tizim tanlagichidan kelgan PDF ni ochadi (Android 11 dan boshlab boshqa
+     * ilovalar yaratgan PDF larni faqat shu yo'l bilan ko'rish mumkin). Fayl
+     * ish papkasiga nusxalanadi; asl fayl o'zgarmaydi.
+     */
+    fun open(uri: Uri) {
+        val context = getApplication<Application>()
+        openWith { UriImport.copy(context, store, uri, "pdf") }
+    }
+
+    private fun openWith(prepare: () -> UriImport.Copied?) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             _state.update {
@@ -136,6 +150,12 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             val context = getApplication<Application>()
+            val prepared = withContext(Dispatchers.IO) { runCatching(prepare).getOrNull() }
+            if (prepared == null) {
+                _state.update { it.copy(busy = PdfBusy.NONE, error = PdfError.FAILED) }
+                return@launch
+            }
+            val file = prepared.file
             val outcome = withContext(Dispatchers.IO) {
                 runCatching { PdfPageTools.pageCount(context, file) }
             }
@@ -144,14 +164,18 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
             if (count == null || count <= 0) {
                 val failure = outcome.exceptionOrNull()
                 if (failure != null) ErrorLog.error("pdf.open", "PDF ochilmadi", failure)
+                // Nusxa ilovaniki bo'lsa — tashlanadi; haqiqiy fayl joyida qoladi.
+                store.deleteIfOwned(file)
                 _state.update {
                     it.copy(busy = PdfBusy.NONE, error = errorOf(failure))
                 }
                 return@launch
             }
 
+            val previous = sourceFile
             sourceFile = file
-            baseName = file.name.substringBeforeLast('.').ifBlank { DEFAULT_NAME }
+            if (previous != null && previous != file) store.deleteIfOwned(previous)
+            baseName = prepared.displayName.substringBeforeLast('.').ifBlank { DEFAULT_NAME }
             _state.update {
                 it.copy(
                     busy = PdfBusy.NONE,
@@ -335,9 +359,10 @@ class PdfViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
-        // Manba fayl endi ilovaga tegishli emas (qurilmadagi haqiqiy fayl),
-        // shuning uchun o'chiriladigan narsa yo'q. Tayyor natijalar qoladi —
-        // ularni `WorkStore.sweep` eskirgach tozalaydi.
+        // Tizim tanlagichidan kelgan nusxalar o'chadi. Qurilmadagi haqiqiy
+        // fayl bu papkada emas, shuning uchun unga tegilmaydi. Tayyor
+        // natijalar qoladi — ularni `WorkStore.sweep` eskirgach tozalaydi.
+        store.clearWork()
     }
 
     private companion object {

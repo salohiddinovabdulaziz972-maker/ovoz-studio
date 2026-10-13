@@ -36,6 +36,7 @@
     <string name="about_link_failed">Ҳаволани очиб бўлмади. Қурилмада браузер йўқ.</string>
     <string name="audio_pick">Аудио файл танлаш</string>
     <string name="audio_pick_other">Бошқа файл танлаш</string>
+    <string name="pick_system">Тизим ойнасидан танлаш</string>
     <string name="audio_file_name">Файл: %1$s</string>
     <string name="audio_format_line">Формат: %1$s. Натижа ҳам шу форматда сақланади.</string>
     <string name="audio_opened">Файл очилди: %1$s. Формат: %2$s. Узунлиги: %3$s.</string>
@@ -217,6 +218,7 @@
     <string name="picker_empty">Бу папкада файл йўқ.</string>
     <string name="picker_loading">Ўқилмоқда…</string>
     <string name="picker_no_access">Папка очилмади: ўқишга рухсат берилмаган.</string>
+    <string name="picker_empty_hint">Керакли файл кўринмаса, «Тизим ойнасидан танлаш» тугмасидан фойдаланинг.</string>
     <string name="picker_at_top">Энг юқори папкадасиз.</string>
     <string name="result_folder_failed">Папкани очиб бўлмади — қурилмада файл бошқарувчиси топилмади.</string>
     <string name="result_saved_plain">Сакланди: %1$s</string>

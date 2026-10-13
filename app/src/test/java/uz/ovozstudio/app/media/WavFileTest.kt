@@ -93,6 +93,32 @@ class WavFileTest {
     }
 
     @Test
+    fun `float orqali otgan butun namunalar bayt-bayt saqlanadi`() {
+        // Regressiya: yozuvchi 2^(n-1) - 1 ga ko'paytirib, o'qish esa 2^(n-1) ga
+        // bo'lgani uchun har bir o'tishda chegaraga yaqin namunalar bir birlikka
+        // o'zgarardi (masalan 32767 -> 32766).
+        for (depth in listOf(BitDepth.BIT_16, BitDepth.BIT_24)) {
+            val max = (1 shl (depth.bits - 1)) - 1
+            val min = -(1 shl (depth.bits - 1))
+            val values = intArrayOf(max, min, max - 1, min + 1, 0, 1, -1, max / 2, min / 2, 12_345, -12_345)
+
+            val first = File(folder.root, "asl-${depth.bits}.wav")
+            WavWriter(first, 1_000, 1, depth).use { it.writeIntegers(values, values.size) }
+
+            val copy = File(folder.root, "nusxa-${depth.bits}.wav")
+            WavSampleReader(first).use { reader ->
+                val floats = FloatArray(values.size)
+                assertEquals(values.size, reader.readFrames(0, values.size, floats))
+                WavWriter(copy, 1_000, 1, depth).use { it.write(floats, values.size) }
+            }
+            assertTrue(
+                "${depth.bits} bit: float orqali o'tgan namunalar o'zgardi",
+                first.readBytes().contentEquals(copy.readBytes()),
+            )
+        }
+    }
+
+    @Test
     fun `kichik fayl xato beradi`() {
         val file = File(folder.root, "kichik.wav")
         file.writeBytes(ByteArray(10))

@@ -31,32 +31,36 @@ object DeviceFiles {
     /** Ilova o'z natijalarini yozadigan papka nomi — `MediaSaver` bilan bir xil. */
     private const val FOLDER = "Ovoz Studio"
 
-    /** Android 13 dan boshlab eski `READ_EXTERNAL_STORAGE` o'rniga yangi ruxsatlar. */
-    private const val PERMISSION: String = Manifest.permission.READ_EXTERNAL_STORAGE
+    /**
+     * Qaysi o'qish ruxsati kerak (`null` — hech qaysi yordam bermaydi).
+     *
+     * Android 13 dan boshlab ruxsatlar tur bo'yicha ajratilgan: audio uchun
+     * `READ_MEDIA_AUDIO`. PDF uchun esa alohida ruxsat YO'Q — boshqa ilova
+     * yaratgan PDF ni faqat tizim tanlagichi ([uz.ovozstudio.app.util.UriImport])
+     * ochadi. Quyi versiyalarda eski `READ_EXTERNAL_STORAGE` kerak.
+     *
+     * Ikkala ruxsat ham `AndroidManifest.xml` da e'lon qilingan bo'lishi shart:
+     * e'lon qilinmagan ruxsatni so'rash oynasi umuman chiqmaydi.
+     */
+    private fun permissionFor(isAudio: Boolean): String? = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+            if (isAudio) Manifest.permission.READ_MEDIA_AUDIO else null
+        else -> Manifest.permission.READ_EXTERNAL_STORAGE
+    }
 
     /**
-     * O'qish ruxsati berilganmi.
-     *
-     * `isAudio` bo'yicha farq qiladi, chunki Android 13 dan boshlab ruxsatlar
-     * tur bo'yicha ajratilgan: `READ_MEDIA_AUDIO` faqat audio uchun, PDF uchun
-     * esa alohida o'qish ruxsati yo'q. PDF so'rovini so'rash foydalanuvchini
-     * keraksiz oynaga tiqardi va foyda bermasdi.
-     *
-     * Android 13 va undan yuqorida tanlash oynasi ruxsatsiz ham ishlaydi:
-     * `Music` va `Documents` — ommaviy papkalar, ulardagi fayllar MediaStore
-     * orqali ochiq. Quyi versiyalarda esa eski `READ_EXTERNAL_STORAGE` kerak.
+     * O'qish ruxsati berilganmi. Ruxsat yordam bermaydigan holatda (Android 13+
+     * da PDF) `true`: ro'yxat ilova ko'ra oladigan narsani ko'rsatadi, qolganini
+     * foydalanuvchi tizim oynasi orqali tanlaydi.
      */
     fun hasAccess(context: Context, isAudio: Boolean): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return true
-        }
-        return ContextCompat.checkSelfPermission(context, PERMISSION) ==
+        val permission = permissionFor(isAudio) ?: return true
+        return ContextCompat.checkSelfPermission(context, permission) ==
             PackageManager.PERMISSION_GRANTED
     }
 
-    /** So'raladigan ruxsat; Android 13 dan yuqorida so'raladigan narsa yo'q. */
-    fun neededPermission(isAudio: Boolean): String? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) null else PERMISSION
+    /** So'raladigan ruxsat; so'raladigan narsa bo'lmasa — `null`. */
+    fun neededPermission(isAudio: Boolean): String? = permissionFor(isAudio)
 
     /** Tanlash oynasi ochiladigan dastlabki papka. */
     fun root(isAudio: Boolean): File = File(
@@ -92,7 +96,7 @@ object DeviceFiles {
             // `listFiles()` `null` qaytaradi — ruxsat yo'q yoki papka o'chirilgan.
             // Sababni jurnalga yozamiz: ekranda bo'sh ro'yxat ko'rinadi, aks
             // holda u «papka bo'sh» degan noto'g'ri taassurot qoldirardi.
-            ErrorLog.info(TAG, "Papka o'qilmadi: ${folder.absolutePath}")
+            ErrorLog.info(TAG, "Papka o'qilmadi (ruxsat yo'q yoki papka o'chirilgan)")
             return emptyList()
         }
         val dirs = children.filter { it.isDirectory && !it.name.startsWith(".") }

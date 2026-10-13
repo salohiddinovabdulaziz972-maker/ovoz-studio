@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
+import uz.ovozstudio.app.ui.common.OpenDocumentAt
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.ParamsGroup
 import uz.ovozstudio.app.ui.common.FolderPicker
@@ -92,6 +93,13 @@ fun MergeScreen(
     // pastdagi tugmalar bilan keyin o'zgartirsa bo'ladi.
     var picking by rememberSaveable { mutableStateOf(false) }
 
+    // Tizim oynasi: to'g'ridan-to'g'ri «Music» papkasidan ochiladi. Ruxsat
+    // kerak emas; SD karta va ilovaning o'z ro'yxati ko'rmaydigan joylar uchun
+    // ham ishlaydi. Fayl ish papkasiga nusxalanadi, asl fayl o'zgarmaydi.
+    val systemPicker = rememberLauncherForActivityResult(
+        OpenDocumentAt(isAudio = true),
+    ) { uri -> if (uri != null) viewModel.addUri(uri) }
+
     val result = state.result
 
     val busyText = when (state.busy) {
@@ -145,6 +153,13 @@ fun MergeScreen(
         A11yButton(
             label = stringResource(R.string.merge_add),
             onClick = { picking = true },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.isBusy,
+        )
+
+        A11yOutlinedButton(
+            label = stringResource(R.string.pick_system),
+            onClick = { systemPicker.launch(arrayOf("*/*")) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )

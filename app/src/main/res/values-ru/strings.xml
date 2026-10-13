@@ -36,6 +36,7 @@
     <string name="about_link_failed">Не удалось открыть ссылку. На устройстве нет браузера.</string>
     <string name="audio_pick">Выбрать аудиофайл</string>
     <string name="audio_pick_other">Выбрать другой файл</string>
+    <string name="pick_system">Выбрать в системном окне</string>
     <string name="audio_file_name">Файл: %1$s</string>
     <string name="audio_format_line">Формат: %1$s. Результат тоже будет сохранён в этом формате.</string>
     <string name="audio_opened">Файл открыт: %1$s. Формат: %2$s. Длительность: %3$s.</string>
@@ -217,6 +218,7 @@
     <string name="picker_empty">В этой папке нет файлов.</string>
     <string name="picker_loading">Загрузка…</string>
     <string name="picker_no_access">Папка не открылась: нет разрешения на чтение.</string>
+    <string name="picker_empty_hint">Если нужного файла нет в списке, воспользуйтесь кнопкой «Выбрать в системном окне».</string>
     <string name="picker_at_top">Вы в самой верхней папке.</string>
     <string name="result_folder_failed">Не удалось открыть папку — на устройстве не найден файловый менеджер.</string>
     <string name="result_saved_plain">Сохранено: %1$s</string>

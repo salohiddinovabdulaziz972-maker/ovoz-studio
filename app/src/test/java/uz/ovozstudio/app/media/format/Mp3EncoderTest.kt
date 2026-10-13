@@ -63,6 +63,25 @@ class Mp3EncoderTest {
     }
 
     @Test
+    fun `katta bolakni bitta chaqiruvda yozish mumkin`() {
+        // LAME chiqish buferi kamida 1,25·n + 7200 bayt talab qiladi. Qat'iy
+        // 16 KB bufer bilan bunday bo'lak «bufer kichik» (-1) xatosini berardi.
+        val frames = 200_000
+        val samples = IntArray(frames * 2)
+        for (t in 0 until frames) {
+            val v = (Math.sin(2.0 * Math.PI * 440 * t / 44_100.0) * 8_000).toInt()
+            samples[t * 2] = v
+            samples[t * 2 + 1] = v / 2
+        }
+        val destination = File(folder.root, "katta.mp3")
+
+        Mp3Encoder(destination, mp3).use { it.write(samples, frames) }
+
+        assertTrue("fayl bo'sh", destination.length() > 0)
+        assertTrue("MPEG kadrlar topilmadi", frameSizes(destination).isNotEmpty())
+    }
+
+    @Test
     fun `oqim mpeg kadrlardan tuzilgan va oxirigacha ochiladi`() {
         val source = writeWav("manba.wav", 2, BitDepth.BIT_16, 44_100)
         val destination = File(folder.root, "natija.mp3")

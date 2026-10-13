@@ -92,6 +92,24 @@ class WorkStore(context: Context, scope: String) {
     fun isOutputReady(file: File): Boolean =
         File(file.parentFile, file.name + READY_SUFFIX).exists()
 
+    /**
+     * Fayl shu ilovaning vaqtinchalik (kesh) papkasida turadimi.
+     *
+     * Nega kerak. Kesish va birlashtirish ekranlari foydalanuvchining
+     * qurilmadagi **haqiqiy** faylini (tanlagichdan kelgan yo'l) nusxasiz
+     * ochadi. Shu fayl `manba`/`tahrir` ro'yxatiga tushib qolsa, keyingi
+     * tozalash uni o'chirib yuborardi. O'chirish faqat shu yerdagi fayllarga
+     * ruxsat etiladi — hamma o'chiruvchi joy [deleteIfOwned] dan o'tadi.
+     */
+    fun owns(file: File): Boolean =
+        isInside(file, File(cache, ROOT_NAME)) || isInside(file, outputsDirectory)
+
+    /** Faylni **faqat ilovaniki bo'lsa** o'chiradi. `true` — o'chirildi. */
+    fun deleteIfOwned(file: File): Boolean =
+        owns(file) && runCatching { file.delete() }.getOrDefault(false)
+
+    private fun isInside(file: File, directory: File): Boolean = FilePaths.isInside(file, directory)
+
     /** Oraliq fayllarni tozalaydi. [keep] berilsa, o'sha fayl qoladi. */
     fun clearEdits(keep: File? = null) {
         editsDirectory.listFiles()?.forEach { file ->

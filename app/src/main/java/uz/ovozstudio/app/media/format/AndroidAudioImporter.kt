@@ -68,11 +68,11 @@ class AndroidAudioImporter(private val store: WorkStore) {
             }
         } catch (error: IOException) {
             copy.delete()
-            ErrorLog.error("audio.import", "Fayl nusxasini o'qib bo'lmadi: $displayName", error)
+            ErrorLog.error("audio.import", "Fayl nusxasini o'qib bo'lmadi", error)
             return ImportOutcome.Rejected(ImportFailure.READ_FAILED)
         } catch (error: SecurityException) {
             copy.delete()
-            ErrorLog.error("audio.import", "Faylga ruxsat berilmadi: $displayName", error)
+            ErrorLog.error("audio.import", "Faylga ruxsat berilmadi", error)
             return ImportOutcome.Rejected(ImportFailure.READ_FAILED)
         }
 
@@ -90,7 +90,7 @@ class AndroidAudioImporter(private val store: WorkStore) {
         val detected = try {
             AudioFormatDetector.detect(source)
         } catch (error: IOException) {
-            ErrorLog.error("audio.open", "Fayl turini aniqlab bo'lmadi: ${source.name}", error)
+            ErrorLog.error("audio.open", "Fayl turini aniqlab bo'lmadi", error)
             return ImportOutcome.Rejected(ImportFailure.READ_FAILED)
         } ?: return ImportOutcome.Rejected(ImportFailure.UNKNOWN_FORMAT)
 
@@ -110,10 +110,10 @@ class AndroidAudioImporter(private val store: WorkStore) {
         val info = try {
             WavFile.readInfo(source)
         } catch (error: IOException) {
-            ErrorLog.error("audio.wav", "WAV sarlavhasini o'qib bo'lmadi: ${source.name}", error)
+            ErrorLog.error("audio.wav", "WAV sarlavhasini o'qib bo'lmadi", error)
             return ImportOutcome.Rejected(ImportFailure.READ_FAILED)
         } catch (error: IllegalArgumentException) {
-            ErrorLog.error("audio.wav", "WAV sarlavhasi noto'g'ri: ${source.name}", error)
+            ErrorLog.error("audio.wav", "WAV sarlavhasi noto'g'ri", error)
             return ImportOutcome.Rejected(ImportFailure.UNKNOWN_FORMAT)
         }
 

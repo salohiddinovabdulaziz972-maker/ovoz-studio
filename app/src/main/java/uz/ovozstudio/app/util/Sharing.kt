@@ -49,7 +49,7 @@ object Sharing {
         }.getOrElse { error ->
             // Xato faqat ekranga chiqmaydi, jurnalga ham tushishi kerak:
             // aks holda ulashish nega ishlamaganini keyin bilib bo'lmaydi.
-            ErrorLog.error("share", "Faylni ulashib bo'lmadi: ${file.name}", error)
+            ErrorLog.error("share", "Faylni ulashib bo'lmadi", error)
             false
         }
     }

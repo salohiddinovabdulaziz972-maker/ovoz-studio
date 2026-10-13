@@ -36,6 +36,7 @@
     <string name="about_link_failed">Could not open the link. There is no browser on the device.</string>
     <string name="audio_pick">Choose an audio file</string>
     <string name="audio_pick_other">Choose another file</string>
+    <string name="pick_system">Choose in the system window</string>
     <string name="audio_file_name">File: %1$s</string>
     <string name="audio_format_line">Format: %1$s. The result will be saved in the same format.</string>
     <string name="audio_opened">File opened: %1$s. Format: %2$s. Length: %3$s.</string>
@@ -217,6 +218,7 @@
     <string name="picker_empty">There are no files in this folder.</string>
     <string name="picker_loading">Loading…</string>
     <string name="picker_no_access">The folder could not be opened: read permission was not granted.</string>
+    <string name="picker_empty_hint">If the file you need is not listed, use the “Choose in the system window” button.</string>
     <string name="picker_at_top">You are in the topmost folder.</string>
     <string name="result_folder_failed">Could not open the folder — no file manager found on this device.</string>
     <string name="result_saved_plain">Saved: %1$s</string>

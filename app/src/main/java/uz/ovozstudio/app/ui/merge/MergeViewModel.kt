@@ -143,8 +143,27 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
      * Fayl — qurilmadagi haqiqiy fayl ([File]), nusxa ko'chirilmaydi. Har bir
      * tanlov bitta fayl beradi, shuning uchun ro'yxat foydalanuvchi fayllarni
      * birma-bir qo'shishi bilan yig'iladi va tartib o'zi saqlanadi.
+     *
+     * Bunday fayl foydalanuvchiniki: ro'yxatdan olib tashlansa ham, rad
+     * etilsa ham diskdan o'chmaydi ([WorkStore.deleteIfOwned]).
      */
-    fun addFile(file: File) {
+    fun addFile(file: File) = addWith(nameOf = { file.name }) { onProgress ->
+        opener.open(file, onProgress)
+    }
+
+    /**
+     * Tizim tanlagichidan kelgan faylni qo'shadi (SD karta, boshqa ilovalar
+     * yaratgan fayllar). Fayl avval ish papkasiga nusxalanadi.
+     */
+    fun addUri(uri: Uri) {
+        val context = getApplication<Application>()
+        addWith(nameOf = { opener.displayName(context, uri) }) { onProgress ->
+            opener.open(context, uri, onProgress)
+        }
+    }
+
+    /** [nameOf] — kutilmagan xatoda foydalanuvchiga ko'rsatiladigan fayl nomi (fon oqimida chaqiriladi). */
+    private fun addWith(nameOf: () -> String, load: ((Float) -> Unit) -> OpenResult) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             _state.update {
@@ -163,7 +182,7 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
             val outcome = withContext(Dispatchers.IO) {
                 var lastPercent = -1
                 runCatching {
-                    opener.open(file) { fraction ->
+                    load { fraction ->
                         val percent = (fraction * 100).toInt()
                         if (percent != lastPercent) {
                             lastPercent = percent
@@ -187,7 +206,10 @@ class MergeViewModel(application: Application) : AndroidViewModel(application) {
                 null -> {
                     ErrorLog.error("merge.add", "Fayl ochishda kutilmagan xato", outcome.exceptionOrNull())
                     addFailure(
-                        MergeFailure(fileName = file.name, reason = ImportFailure.READ_FAILED),
+                        MergeFailure(
+                            fileName = withContext(Dispatchers.IO) { runCatching(nameOf).getOrDefault("") },
+                            reason = ImportFailure.READ_FAILED,
+                        ),
                     )
                 }
             }

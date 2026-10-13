@@ -34,7 +34,7 @@ object ResultFiles {
     } catch (error: Exception) {
         // Sabab jurnalga tushadi: xato ekranda ham ko'rinadi, lekin fayl
         // nomi va tizim xabari faqat shu yerda qoladi.
-        ErrorLog.error("fayl.saqlash", "Natijani tanlangan joyga yozib bo'lmadi: ${source.name}", error)
+        ErrorLog.error("fayl.saqlash", "Natijani tanlangan joyga yozib bo'lmadi", error)
         false
     }
 }

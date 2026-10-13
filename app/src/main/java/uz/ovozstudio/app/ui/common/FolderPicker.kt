@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +37,9 @@ import uz.ovozstudio.app.R
 import uz.ovozstudio.app.log.ErrorLog
 import uz.ovozstudio.app.util.DeviceFiles
 import java.io.File
+
+/** Fayllar ro'yxati oynasining balandligi. */
+private val LIST_HEIGHT = 360.dp
 
 /**
  * Audio yoki PDF faylni tanlash oynasi — ilovaning o'z oynasi.
@@ -78,6 +82,7 @@ fun FolderPicker(
     val busyMessage = stringResource(R.string.picker_loading)
     val emptyMessage = stringResource(R.string.picker_empty)
     val noAccessMessage = stringResource(R.string.picker_no_access)
+    val systemHint = stringResource(R.string.picker_empty_hint)
     val topMessage = stringResource(R.string.picker_at_top)
 
     // Ro'yxat fon oqimida o'qiladi: papkada minglab fayl bo'lishi mumkin va
@@ -148,27 +153,39 @@ fun FolderPicker(
 
         if (!DeviceFiles.hasAccess(context, isAudio) && !isLoading) {
             Text(text = noAccessMessage, style = MaterialTheme.typography.bodyMedium)
+            Text(text = systemHint, style = MaterialTheme.typography.bodyMedium)
         } else if (isLoading) {
             Text(text = busyMessage, style = MaterialTheme.typography.bodyMedium)
         } else {
             if (entries.isEmpty()) {
                 Text(text = emptyMessage, style = MaterialTheme.typography.bodyMedium)
+                // Android 11 dan boshlab ilova boshqa ilovalar yaratgan PDF va
+                // ko'p audio fayllarni o'zi ko'ra olmaydi: yo'l — tizim oynasi.
+                Text(text = systemHint, style = MaterialTheme.typography.bodyMedium)
             }
             // Ro'yxat adapteri `remember` ichida saqlanadi: `update` har
             // qayta chizishda chaqiriladi va har safar yangi adapter yasalsa,
             // ro'yxat joyi (scroll) yo'qolardi — ekran o'quvchi foydalanuvchi
             // uchun bu ayniqsa sezilarli.
             val adapter = remember { EntryAdapter(context, onOpenFolder = openFolder, onPickFile = onPick) }
+            // Balandlik aniq berilishi SHART. Bu oyna ekranning aylantiriladigan
+            // ustuni ichida turadi: balandlik cheksiz bo'lsa `ListView` o'zini
+            // faqat BIR qator balandligida o'lchaydi (bu `ListView` ning
+            // ma'lum xatti-harakati) va ro'yxat deyarli ko'rinmay qoladi.
             AndroidView(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LIST_HEIGHT)
+                    .padding(bottom = 4.dp),
                 factory = { viewContext ->
                     ListView(viewContext).apply {
                         dividerHeight = 1
                         this.adapter = adapter
                     }
                 },
-                update = { list ->
-                    list.adapter = adapter
+                update = {
+                    // Adapter `factory` da bir marta berilgan. Bu yerda uni qayta
+                    // berish ro'yxatni har qayta chizishda eng tepaga qaytarardi.
                     adapter.submit(entries, folder)
                 },
             )
@@ -271,7 +288,7 @@ private suspend fun read(
     announce: (String) -> Unit,
 ): List<DeviceFiles.Entry> = withContext(Dispatchers.IO) {
     runCatching { DeviceFiles.list(context, folder) }
-        .onFailure { ErrorLog.error("papka.ro'yxat", "Papka o'qilmadi: ${folder.name}", it) }
+        .onFailure { ErrorLog.error("papka.ro'yxat", "Papka o'qilmadi", it) }
         .getOrElse { emptyList() }
 }
 

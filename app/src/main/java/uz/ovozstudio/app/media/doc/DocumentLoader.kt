@@ -252,7 +252,7 @@ object DocumentLoader {
     } catch (error: Exception) {
         // Arxiv ochilmadi — tashqi qator xulosani keyin o'zi chiqaradi,
         // lekin sabab shu yerda yo'qolib qolmasin.
-        ErrorLog.error("hujjat.sniff", "Arxiv turini aniqlab bo'lmadi: ${file.name}", error)
+        ErrorLog.error("hujjat.sniff", "Arxiv turini aniqlab bo'lmadi", error)
         null
     }
 
@@ -291,7 +291,7 @@ object DocumentLoader {
     private fun readHeader(file: File): ByteArray? = try {
         FileInputStream(file).use { input -> readUpTo(input, SNIFF_BYTES) }
     } catch (error: Exception) {
-        ErrorLog.error("hujjat.header", "Fayl boshini o'qib bo'lmadi: ${file.name}", error)
+        ErrorLog.error("hujjat.header", "Fayl boshini o'qib bo'lmadi", error)
         null
     }
 

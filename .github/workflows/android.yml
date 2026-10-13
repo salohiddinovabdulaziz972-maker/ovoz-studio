@@ -25,6 +25,8 @@ name: Android
 # qo'zg'atiladi.
 #
 # Yuri (19): 0.7.0 — fayl tanlash ilovaning o'zida, manba fayllar haqiqiy yo'l bilan, PDF birlashtirish xatosi tuzatildi.
+#
+# Yuri (20): 0.7.1 — asl fayl o'chib ketishi tuzatildi, fayl tanlash ruxsatlari, tizim oynasi Music/Documents dan ochiladi.
 
 on:
   workflow_dispatch:

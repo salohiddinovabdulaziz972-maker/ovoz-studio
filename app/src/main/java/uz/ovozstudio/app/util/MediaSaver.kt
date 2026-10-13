@@ -2,6 +2,7 @@ package uz.ovozstudio.app.util
 
 import android.content.ContentValues
 import android.content.Context
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -28,6 +29,9 @@ object MediaSaver {
 
     private const val TAG = "fayl.saqlash"
 
+    /** Natijalar yoziladigan papka nomi (`Music/Ovoz Studio`, `Documents/Ovoz Studio`). */
+    private const val FOLDER = "Ovoz Studio"
+
     /** Saqlash natijasi: muvaffaqiyat yoki jimgina yutilmagan sabab. */
     sealed interface Result {
         /** Fayl saqlandi; [display] — foydalanuvchiga aytiladigan manzil. */
@@ -52,6 +56,9 @@ object MediaSaver {
         mimeType: String,
         isAudio: Boolean,
     ): Result {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return saveLegacy(context, source, suggestedName, mimeType, isAudio)
+        }
         val collection = if (isAudio) audioCollection() else documentCollection()
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, suggestedName)
@@ -77,14 +84,14 @@ object MediaSaver {
         val uri = try {
             context.contentResolver.insert(collection, values)
         } catch (error: Exception) {
-            ErrorLog.error(TAG, "Yozuv ochilmadi: $suggestedName", error)
+            ErrorLog.error(TAG, "Yozuv ochilmadi", error)
             null
         }
         if (uri == null) {
             // `insert` odatda istisno beradi; `null` — kam uchraydigan, lekin
             // haqiqiy holat (provayder rad etdi). Sababni yozmasak, fayl
             // shunchaki «saqlanmadi» bo'lib qolardi.
-            ErrorLog.error(TAG, "Yozuv ochilmadi (provayder bo'sh URI qaytardi): $suggestedName")
+            ErrorLog.error(TAG, "Yozuv ochilmadi (provayder bo'sh URI qaytardi)")
             return Result.Failed("insert-null")
         }
 
@@ -93,7 +100,7 @@ object MediaSaver {
                 source.inputStream().use { input -> input.copyTo(sink) }
             } != null
         } catch (error: Exception) {
-            ErrorLog.error(TAG, "Fayl nusxalanmadi: $suggestedName", error)
+            ErrorLog.error(TAG, "Fayl nusxalanmadi", error)
             false
         }
 
@@ -108,9 +115,9 @@ object MediaSaver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val done = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
             runCatching { context.contentResolver.update(uri, done, null, null) }
-                .onFailure { ErrorLog.error(TAG, "Fayl «tayyor» deb belgilanmadi: $suggestedName", it) }
+                .onFailure { ErrorLog.error(TAG, "Fayl «tayyor» deb belgilanmadi", it) }
         }
-        ErrorLog.info(TAG, "Saqlandi: $display")
+        ErrorLog.info(TAG, "Fayl saqlandi")
         return Result.Saved(uri, display)
     }
 
@@ -141,9 +148,65 @@ object MediaSaver {
     }.onFailure { ErrorLog.error(TAG, "Saqlangan joyni o'qib bo'lmadi: $uri", it) }.getOrNull()
 
     /**
-     * Audio uchun to'plam. API 29+ da `MediaStore.Audio`; pastda esa
-     * `EXTERNAL_CONTENT_URI` — o'sha jadval, lekin `RELATIVE_PATH` yo'q
-     * (shuning uchun `DATA` ustuni bilan yoziladi).
+     * Android 9 va undan pastda MediaStore `RELATIVE_PATH` ni bilmaydi, `DATA`
+     * ustunisiz qator qo'shish esa o'sha tizimlarda xato beradi yoki faylni
+     * noto'g'ri papkaga tushiradi. Shuning uchun fayl to'g'ridan-to'g'ri
+     * `Music/Ovoz Studio` (yoki `Documents/Ovoz Studio`) papkasiga yoziladi,
+     * pleyerlar ko'rishi uchun tizimga `MediaScannerConnection` bilan xabar
+     * beriladi. `WRITE_EXTERNAL_STORAGE` ni chaqiruvchi tomon allaqachon so'ragan.
+     */
+    @Suppress("DEPRECATION")
+    private fun saveLegacy(
+        context: Context,
+        source: File,
+        suggestedName: String,
+        mimeType: String,
+        isAudio: Boolean,
+    ): Result {
+        val base = Environment.getExternalStoragePublicDirectory(
+            if (isAudio) Environment.DIRECTORY_MUSIC else Environment.DIRECTORY_DOCUMENTS,
+        )
+        val folder = File(base, FOLDER)
+        if (!folder.isDirectory && !folder.mkdirs()) {
+            ErrorLog.error(TAG, "Papka yaratilmadi (eski Android)")
+            return Result.Failed("mkdir")
+        }
+        val target = uniqueTarget(folder, suggestedName)
+        try {
+            source.inputStream().use { input ->
+                target.outputStream().use { sink -> input.copyTo(sink) }
+            }
+        } catch (error: Exception) {
+            ErrorLog.error(TAG, "Fayl nusxalanmadi (eski Android)", error)
+            runCatching { target.delete() }
+            return Result.Failed("copy")
+        }
+        runCatching {
+            MediaScannerConnection.scanFile(context, arrayOf(target.absolutePath), arrayOf(mimeType), null)
+        }
+        ErrorLog.info(TAG, "Fayl saqlandi (eski Android)")
+        return Result.Saved(Uri.fromFile(target), "${base.name}/$FOLDER/${target.name}")
+    }
+
+    /** Bir xil nomli fayl bo'lsa «(1)», «(2)»… qo'shadi: mavjud fayl ustidan yozilmaydi. */
+    private fun uniqueTarget(folder: File, rawName: String): File {
+        val name = rawName.replace('/', '_').ifBlank { "natija" }
+        var candidate = File(folder, name)
+        if (!candidate.exists()) return candidate
+        val stem = name.substringBeforeLast('.', name)
+        val extension = name.substringAfterLast('.', "")
+        val tail = if (extension.isEmpty()) "" else ".$extension"
+        var counter = 1
+        while (candidate.exists()) {
+            candidate = File(folder, "$stem ($counter)$tail")
+            counter++
+        }
+        return candidate
+    }
+
+    /**
+     * Audio uchun to'plam (API 29+). Pastda `save` bu yerga umuman kelmaydi:
+     * eski tizimlar uchun alohida yo'l — [saveLegacy].
      */
     private fun audioCollection(): Uri =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)

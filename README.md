@@ -1,10 +1,10 @@
 # Ovoz Studio
 
 Android uchun ochiq kodli, **internetsiz** ishlaydigan ilova: audio va PDF
-fayllarni tahrirlash, hujjatlarni o'qish. Ekran o'quvchi (TalkBack) bilan
-ishlash uchun yozilgan; ilova matni sodda o'zbek tilida.
+fayllarni tahrirlash. Ekran o'quvchi (TalkBack) bilan ishlash uchun
+yozilgan; ilova matni sodda o'zbek tilida.
 
-Versiya: **0.4.0**. Litsenziya: **GPL-3.0**.
+Versiya: **0.7.1**. Litsenziya: **GPL-3.0**.
 
 ## Nima qiladi
 
@@ -15,8 +15,7 @@ Versiya: **0.4.0**. Litsenziya: **GPL-3.0**.
 | Audio | bir nechta audioni **birlashtirish** |
 | PDF | belgilangan sahifalarni **kesib olish** — yangi PDF |
 | PDF | belgilangan sahifalarni **o'chirish** — yangi PDF |
-| Hujjat | hujjatni **o'qish**: matn ekranda, ekran o'quvchi bilan yoki ilovaning ovozida (Microsoft Sardor/Madina ham, agar qurilmada bo'lsa); ekran o'chsa ham davom etadi |
-| Hujjat | hujjatni **audio-kitob (MP3) qilib saqlash** — ekrandan chiqib ketilsa yoki telefon qulflansa ham ish orqada davom etadi |
+| PDF | bir nechta PDF ni **birlashtirish** |
 | Jurnal | **xatolar jurnali**: nima buzilgani yozib boriladi, foydalanuvchi uni ulashishi mumkin |
 
 Boshqa hech narsa yo'q: yozib olish, konvertatsiya, ekvalayzer, shovqin
@@ -47,24 +46,34 @@ ko'chirish yo'li bilan yasaladi — o'chirilgan sahifalarning mazmuni faylda
 **qolmaydi**. Asl fayl o'zgarmaydi. Parol bilan ochiladigan yoki muallif
 ajratishni taqiqlagan PDF rad etiladi. Kutubxona: PDFBox (Android porti, Apache-2.0).
 
-## Hujjatni o'qish
+## Fayl tanlash
 
-Qo'llab-quvvatlanadi: **PDF, DOCX, ODT (ODS, ODP), RTF, EPUB, FB2, HTML, PPTX, TXT**
-(va `.md`, `.log`, `.csv` kabi oddiy matn). Fayl kengaytmasi noto'g'ri bo'lsa
-ham (masalan RTF `.doc` nomi bilan) imzosiga qarab tanib olinadi.
+Fayl tanlash oynasi **to'g'ridan-to'g'ri kerakli papkadan** ochiladi:
 
-- Matn abzatslarga bo'linadi va ekranda turadi: **ekran o'quvchi** o'qiydi.
-- «O'qishni boshlash» — ilovaning ovozi. Ovoz dvigateli va ovoz tanlanadi.
-  Nomida «Sardor» yoki «Madina» bor ovoz bo'lsa, u avtomatik tanlanadi.
-- PDF da har bir sahifa — bob. Matni buzuq (shrift kodlashi noma'lum) PDF
-  «buzuq matn» deb aytiladi, tushunarsiz shovqin o'qib berilmaydi.
+- **Audio** — ilovaning o'z ro'yxati qurilmaning `Music` papkasidan boshlanadi
+  (birinchi marta audio fayllarni o'qishga ruxsat so'raydi: Android 13 va
+  undan yuqorida `READ_MEDIA_AUDIO`, quyida `READ_EXTERNAL_STORAGE`). Shu
+  ekranda «Tizim oynasidan tanlash» tugmasi ham bor: Android'ning o'z
+  tanlagichi ham `Music` papkasidan ochiladi (ruxsat kerak emas, SD karta
+  uchun ham shu yo'l).
+- **PDF** — faqat tizim tanlagichi, `Documents` papkasidan ochiladi. Android
+  11 dan boshlab ilova boshqa ilovalar yaratgan PDF larni o'zi ko'ra olmaydi
+  va buni hech qanday oddiy ruxsat o'zgartirmaydi.
 
-**Microsoft Sardor/Madina haqida.** Bu bulutli ovozlar; Android'da ular faqat
-ularni tizim sintezatori sifatida ochib beradigan dvigatel dasturi orqali
-ko'rinadi. Ilovaning o'zi internetga chiqmaydi, shuning uchun bulutga ulanmaydi.
+Boshlang'ich papka — Android'ga «iloji boricha» ko'rsatma
+(`EXTRA_INITIAL_URI`). Ba'zi qurilmalarda (masalan Samsung) tanlagich uni
+e'tiborsiz qoldirishi mumkin; bunday holda oyna odatdagidek ochiladi.
 
-Qo'llab-quvvatlanmaydi: eski Word `.doc`, `.xls`, `.ppt` (DOCX/PPTX qilib
-saqlang), parol bilan himoyalangan PDF, matn qatlami yo'q skaner PDF (OCR yo'q).
+Tizim oynasidan kelgan fayl ilovaning ish papkasiga **nusxalanadi** (asl fayl
+o'zgarmaydi). Ilova ichidagi ro'yxatdan tanlangan fayl esa nusxalanmaydi va
+**hech qachon o'chirilmaydi**: faqat ilovaning o'z vaqtinchalik fayllari o'chadi.
+
+## Hujjat o'quvchilari (ekransiz)
+
+`media/doc/` da PDF, DOCX, ODT, RTF, EPUB, FB2, HTML, PPTX, TXT o'quvchilari va
+ularning testlari bor, lekin ularni ishlatadigan ekran (o'qish, audio-kitob)
+hozirgi versiyada bosh ekranda yo'q. Kod saqlangan; ekranlar qaytarilmaguncha
+ilovada ishlatilmaydi.
 
 ## Til
 
@@ -84,14 +93,14 @@ yozadi (`filesDir/jurnal/`), shu jumladan kutilmagan to'xtashlarni.
 
 ## Maxfiylik va xavfsizlik
 
-- `INTERNET` ruxsati yo'q — ilova internetga chiqmaydi. Fayllar tizim
-  tanlagichi orqali olinadi va saqlanadi.
-- To'rtta ruxsat bor, hammasi faqat jonli o'qish yoki audio-kitob yasashni
-  ekran o'chganda ham to'xtatmaslik uchun: `FOREGROUND_SERVICE`,
-  `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `FOREGROUND_SERVICE_MEDIA_PROCESSING`,
-  `POST_NOTIFICATIONS` (faqat jarayon bildirishnomasini ko'rsatish uchun).
-  Boshqa hech qanday ruxsat yo'q — mikrofon, ommaviy xotira, kontaktlar
-  va hokazoga kirish so'ralmaydi.
+- `INTERNET` ruxsati yo'q — ilova internetga chiqmaydi.
+- Ruxsatlar faqat shular: audio fayllarni **o'qish** (`READ_MEDIA_AUDIO`,
+  Android 12 va pastda `READ_EXTERNAL_STORAGE`) — ilova ichidagi audio ro'yxati
+  uchun; Android 9 va pastda natijani yozish uchun `WRITE_EXTERNAL_STORAGE`.
+  Mikrofon, kontaktlar, joylashuv va bildirishnoma ruxsatlari yo'q. Tizim
+  tanlagichi orqali olingan fayl ruxsat talab qilmaydi.
+- Foydalanuvchining asl fayli hech qachon o'chirilmaydi: o'chirish faqat
+  ilovaning kesh papkasidagi fayllarga ruxsat etilgan (`WorkStore.deleteIfOwned`).
 - Zaxira nusxa o'chirilgan (`allowBackup=false`).
 - `FileProvider` faqat tayyor natijalar papkasini (`cache/natija/`) ochadi.
 - Ish fayllari kesh papkasida; ilova boshlanganda tozalanadi, natijalar bir kun saqlanadi.
@@ -121,17 +130,16 @@ app/src/main/java/uz/ovozstudio/app/
   OvozApp.kt, MainActivity.kt
   log/            xatolar jurnali (ErrorJournal, ErrorLog)
   settings/       til aniqlash (AppLanguage, LocaleContext), About
-  media/          WavFile, WavWriter, AudioTrimmer, AudioPlayer, WorkStore
+  media/          WavFile, WavWriter, AudioTrimmer, AudioPlayer, WorkStore, FilePaths
     format/       import/eksport, qat'iy format qoidasi (StrictFormat, AudioOpener)
     merge/        AudioMerger
     dsp/          Resampler
     pdf/          PdfPageTools (PDFBox), PageRange
-    doc/          hujjat o'quvchilari, ReadingText, TextQuality
-    voice/        ovoz sintezatori va audio-kitob (DeviceTtsEngine, VoiceChoice,
-                  VoicePrefs, AudioBookExporter, AudioBookService, KeepAliveService)
-  ui/             home, trim (kesish/o'chirish), merge, pdf, reader, audiobook,
-                  log, nav, common, theme
-  util/           vaqt, son formati, Sharing, ResultFiles
+    doc/          hujjat o'quvchilari (hozir ekransiz), ReadingText, TextQuality
+  ui/             home, trim (kesish/o'chirish), merge, pdf (kesish/o'chirish va
+                  birlashtirish), log, nav, common (FolderPicker, OpenDocumentAt), theme
+  util/           vaqt, son formati, Sharing, ResultFiles, MediaSaver, FolderOpener,
+                  DeviceFiles, UriImport, RecentFiles
 ```
 
 ## Ma'lum cheklovlar
@@ -141,3 +149,8 @@ app/src/main/java/uz/ovozstudio/app/
 - Birinchi PDF ochilganda PDFBox resurslarni yuklaydi — bir necha soniya.
 - PDF ni yangi hujjatga ko'chirishda xatcho'plar, tegli tuzilma va shakl maydonlari saqlanmaydi.
 - Ilova hali telefonda sinalmagan: qarang `docs/PROGRESS.md`, «Tekshiruv holati».
+- WAV (ichki ish fayli) 4 GB gacha: 44,1 kHz stereo 16 bit uchun taxminan 6,7
+  soat. Undan uzun yozuv ochilmaydi.
+- Chastotasi har xil fayllarni birlashtirishda qayta namunalash ancha sekin
+  (har kadr uchun filtr hisoblanadi): uzun fayllarda bir necha daqiqa ketishi mumkin.
+- PDF faqat tizim tanlagichi orqali tanlanadi (Android 11+ da boshqa yo'l yo'q).

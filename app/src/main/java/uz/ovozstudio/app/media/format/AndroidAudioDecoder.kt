@@ -170,6 +170,9 @@ class AndroidAudioDecoder {
                         val depth = if (floatOutput) BitDepth.BIT_24 else BitDepth.BIT_16
                         writer?.close()
                         writer = WavWriter(destination, rate, channels, depth)
+                        // Yangi yozuvchi faylni noldan boshlaydi: avval yozilgan
+                        // kadrlar yo'qoldi, hisob ham shunga mos bo'lishi kerak.
+                        frames = 0L
                         format = AudioFormat(AudioContainer.WAV, AudioCodec.PCM, rate, channels, depth.bits)
                     }
 
@@ -195,8 +198,15 @@ class AndroidAudioDecoder {
             // `IllegalStateException` bilan yiqitadi: dekoder allaqachon
             // ishdan chiqqan, lekin qo'lda olingan namunalar to'liq yozilgan.
             // Buferlarni tashlab yuborish — natijani yo'qotish demak.
-            // Shuning uchun yozilgan qism saqlanadi: fayl to'liq bo'lmasa
-            // ham, foydalanuvchida ishlaydigan audio qoladi.
+            // Shuning uchun yozilgan qism saqlanadi.
+            //
+            // FAQAT kirish tugagan bo'lsa. Fayl o'rtasida (`inputDone` hali
+            // yolg'on) yiqilgan dekoder faylning faqat boshini bergan: uni
+            // jimgina «tayyor» deb qabul qilish foydalanuvchiga qisqartirilgan
+            // audioni to'liq deb ko'rsatardi va u shu bilan ishlab ketardi.
+            if (!inputDone) {
+                throw IOException("Dekoder fayl o'rtasida to'xtadi", error)
+            }
             ErrorLog.info(
                 "audio.decode",
                 "Dekoder oxirida yiqildi, yozilgan qism saqlandi: $frames freym",

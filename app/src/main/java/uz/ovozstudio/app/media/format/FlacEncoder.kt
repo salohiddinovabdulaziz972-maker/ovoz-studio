@@ -152,7 +152,7 @@ class FlacEncoder(
             // etadi. Uni saqlab qolishdan ko'ra o'chirgan ma'qul —
             // MediaCodec kodlovchisi ham shunday qiladi.
             if (failed) {
-                ErrorLog.error("audio.flac", "FLAC faylini yozib bo'lmadi: ${file.name}", null)
+                ErrorLog.error("audio.flac", "FLAC faylini yozib bo'lmadi", null)
                 runCatching { file.delete() }
             }
         }

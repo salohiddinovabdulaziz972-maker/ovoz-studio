@@ -54,7 +54,7 @@ class Mp3Encoder(
     private val lame: Lame = Lame().also { wireModules(it) }
     private val flags: LameGlobalFlags = lame.lame_init()
     private val out = BufferedOutputStream(FileOutputStream(file))
-    private val mp3Buffer = ByteArray(Lame.LAME_MAXMP3BUFFER)
+    private var mp3Buffer = ByteArray(Lame.LAME_MAXMP3BUFFER)
 
     private var left = IntArray(0)
     private var right = IntArray(0)
@@ -118,6 +118,11 @@ class Mp3Encoder(
         if (frames == 0) return
 
         ensureCapacity(frames)
+        // LAME qoidasi: chiqish buferi kamida 1,25·n + 7200 bayt (n — kadrlar
+        // soni). Qat'iy 16 KB bufer faqat kichik bo'laklarga yetadi; katta
+        // bo'lak berilsa LAME «bufer kichik» deb -1 qaytarardi.
+        val needed = frames + frames / 4 + 7_200
+        if (mp3Buffer.size < needed) mp3Buffer = ByteArray(needed)
         if (format.channels == 1) {
             var i = 0
             while (i < frames) {

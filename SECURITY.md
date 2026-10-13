@@ -13,8 +13,15 @@ bo'lishi mumkin.
 
 - **Internetga chiqmaydi**: manifestda `INTERNET` ruxsati yo'q. Fayllar
   telefondan tashqariga o'zi chiqib ketishi texnik jihatdan mumkin emas.
-- **Hech qanday ruxsat so'ramaydi**: fayl tizim tanlagichi orqali olinadi va
-  saqlanadi, mikrofon va ommaviy xotiraga kirish yo'q.
+- **Kam ruxsat so'raydi**: faqat audio fayllarni *o'qish* (`READ_MEDIA_AUDIO`,
+  Android 12 va pastda `READ_EXTERNAL_STORAGE`) — ilova ichidagi audio ro'yxati
+  uchun; Android 9 va pastda natijani yozish uchun `WRITE_EXTERNAL_STORAGE`.
+  Mikrofon, kontaktlar, joylashuv va bildirishnoma ruxsatlari yo'q. PDF va tizim
+  tanlagichi orqali olingan fayllar ruxsat talab qilmaydi.
+- **Foydalanuvchining asl faylini o'chirmaydi**: ilova faqat o'zining
+  vaqtinchalik (kesh) papkasidagi fayllarni o'chiradi (`WorkStore.deleteIfOwned`).
+  Qurilmadagi haqiqiy fayl tanlansa ham, ro'yxatdan olib tashlansa ham, rad
+  etilsa ham o'z joyida qoladi.
 - Zaxira nusxa (`allowBackup`) o'chirilgan.
 
 ## Nimalar muhim

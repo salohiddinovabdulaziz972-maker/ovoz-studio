@@ -65,16 +65,17 @@ object FolderOpener {
     }
 
     /**
-     * `content://com.android.externalstorage.documents/document/primary:Music/Ovoz%20Studio`
+     * `content://com.android.externalstorage.documents/document/primary%3AMusic%2FOvoz%20Studio`
      * — zamonaviy fayl boshqaruvchilari shu manzilni tushunadi.
+     *
+     * Manzilni `DocumentsContract.buildDocumentUri` yasaydi: u hujjat
+     * identifikatorini («primary:Music/Ovoz Studio») o'zi to'g'ri kodlaydi.
+     * Oldingi versiyada bo'sh joy qo'lda `%20` ga almashtirilib, keyin
+     * `appendPath` uni YANA kodlardi (`%2520`) — fayl boshqaruvchisi
+     * «Ovoz%20Studio» degan mavjud bo'lmagan papkani qidirardi.
      */
     private fun openDocument(context: Context, path: String): Boolean = runCatching {
-        val document = Uri.Builder()
-            .scheme("content")
-            .authority(STORAGE_AUTHORITY)
-            .appendPath("document")
-            .appendPath("primary:${path.replace(" ", "%20")}")
-            .build()
+        val document = DocumentsContract.buildDocumentUri(STORAGE_AUTHORITY, "primary:$path")
         launchDirectory(context, document)
     }.getOrElse { error ->
         ErrorLog.info(TAG, "Hujjat manzili ishlamadi ($path): ${error.message}")

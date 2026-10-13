@@ -38,6 +38,7 @@
     <string name="about_link_failed">Havolani ochib bo\'lmadi. Qurilmada brauzer yo\'q.</string>
     <string name="audio_pick">Audio fayl tanlash</string>
     <string name="audio_pick_other">Boshqa fayl tanlash</string>
+    <string name="pick_system">Tizim oynasidan tanlash</string>
     <string name="audio_file_name">Fayl: %1$s</string>
     <string name="audio_format_line">Format: %1$s. Natija ham shu formatda saqlanadi.</string>
     <string name="audio_opened">Fayl ochildi: %1$s. Format: %2$s. Uzunligi: %3$s.</string>
@@ -217,6 +218,7 @@
     <string name="picker_empty">Bu papkada fayl yo\'q.</string>
     <string name="picker_loading">O\'qilmoqda…</string>
     <string name="picker_no_access">Papka ochilmadi: o\'qishga ruxsat berilmagan.</string>
+    <string name="picker_empty_hint">Kerakli fayl ko\'rinmasa, «Tizim oynasidan tanlash» tugmasidan foydalaning.</string>
     <string name="picker_at_top">Eng yuqori papkadasiz.</string>
     <string name="result_folder_failed">Papkani ochib bo\'lmadi — qurilmada fayl boshqaruvchisi topilmadi.</string>
     <string name="result_saved_plain">Saqlandi: %1$s</string>

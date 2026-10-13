@@ -27,7 +27,7 @@ import uz.ovozstudio.app.R
 import uz.ovozstudio.app.ui.common.A11yButton
 import uz.ovozstudio.app.ui.common.A11yOutlinedButton
 import uz.ovozstudio.app.ui.common.ParamsGroup
-import uz.ovozstudio.app.ui.common.FolderPicker
+import uz.ovozstudio.app.ui.common.OpenDocumentAt
 import uz.ovozstudio.app.ui.common.RecentFilesBlock
 import uz.ovozstudio.app.ui.common.SavedFileBlock
 import uz.ovozstudio.app.ui.common.StatusMessage
@@ -85,8 +85,15 @@ fun PdfMergeScreen(
     // qat'i nazar qisqa qoladi.
     var listExpanded by rememberSaveable { mutableStateOf(false) }
 
-    // Fayl tanlash — ilovaning o'z oynasi (sabab: `FolderPicker` izohida).
-    var picking by rememberSaveable { mutableStateOf(false) }
+    // Fayl tanlash — tizim oynasi, to'g'ridan-to'g'ri «Documents» papkasidan
+    // ochiladi. Ilovaning o'z ro'yxati PDF uchun ishlatilmaydi: Android 11
+    // dan boshlab ilova boshqa ilovalar yaratgan PDF larni o'zi ko'ra olmaydi
+    // (ruxsat ham yordam bermaydi). Fayl ish papkasiga nusxalanadi, asl fayl
+    // o'zgarmaydi.
+    val systemPicker = rememberLauncherForActivityResult(
+        OpenDocumentAt(isAudio = false),
+    ) { uri -> if (uri != null) viewModel.addUri(uri) }
+    val pickPdf: () -> Unit = { systemPicker.launch(arrayOf("*/*")) }
 
     val result = state.result
 
@@ -141,7 +148,7 @@ fun PdfMergeScreen(
 
         A11yButton(
             label = stringResource(R.string.pdf_merge_add),
-            onClick = { picking = true },
+            onClick = pickPdf,
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isBusy,
         )
@@ -154,7 +161,7 @@ fun PdfMergeScreen(
                 query = state.recentQuery,
                 onQueryChange = viewModel::searchRecent,
                 onClear = viewModel::clearRecent,
-                onPick = { picking = true },
+                onPick = pickPdf,
                 enabled = !state.isBusy,
             )
         }
@@ -306,17 +313,6 @@ fun PdfMergeScreen(
                 onDismiss = { viewModel.clearSaved() },
             )
             SavedFileBlock(name = name, savedPath = state.savedPath, isAudio = false)
-        }
-
-        if (picking) {
-            FolderPicker(
-                isAudio = false,
-                onPick = { file ->
-                    picking = false
-                    viewModel.addFile(file)
-                },
-                onCancel = { picking = false },
-            )
         }
     }
 }

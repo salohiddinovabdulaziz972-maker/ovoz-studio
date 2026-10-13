@@ -224,8 +224,22 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
      * Fayl — qurilmadagi haqiqiy fayl ([File]): nusxa ko'chirilmaydi, shuning
      * uchun tanlangan fayl o'z joyida qoladi. `content://` yo'li ilgari
      * ishlatilgan va vaqtinchalik nusxa yo'qolib qolgan hollarni bergan.
+     *
+     * Bunday fayl foydalanuvchiniki: ilova uni hech qachon o'chirmaydi
+     * ([WorkStore.deleteIfOwned]).
      */
-    fun open(file: File) {
+    fun open(file: File) = openWith { onProgress -> opener.open(file, onProgress) }
+
+    /**
+     * Tizim tanlagichidan kelgan faylni ochadi (ilovaning o'z oynasi ko'rmaydigan
+     * joylar uchun: SD karta, boshqa ilovalar yaratgan fayllar). Fayl avval
+     * ish papkasiga nusxalanadi; asl fayl o'zgarmaydi.
+     */
+    fun open(uri: Uri) = openWith { onProgress ->
+        opener.open(getApplication<Application>(), uri, onProgress)
+    }
+
+    private fun openWith(load: ((Float) -> Unit) -> OpenResult) {
         if (_state.value.isBusy) return
         viewModelScope.launch {
             stopPlayback()
@@ -249,7 +263,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             val outcome = withContext(Dispatchers.IO) {
                 var lastPercent = -1
                 runCatching {
-                    opener.open(file) { fraction ->
+                    load { fraction ->
                         // Har foizda bir marta yangilanadi, har bir dekodlangan
                         // bo'lakda emas — aks holda holat oqimi soniyasiga
                         // yuzlab marta chiqardi.
@@ -723,7 +737,9 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
         history += opened.wav
         historyIndex = 0
 
-        for (file in previous) runCatching { file.delete() }
+        // Faqat ilovaning o'z fayllari: foydalanuvchining asl fayli ([File]
+        // tanlagichidan kelgan) bu yerda HECH QACHON o'chmaydi.
+        for (file in previous) store.deleteIfOwned(file)
 
         _state.update {
             it.copy(
@@ -788,7 +804,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
                     // natija eskirdi: u endi oldingi tahrirga tegishli.
                     while (history.size > historyIndex + 1) {
                         val dropped = history.removeAt(history.size - 1)
-                        runCatching { dropped.delete() }
+                        store.deleteIfOwned(dropped)
                     }
                     history += destination
                     historyIndex = history.size - 1
@@ -823,7 +839,7 @@ class TrimViewModel(application: Application) : AndroidViewModel(application) {
             // Fayl o'qilmadi: ekran `info` bo'yicha chiziladi, ya'ni barcha
             // boshqaruv tugmalari yo'qolib, fayl ochilmagandek ko'rinardi —
             // sabab esa aytilmasdi. Xatoni jurnalga yozamiz va ko'rsatamiz.
-            ErrorLog.error("kesish.ochish", "Tahrir natijasini o'qib bo'lmadi: ${file.name}")
+            ErrorLog.error("kesish.ochish", "Tahrir natijasini o'qib bo'lmadi")
             _state.update {
                 it.copy(
                     busy = TrimBusy.NONE,
