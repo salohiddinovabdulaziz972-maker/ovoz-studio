@@ -262,3 +262,66 @@ tekshirilishi kerak: ruxsat oynasi (Android 13), tizim tanlagichining `Music` /
 - `Resampler` sekin (har kadr uchun filtr); `WavPcmReader` 4096 kadrlik bo'lakda
   o'qiydi (65 536 ga oshirish tezlikni deyarli o'zgartirmaydi).
 - MP3 da LAME'ning «Info» sarlavhasi to'ldirilmaydi (birinchi kadr bo'sh qoladi).
+
+## 0.7.1 — tuzatish: dekoder yiqilganda barcha audio amallari to'xtardi (2026-10-13)
+
+Egasi: yangilangan 0.7.1 da audio ustida istalgan amal xato beryapti.
+Xatolar jurnali (Samsung SM-A716S, Android 13) aniq sababni ko'rsatdi:
+
+```
+audio.decode — Dekodlash bajarilmadi
+    IOException: Dekoder fayl o'rtasida to'xtadi
+    Sabab: IllegalStateException  (MediaCodec.dequeueOutputBuffer)
+audio.open — Fayl ochilmadi: NO_DECODER
+```
+
+Kesish, o'chirish va birlashtirish faylni bitta yo'l bilan ochadi
+(`AudioOpener.open` → `AndroidAudioDecoder`), shuning uchun bitta dekoder xatosi
+hammasini to'xtatdi. Sabab: `MediaCodec.createDecoderByType` ro'yxatdagi BIRINCHI
+dekoderni beradi; Samsung'da u ishlab chiqaruvchining o'z dekoderi, u esa ba'zi
+fayllarda yiqiladi. 0.7.0 bu yiqilishni jimgina «tayyor» deb qabul qilardi
+(qisqargan audio bilan), 0.7.1 uni to'g'ri rad etadi — shuning uchun xato endi
+ko'rinib qoldi. Rad etish to'g'ri; yetishmagani — ikkinchi urinish edi.
+
+### Tuzatish
+- **`DecoderPolicy`** (yangi, Android'siz, JVM testi bor): dekoder tartibi — avval
+  Android'ning o'z dasturiy dekoderlari (`c2.android…`, `OMX.google…`), keyin
+  ishlab chiqaruvchiniki.
+- **`AndroidAudioDecoder`**: fayl bitta dekoderga bog'lanmaydi. Dekoder yiqilsa
+  keyingisi sinaladi (4 tagacha), har safar faylni boshidan o'qib, yangi
+  `MediaExtractor` va `MediaCodec` bilan. Qisqargan audio baribir «tayyor»
+  deb qabul qilinmaydi.
+- Chiqish formati **takror** e'lon qilinsa, yozuvchi qayta ochilib, ilgari yozilgan
+  audio jimgina yo'qolardi — tuzatildi (bir xil format e'tiborsiz qoldiriladi;
+  haqiqatan o'zgarsa va audio yozilgan bo'lsa — xato, keyingi dekoder sinaladi).
+- Dekoder chiqish formatini umuman e'lon qilmasa, birinchi buferdan oldin
+  `outputFormat` so'raladi.
+- Kirish tugagandan keyin yiqilgan dekoderning qismi endi **davomiylik bo'yicha
+  tekshiriladi**: ko'pi bilan 1 soniya (qisqa faylda — 10 %) yetishmasa qabul
+  qilinadi. Ilgari qisqa faylda birinchi bufergayoq yiqilgan dekoder ham «tayyor»
+  hisoblanardi.
+- 0 kadr bergan dekoder ham «yaramadi» hisoblanadi (boshqasi sinaladi).
+- `MediaFormat.getLong(nom, standart)` faqat Android 10+ da bor edi — `containsKey`
+  bilan almashtirildi.
+- Jurnal: yiqilgan dekoderning nomi, tartib raqami va fayl turi (MIME) yoziladi;
+  zaxira dekoder ochgan bo'lsa — alohida «ma'lumot» qatori.
+
+### Tekshiruv holati (halol)
+Bu muhitda Kotlin kompilyatori, Gradle va Android SDK **yo'q**: kod **yig'ilmadi**,
+testlar **ishga tushirilmadi**, telefonda **sinalmadi**. Bajarilgani: qavs/satr
+balansi tekshiruvi; `DecoderPolicy` mantig'i va testdagi sonlar Python'da aynan
+takrorlab tekshirildi; kod qo'lda qayta o'qildi. Yangi test: `DecoderPolicyTest`
+(`bin/run-tests.sh` ro'yxatiga qo'shildi).
+
+**Birinchi ish:** CI'da `gradle testDebugUnitTest` va `assembleDebug`. Keyin
+telefonda M4A va MP3 faylni kesish/o'chirish/birlashtirishda ochib ko'rish. Hali
+ham ochilmasa — jurnalni yuboring: unda «dekoder 1/N: …» qatorlari qaysi dekoder
+qaysi turda yiqilganini ko'rsatadi.
+
+### Hali tegilmagan
+- Fayllar ro'yxatini tartiblash (`ovozstudio-saralash-topshiriq.txt`): hozir
+  ro'yxat (`DeviceFiles`) nom bo'yicha tartiblangan; topshiriq bajarilmagan.
+- `MediaCodecEncoder` ham `createEncoderByType` ishlatadi: jurnalda kodlovchi
+  xatosi yo'q, shuning uchun tegilmadi.
+- To'plam (zip) tozaligi: `build.gradle.kts` (ildiz va `app/`) to'plamda yo'q edi;
+  `scratch/` ichida buzuq ichki zip bor edi — yangi to'plamdan olib tashlandi.

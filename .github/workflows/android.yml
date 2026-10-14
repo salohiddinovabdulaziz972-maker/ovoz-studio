@@ -27,6 +27,8 @@ name: Android
 # Yuri (19): 0.7.0 — fayl tanlash ilovaning o'zida, manba fayllar haqiqiy yo'l bilan, PDF birlashtirish xatosi tuzatildi.
 #
 # Yuri (20): 0.7.1 — asl fayl o'chib ketishi tuzatildi, fayl tanlash ruxsatlari, tizim oynasi Music/Documents dan ochiladi.
+#
+# Yuri (21): 0.7.1 — Samsung dekoderi yiqilganda keyingi dekoderga o'tish (DecoderPolicy).
 
 on:
   workflow_dispatch:

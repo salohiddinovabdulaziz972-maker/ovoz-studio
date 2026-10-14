@@ -27,3 +27,4 @@ __pycache__/
 
 # Yig'ilgan APK'lar repoga tushmaydi — ular CI artefakti sifatida tarqatiladi.
 *.apk
+scratch/

@@ -66,6 +66,7 @@ MAIN=(
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormat.kt
     app/src/main/java/uz/ovozstudio/app/media/format/AudioFormatDetector.kt
     app/src/main/java/uz/ovozstudio/app/media/format/CodecRates.kt
+    app/src/main/java/uz/ovozstudio/app/media/format/DecoderPolicy.kt
     app/src/main/java/uz/ovozstudio/app/media/format/FlacEncoder.kt
     app/src/main/java/uz/ovozstudio/app/media/format/FormatPreservingExporter.kt
     app/src/main/java/uz/ovozstudio/app/media/format/FormatSupport.kt
@@ -99,6 +100,7 @@ TESTS=(
     app/src/test/java/uz/ovozstudio/app/media/format/AdtsHeaderTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/AudioFormatDetectorTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/CodecRatesTest.kt
+    app/src/test/java/uz/ovozstudio/app/media/format/DecoderPolicyTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/FormatPreservingExporterTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/FormatSupportTest.kt
     app/src/test/java/uz/ovozstudio/app/media/format/Mp3EncoderTest.kt
